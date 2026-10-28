@@ -72,6 +72,45 @@ describe("nodes", () => {
   });
 });
 
+describe("templates", () => {
+  it("inserts a centered flowchart with edges and selects it", () => {
+    const existing = add("note", -1000, -1000);
+    useCanvasStore.getState().selectNodes([]);
+    const ids = useCanvasStore.getState().insertTemplate("flowchart", { x: 500, y: 500 });
+    const state = useCanvasStore.getState();
+
+    expect(ids).toHaveLength(4);
+    expect(state.nodes).toHaveLength(5);
+    expect(state.edges).toHaveLength(3);
+    expect(node(existing).selected).toBe(false);
+
+    const created = ids.map((id) => node(id));
+    expect(created.every((item) => item.selected)).toBe(true);
+    const minX = Math.min(...created.map((item) => item.position.x));
+    const maxX = Math.max(...created.map((item) => item.position.x + (item.width ?? 0)));
+    const minY = Math.min(...created.map((item) => item.position.y));
+    const maxY = Math.max(...created.map((item) => item.position.y + (item.height ?? 0)));
+    expect((minX + maxX) / 2).toBeCloseTo(500);
+    expect((minY + maxY) / 2).toBeCloseTo(500);
+
+    const idsSet = new Set(ids);
+    expect(state.edges.every((edge) => idsSet.has(edge.source) && idsSet.has(edge.target))).toBe(true);
+  });
+
+  it("undoes a template insertion in one step", () => {
+    useCanvasStore.getState().insertTemplate("kanban", { x: 0, y: 0 });
+    expect(useCanvasStore.getState().nodes).toHaveLength(3);
+    useCanvasStore.getState().undo();
+    expect(useCanvasStore.getState().nodes).toHaveLength(0);
+  });
+
+  it("ignores unknown templates without touching history", () => {
+    expect(useCanvasStore.getState().insertTemplate("nope", { x: 0, y: 0 })).toEqual([]);
+    expect(useCanvasStore.getState().nodes).toHaveLength(0);
+    expect(useCanvasStore.getState().past).toHaveLength(0);
+  });
+});
+
 describe("connections", () => {
   it("rejects self-connections and duplicate edges", () => {
     const a = add("note", 0, 0);

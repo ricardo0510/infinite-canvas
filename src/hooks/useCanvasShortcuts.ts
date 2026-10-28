@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { exportSnapshot, saveSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
+import { useUiStore } from "../store/uiStore";
 
 function isEditable(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -35,6 +36,12 @@ export function useCanvasShortcuts(): void {
       const store = useCanvasStore.getState();
       const mod = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
+
+      if (!mod && key === "/") {
+        event.preventDefault();
+        useUiStore.getState().setCommandOpen(true);
+        return;
+      }
 
       if (mod && key === "z") {
         event.preventDefault();

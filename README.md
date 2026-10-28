@@ -16,6 +16,8 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Duplicate/self connections blocked; hover an edge to delete it
 - Drag a connection into blank canvas to create and connect a node (upstream or downstream)
 - Edge toolbar: label, color, solid/dashed/dotted line, arrow toggle
+- Command palette (`/`) for nodes, templates, layout, export and view actions
+- Starter templates: flowchart, mind map, kanban, meeting notes
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
@@ -60,6 +62,7 @@ CI runs typecheck, lint, unit tests, and a production build on every push and pu
 | `F` | Focus selection |
 | `Ctrl/Cmd + S` | Save to `localStorage` |
 | `Delete` / `Backspace` | Delete selected nodes |
+| `/` | Command palette |
 | `?` | Keyboard shortcuts |
 
 Double-click the canvas to add a note, right-click for the context menu, and drag the left/right handles to connect nodes.
@@ -72,6 +75,7 @@ src/
     FlowCanvas.tsx        # React Flow container, menus, guides, overlays
     Toolbar.tsx           # add nodes, undo, layout, snap, import/export
     CanvasControls.tsx    # zoom presets, fit view, minimap toggle
+    CommandPalette.tsx    # `/` command palette
     SelectionToolbar.tsx  # align / distribute / group
     EdgeToolbar.tsx       # edge label / color / dash / arrow
     StatusBar.tsx
@@ -87,6 +91,7 @@ src/
     storage.ts            # schema v2, validation, migration, import/export
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math
+    templates.ts          # starter canvases
     layout.ts             # Dagre (dynamic import)
   store/
     canvasStore.ts        # nodes/edges/history/clipboard

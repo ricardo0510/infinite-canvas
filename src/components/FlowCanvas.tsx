@@ -21,6 +21,7 @@ import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
 import { useUiStore } from "../store/uiStore";
 import type { CanvasNode, NoteColor } from "../types";
 import { CanvasControls } from "./CanvasControls";
+import { CommandPalette } from "./CommandPalette";
 import { ContextMenu, type ContextMenuState } from "./ContextMenu";
 import { EdgeToolbar } from "./EdgeToolbar";
 import { EmptyState } from "./EmptyState";
@@ -353,6 +354,7 @@ export function FlowCanvas() {
       <EmptyState />
       <SelectionToolbar />
       <EdgeToolbar />
+      <CommandPalette />
       {menu ? (
         <ContextMenu
           menu={menu}

@@ -1,4 +1,5 @@
-import { useReactFlow } from "@xyflow/react";
+﻿import { useReactFlow } from "@xyflow/react";
+import { TEMPLATES } from "../lib/templates";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NodeKind } from "../types";
 
@@ -12,19 +13,33 @@ const ACTIONS: { kind: NodeKind; label: string; hint: string }[] = [
 export function EmptyState() {
   const isEmpty = useCanvasStore((state) => state.nodes.length === 0);
   const addNode = useCanvasStore((state) => state.addNode);
-  const { screenToFlowPosition } = useReactFlow();
+  const insertTemplate = useCanvasStore((state) => state.insertTemplate);
+  const { screenToFlowPosition, fitView } = useReactFlow();
 
   if (!isEmpty) return null;
 
-  const add = (kind: NodeKind) => {
+  const center = () => {
     const rect = document.querySelector<HTMLElement>(".canvas")?.getBoundingClientRect();
-    addNode(
-      kind,
-      screenToFlowPosition({
-        x: (rect?.left ?? 0) + (rect?.width ?? window.innerWidth) / 2,
-        y: (rect?.top ?? 0) + (rect?.height ?? window.innerHeight) / 2,
-      }),
-    );
+    return screenToFlowPosition({
+      x: (rect?.left ?? 0) + (rect?.width ?? window.innerWidth) / 2,
+      y: (rect?.top ?? 0) + (rect?.height ?? window.innerHeight) / 2,
+    });
+  };
+
+  const add = (kind: NodeKind) => {
+    addNode(kind, center());
+  };
+
+  const applyTemplate = (templateId: string) => {
+    const ids = insertTemplate(templateId, center());
+    window.setTimeout(() => {
+      fitView({
+        nodes: ids.map((id) => ({ id })),
+        padding: 0.3,
+        duration: 300,
+        maxZoom: 1.25,
+      });
+    }, 0);
   };
 
   return (
@@ -40,10 +55,26 @@ export function EmptyState() {
             </button>
           ))}
         </div>
+        <div className="empty-divider" />
+        <p className="empty-templates-title">Or start from a template</p>
+        <div className="empty-actions">
+          {TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              type="button"
+              className="empty-action empty-template"
+              onClick={() => applyTemplate(template.id)}
+            >
+              <strong>{template.label}</strong>
+              <span>{template.description}</span>
+            </button>
+          ))}
+        </div>
         <p className="empty-footnote">
-          Press <kbd>?</kbd> for all shortcuts.
+          Press <kbd>?</kbd> for shortcuts 路 <kbd>/</kbd> for commands.
         </p>
       </div>
     </div>
   );
 }
+

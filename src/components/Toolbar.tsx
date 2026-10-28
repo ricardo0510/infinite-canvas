@@ -25,6 +25,7 @@ export function Toolbar() {
   const snapToGrid = useUiStore((state) => state.snapToGrid);
   const toggleSnap = useUiStore((state) => state.toggleSnap);
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
+  const setCommandOpen = useUiStore((state) => state.setCommandOpen);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
   const hasNodes = useCanvasStore((state) => state.nodes.length > 0);
@@ -130,6 +131,10 @@ export function Toolbar() {
       <button type="button" className="tool-button" onClick={() => fileInput.current?.click()} title="Import JSON">
         <span aria-hidden="true">↑</span>
         <span className="tool-label">Import</span>
+      </button>
+      <button type="button" className="tool-button" onClick={() => setCommandOpen(true)} title="Command palette (/)">
+        <span aria-hidden="true">/</span>
+        <span className="tool-label">Commands</span>
       </button>
       <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="Keyboard shortcuts (?)">
         <span aria-hidden="true">?</span>

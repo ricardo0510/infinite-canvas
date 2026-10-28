@@ -20,6 +20,7 @@ import {
   nodeSize,
 } from "../lib/geometry";
 import { loadSnapshot, SCHEMA_VERSION } from "../lib/storage";
+import { TEMPLATE_MAP } from "../lib/templates";
 import type {
   AlignKind,
   CanvasEdge,
@@ -293,6 +294,7 @@ type CanvasState = {
   commit: () => void;
   addNode: (kind: NodeKind, position: XYPosition) => string;
   addNote: (position: XYPosition) => string;
+  insertTemplate: (templateId: string, anchor: XYPosition) => string[];
   updateNodeData: (id: string, patch: Record<string, unknown>) => void;
   setViewport: (viewport: Viewport) => void;
   selectNodes: (ids: string[]) => void;
@@ -418,6 +420,59 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   addNote: (position) => get().addNode("note", position),
+
+  insertTemplate: (templateId, anchor) => {
+    const template = TEMPLATE_MAP[templateId];
+    if (!template || template.nodes.length === 0) return [];
+
+    const sizes = template.nodes.map((spec) => ({
+      width: spec.width ?? DEFAULT_SIZE[spec.kind].width,
+      height: spec.height ?? DEFAULT_SIZE[spec.kind].height,
+    }));
+    const minX = Math.min(...template.nodes.map((spec) => spec.x));
+    const minY = Math.min(...template.nodes.map((spec) => spec.y));
+    const maxX = Math.max(
+      ...template.nodes.map((spec, index) => spec.x + sizes[index].width),
+    );
+    const maxY = Math.max(
+      ...template.nodes.map((spec, index) => spec.y + sizes[index].height),
+    );
+    // The anchor is the center of the template.
+    const offsetX = anchor.x - (minX + maxX) / 2;
+    const offsetY = anchor.y - (minY + maxY) / 2;
+
+    get().commit();
+    const created = template.nodes.map((spec, index) => {
+      const base = createNode(spec.kind, { x: offsetX + spec.x, y: offsetY + spec.y });
+      const { width, height } = sizes[index];
+      return {
+        ...base,
+        width,
+        height,
+        style: { ...(base.style ?? {}), width, height },
+        data: { ...base.data, ...spec.data },
+      } as CanvasNode;
+    });
+    const createdEdges = template.edges.flatMap((edge) => {
+      const source = created[edge.from];
+      const target = created[edge.to];
+      if (!source || !target) return [];
+      return [
+        defaultEdge({
+          source: source.id,
+          target: target.id,
+          sourceHandle: null,
+          targetHandle: null,
+        }),
+      ];
+    });
+
+    set({
+      nodes: [...get().nodes.map((node) => ({ ...node, selected: false })), ...created],
+      edges: [...get().edges, ...createdEdges],
+    });
+    return created.map((node) => node.id);
+  },
 
   updateNodeData: (id, patch) => {
     set({
