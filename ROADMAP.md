@@ -86,16 +86,16 @@ src/
 
 **当前构建指标**
 
-- 首屏 JS：467 KB（gzip 145 KB）；Dagre 自动布局单独分包 47 KB（gzip 16 KB）
+- 首屏 JS：471 KB（gzip 146 KB）；Dagre 自动布局单独分包 47 KB（gzip 16 KB）
 - CSS：36.3 KB（gzip 6.8 KB）
 - 首次加载未做路由/代码分割，重依赖（Dagre）已按需加载
-- 性能（headless Chrome，1440×900）：500 节点 setup 323ms / 拖动 60.1 FPS；1000 节点 setup 396ms / 拖动 60.1 FPS；可见 DOM 约 15 个节点
+- 性能（headless Chrome，1440×900）：500 节点 setup 323ms / 拖动 60.1 FPS；1000 节点 setup 326ms / 拖动 59.7 FPS；可见 DOM 约 15 个节点
 
 **已知限制**
 
 - 没有形状节点。
 - 历史记录基于快照，节点很多时内存会增长。
-- 只支持 localStorage；图片以 data URL 存储，大图会占配额。
+- 快照存 localStorage，图片存 IndexedDB；清站点数据仍会全部丢失。
 - 没有 E2E、License。
 - 可访问性和移动端只做了基础处理。
 
@@ -165,10 +165,10 @@ store 变化
 
 **目标**：数据不丢，版本可升级，性能可量化。
 
-- [x] Schema 版本号 + 迁移函数（v1 → v2）
-- [ ] IndexedDB 存储适配器（大图/图片节点）
+- [x] Schema 版本号 + 迁移函数（v1/v2 → v3）
+- [x] IndexedDB 存储适配器（图片 Blob，data URL 自动迁移与孤儿清理）
 - [ ] 历史记录改为增量 patch 或压缩快照（控制内存）
-- [x] 图片节点：上传/拖入/粘贴 + 自动尺寸（仍以 data URL 存储）
+- [x] 图片节点：上传/拖入/粘贴 + 自动尺寸（图片存 IndexedDB）
 - [x] 导入导出兼容旧版本；导入失败给出可读 toast
 - [x] Error Boundary + 全局错误提示
 - [x] 500 / 1000 节点性能基准与优化（节点 memo、>80 节点仅渲染可视元素）
@@ -253,10 +253,10 @@ store 变化
 
 ### 5.3 存储
 
-- v0.2 保持 localStorage；v0.3 引入 `StorageAdapter`。
+- 已实现：快照存 localStorage，图片 Blob 存 IndexedDB（`idb:<id>` 引用）；旧 data URL 启动时自动迁移，导出时重新内嵌为 data URL。
 - JSON schema：
   ```json
-  { "version": 2, "nodes": [], "edges": [], "viewport": { "x": 0, "y": 0, "zoom": 1 } }
+  { "version": 3, "nodes": [], "edges": [], "viewport": { "x": 0, "y": 0, "zoom": 1 } }
   ```
 - 迁移：`migrate(snapshot): Snapshot`，逐版本升级，失败回退到空画布并提示。
 - 导入校验：节点必须有 `id/type/position/data`，边必须有 `id/source/target`。
@@ -317,10 +317,10 @@ store 变化
 
 | 指标 | v0.1 现状 | v0.4 目标 |
 | --- | --- | --- |
-| 首屏 JS gzip | 145 KB | ≤ 150 KB |
+| 首屏 JS gzip | 146 KB | ≤ 150 KB |
 | 1000 节点拖拽 FPS | 60（headless 基准） | ≥ 45 |
 | 核心 E2E 用例 | 0 | ≥ 8 |
-| 单元测试 | 79 | ≥ 25 |
+| 单元测试 | 83 | ≥ 25 |
 | CI 时长 | 无 | ≤ 3 min |
 | 新用户跑起来 | 需手动 | ≤ 3 min |
 | Lighthouse Performance | 未测 | ≥ 90 |

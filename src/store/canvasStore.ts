@@ -304,6 +304,7 @@ type CanvasState = {
     }[],
   ) => string[];
   resizeNode: (id: string, width: number, height: number) => void;
+  replaceImageSources: (updates: Map<string, string>) => void;
   insertTemplate: (templateId: string, anchor: XYPosition) => string[];
   updateNodeData: (id: string, patch: Record<string, unknown>) => void;
   setViewport: (viewport: Viewport) => void;
@@ -457,6 +458,16 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
           ? { ...node, width, height, style: { ...node.style, width, height } }
           : node,
       ),
+    });
+  },
+
+  replaceImageSources: (updates) => {
+    if (updates.size === 0) return;
+    set({
+      nodes: get().nodes.map((node) => {
+        const src = updates.get(node.id);
+        return src ? ({ ...node, data: { ...node.data, src } } as CanvasNode) : node;
+      }),
     });
   },
 

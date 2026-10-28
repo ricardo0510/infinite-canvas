@@ -139,7 +139,9 @@ function CommandPaletteSession() {
         label: "Export JSON",
         group: "Canvas",
         hint: "Ctrl/Cmd E",
-        run: () => exportSnapshot(state().getSnapshot()),
+        run: () => {
+          void exportSnapshot(state().getSnapshot());
+        },
       },
       {
         id: "clear",

@@ -6,7 +6,7 @@ const MIN_WIDTH = 140;
 const MIN_HEIGHT = 100;
 
 export type LoadedImage = {
-  src: string;
+  blob: Blob;
   width: number;
   height: number;
   name: string;
@@ -28,37 +28,39 @@ export function fitImageSize(
   };
 }
 
-export function readImageFile(file: File): Promise<LoadedImage> {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith("image/")) {
-      reject(new Error(`${file.name}: only image files are supported.`));
-      return;
-    }
-    if (file.size > MAX_IMAGE_BYTES) {
-      reject(new Error(`${file.name}: image is larger than 4 MB.`));
-      return;
-    }
+async function decodeSize(blob: Blob): Promise<{ width: number; height: number }> {
+  if (typeof createImageBitmap === "function") {
+    const bitmap = await createImageBitmap(blob);
+    const size = { width: bitmap.width, height: bitmap.height };
+    bitmap.close?.();
+    return size;
+  }
 
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error(`${file.name}: could not read the file.`));
-    reader.onload = () => {
-      const src = String(reader.result ?? "");
-      if (!src) {
-        reject(new Error(`${file.name}: the file is empty.`));
-        return;
-      }
+  const url = URL.createObjectURL(blob);
+  try {
+    return await new Promise((resolve, reject) => {
       const image = new Image();
-      image.onload = () => {
-        resolve({
-          src,
-          width: image.naturalWidth,
-          height: image.naturalHeight,
-          name: file.name,
-        });
-      };
-      image.onerror = () => reject(new Error(`${file.name}: could not decode the image.`));
-      image.src = src;
-    };
-    reader.readAsDataURL(file);
-  });
+      image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      image.onerror = () => reject(new Error("the image could not be decoded."));
+      image.src = url;
+    });
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+export async function readImageFile(file: File): Promise<LoadedImage> {
+  if (!file.type.startsWith("image/")) {
+    throw new Error(`${file.name}: only image files are supported.`);
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error(`${file.name}: image is larger than 4 MB.`);
+  }
+
+  try {
+    const { width, height } = await decodeSize(file);
+    return { blob: file, width, height, name: file.name };
+  } catch {
+    throw new Error(`${file.name}: could not decode the image.`);
+  }
 }

@@ -1,5 +1,7 @@
+import { useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { FlowCanvas } from "./components/FlowCanvas";
+import { ensureInlineImagesMigrated, pruneOrphanImages } from "./lib/imageMigration";
 import { KeyboardHelp } from "./components/KeyboardHelp";
 import { ToastHost } from "./components/ToastHost";
 import { Toolbar } from "./components/Toolbar";
@@ -9,6 +11,15 @@ import { useCanvasShortcuts } from "./hooks/useCanvasShortcuts";
 function App() {
   useAutoSave();
   useCanvasShortcuts();
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("bench")) return;
+    void ensureInlineImagesMigrated()
+      .then(() => pruneOrphanImages())
+      .catch(() => {
+        // IndexedDB 不可用时继续使用 localStorage。
+      });
+  }, []);
 
   return (
     <ReactFlowProvider>

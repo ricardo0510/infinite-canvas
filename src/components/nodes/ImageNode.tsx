@@ -1,8 +1,10 @@
 import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
 import { memo, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
+import { storeImage } from "../../lib/imageStore";
 import { fitImageSize, readImageFile } from "../../lib/images";
 import { sanitizeImageSrc } from "../../lib/storage";
+import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { ImageNodeModel } from "../../types";
 import { nodePropsEqual } from "./nodePropsEqual";
@@ -13,7 +15,8 @@ function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
   const commit = useCanvasStore((state) => state.commit);
   const fileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
-  const src = sanitizeImageSrc(data.src);
+  const rawSrc = sanitizeImageSrc(data.src);
+  const src = useResolvedImageSrc(rawSrc);
 
   const setSrc = (next: string) => {
     commit();
@@ -26,9 +29,10 @@ function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
     try {
       setError(null);
       const image = await readImageFile(file);
+      const ref = await storeImage(image.blob);
       const size = fitImageSize(image.width, image.height);
       commit();
-      updateNodeData(id, { src: image.src, alt: image.name });
+      updateNodeData(id, { src: ref, alt: image.name });
       resizeNode(id, size.width, size.height);
     } catch (readError) {
       setError(
@@ -70,7 +74,7 @@ function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
         </button>
       )}
       <div className="image-bar">
-        {data.src.startsWith("data:") ? (
+        {rawSrc.startsWith("data:") || rawSrc.startsWith("idb:") ? (
           <span className="image-uploaded" title={data.alt || "Uploaded image"}>
             {data.alt || "Uploaded image"}
           </span>

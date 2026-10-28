@@ -1,5 +1,6 @@
 import type { MarkerType } from "@xyflow/react";
 import { DEFAULT_SIZE } from "./geometry";
+import { blobToDataUrl, getImageBlob, isIdbImageRef } from "./imageStore";
 import type {
   CanvasEdge,
   CanvasNode,
@@ -12,10 +13,10 @@ import type {
   TextData,
 } from "../types";
 
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
-const STORAGE_KEY = "infinite-canvas:v2";
-const LEGACY_KEYS = ["infinite-canvas:v1"];
+const STORAGE_KEY = "infinite-canvas:v3";
+const LEGACY_KEYS = ["infinite-canvas:v2", "infinite-canvas:v1"];
 const MAX_ZOOM = 8;
 
 const NODE_KINDS: NodeKind[] = ["note", "text", "image", "group"];
@@ -50,6 +51,7 @@ export function sanitizeImageSrc(value: unknown): string {
   if (/^https:\/\//i.test(src)) return src;
   if (/^blob:/i.test(src)) return src;
   if (/^data:image\//i.test(src)) return src;
+  if (/^idb:[A-Za-z0-9-]+$/i.test(src)) return src;
   return "";
 }
 
@@ -223,10 +225,27 @@ export function saveSnapshot(snapshot: CanvasSnapshot): void {
   }
 }
 
-export function exportSnapshot(snapshot: CanvasSnapshot): void {
+export async function exportSnapshot(snapshot: CanvasSnapshot): Promise<void> {
+  let nodes = snapshot.nodes;
+  if (nodes.some((node) => node.type === "image" && isIdbImageRef(node.data.src))) {
+    nodes = await Promise.all(
+      nodes.map(async (node) => {
+        if (node.type !== "image" || !isIdbImageRef(node.data.src)) return node;
+        const image = await getImageBlob(node.data.src);
+        if (!image) return node;
+        try {
+          const src = await blobToDataUrl(image);
+          return { ...node, data: { ...node.data, src } } as CanvasNode;
+        } catch {
+          return node;
+        }
+      }),
+    );
+  }
+
   const payload = {
     version: SCHEMA_VERSION,
-    nodes: snapshot.nodes,
+    nodes,
     edges: snapshot.edges,
     ...(snapshot.viewport ? { viewport: snapshot.viewport } : {}),
   };

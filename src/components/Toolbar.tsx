@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { useReactFlow } from "@xyflow/react";
+import { migrateInlineImagesNow } from "../lib/imageMigration";
 import { exportSnapshot, parseSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
@@ -56,6 +57,7 @@ export function Toolbar() {
         return;
       }
       importSnapshot(snapshot);
+      void migrateInlineImagesNow();
       window.setTimeout(() => {
         if (snapshot.viewport) setViewport(snapshot.viewport);
         else fitView({ padding: 0.2, duration: 300 });
@@ -127,7 +129,7 @@ export function Toolbar() {
         <span className="tool-label">Fit</span>
       </button>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={() => exportSnapshot(getSnapshot())} title="Export JSON">
+      <button type="button" className="tool-button" onClick={() => void exportSnapshot(getSnapshot())} title="Export JSON">
         <span aria-hidden="true">↓</span>
         <span className="tool-label">Export</span>
       </button>

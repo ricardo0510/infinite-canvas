@@ -90,6 +90,14 @@ describe("images", () => {
     expect(useCanvasStore.getState().nodes).toHaveLength(0);
   });
 
+  it("replaces image sources without adding history", () => {
+    const id = add("image", 0, 0);
+    const history = useCanvasStore.getState().past.length;
+    useCanvasStore.getState().replaceImageSources(new Map([[id, "idb:stored-image"]]));
+    expect(node(id).data).toMatchObject({ src: "idb:stored-image" });
+    expect(useCanvasStore.getState().past.length).toBe(history);
+  });
+
   it("resizes a node without adding history", () => {
     const id = add("image", 0, 0);
     const history = useCanvasStore.getState().past.length;

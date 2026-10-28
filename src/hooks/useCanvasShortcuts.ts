@@ -86,7 +86,7 @@ export function useCanvasShortcuts(): void {
       }
       if (mod && key === "e") {
         event.preventDefault();
-        exportSnapshot(store.getSnapshot());
+        void exportSnapshot(store.getSnapshot());
         return;
       }
       if (mod && key === "g") {

@@ -26,7 +26,8 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Right-click context menu: add nodes, duplicate, layer order, group, delete
 - One-click auto layout (Dagre, loaded on demand)
 - Undo/redo, copy/paste, duplicate
-- Autosave to `localStorage`; versioned JSON import/export with schema migration
+- Snapshot autosave to `localStorage`; image blobs in IndexedDB
+- Versioned JSON import/export with schema migration
 - Shortcut cheatsheet (`?`), empty-canvas onboarding
 
 ## Run
@@ -60,7 +61,7 @@ The benchmark builds the app, starts a preview server and drives a throwaway hea
 | Nodes | Rendered DOM | Setup | Idle | Drag | Long tasks |
 | --- | --- | --- | --- | --- | --- |
 | 500 | 15 | 323 ms | 60.3 fps | 60.1 fps | 0 |
-| 1000 | 15 | 396 ms | 60.3 fps | 60.1 fps | 0 |
+| 1000 | 15 | 326 ms | 60.0 fps | 59.7 fps | 0 |
 
 Headless Chrome, 1440×900, production build.
 
@@ -107,12 +108,15 @@ src/
   hooks/
     useAutoSave.ts        # debounced localStorage writes
     useCanvasShortcuts.ts
+    useResolvedImageSrc.ts # IndexedDB ref → object URL
   lib/
     storage.ts            # schema v2, validation, migration, import/export
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math
     templates.ts          # starter canvases
     images.ts             # image validation, decode and fit sizing
+    imageStore.ts         # IndexedDB blob store + data URL fallback
+    imageMigration.ts     # inline data URL → IndexedDB migration/pruning
     stress.ts             # deterministic canvas used by the benchmark
     layout.ts             # Dagre (dynamic import)
   store/
@@ -120,9 +124,9 @@ src/
     uiStore.ts            # snap toggle, help panel
 ```
 
-Data model: `{ version: 2, nodes, edges, viewport? }`. Older `v1` snapshots are migrated on load; unknown fields and unsafe image URLs are dropped.
+Data model: `{ version: 3, nodes, edges, viewport? }`. Older `v1`/`v2` snapshots are migrated on load; unknown fields and unsafe image URLs are dropped. Image sources are `idb:<id>` refs (blob stored in IndexedDB), `https:`, or legacy `data:image/` URLs.
 
 ## Notes
 
-- Everything stays in the browser. Image uploads are stored as data URLs, so very large images will hit the `localStorage` quota.
+- Everything stays in the browser. Snapshots live in `localStorage`; image blobs live in IndexedDB and are embedded back as data URLs when exporting JSON. Clearing site data still deletes both stores.
 - `BASE_PATH` controls the Vite `base`; the Pages workflow builds with `/infinite-canvas/`.

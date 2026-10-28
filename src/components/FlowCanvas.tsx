@@ -16,6 +16,7 @@ import {
 } from "@xyflow/react";
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
+import { storeImage } from "../lib/imageStore";
 import { fitImageSize, readImageFile, type LoadedImage } from "../lib/images";
 import { buildStressSnapshot } from "../lib/stress";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
@@ -139,6 +140,7 @@ export function FlowCanvas() {
       }
 
       const origin = screenToFlowPosition(point);
+      const refs = await Promise.all(loaded.map((image) => storeImage(image.blob)));
       const specs = loaded.map((image, index) => {
         const size = fitImageSize(image.width, image.height);
         const single = loaded.length === 1;
@@ -147,7 +149,7 @@ export function FlowCanvas() {
             x: single ? origin.x - size.width / 2 : origin.x + (index % 3) * 344,
             y: single ? origin.y - size.height / 2 : origin.y + Math.floor(index / 3) * 344,
           },
-          src: image.src,
+          src: refs[index],
           width: size.width,
           height: size.height,
           alt: image.name,

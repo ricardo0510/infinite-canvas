@@ -153,18 +153,38 @@ describe("viewport persistence", () => {
     const snapshot = migrateSnapshot({ version: 2, nodes: [], edges: [], viewport: { zoom: 0 } });
     expect(snapshot?.viewport).toBeUndefined();
   });
+
+  it("migrates the v2 localStorage key to v3", () => {
+    localStorage.clear();
+    localStorage.setItem(
+      "infinite-canvas:v2",
+      JSON.stringify({
+        version: 2,
+        nodes: [{ id: "a", type: "note", position: { x: 0, y: 0 }, data: {} }],
+        edges: [],
+      }),
+    );
+    expect(loadSnapshot()?.version).toBe(SCHEMA_VERSION);
+    expect(localStorage.getItem("infinite-canvas:v3")).not.toBeNull();
+    expect(localStorage.getItem("infinite-canvas:v2")).toBeNull();
+    localStorage.clear();
+  });
 });
 
 describe("sanitizeImageSrc", () => {
-  it("allows https, blob, and image data urls", () => {
+  it("allows https, blob, image data urls and IndexedDB refs", () => {
     expect(sanitizeImageSrc("https://example.com/a.png")).toBe("https://example.com/a.png");
     expect(sanitizeImageSrc("blob:http://localhost/abc")).toBe("blob:http://localhost/abc");
     expect(sanitizeImageSrc("data:image/png;base64,AAAA")).toBe("data:image/png;base64,AAAA");
+    expect(sanitizeImageSrc("idb:0f8fad5b-d9cb-469f-a165-70867728950e")).toBe(
+      "idb:0f8fad5b-d9cb-469f-a165-70867728950e",
+    );
   });
 
   it("rejects other protocols and empty values", () => {
     expect(sanitizeImageSrc("http://example.com/a.png")).toBe("");
     expect(sanitizeImageSrc("javascript:alert(1)")).toBe("");
+    expect(sanitizeImageSrc("idb:has spaces")).toBe("");
     expect(sanitizeImageSrc(42)).toBe("");
     expect(sanitizeImageSrc("")).toBe("");
   });
