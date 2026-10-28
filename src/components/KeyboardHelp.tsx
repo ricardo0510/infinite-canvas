@@ -30,6 +30,8 @@ const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] =
     items: [
       { keys: ["Double-click"], action: "Add a note" },
       { keys: ["Right-click"], action: "Context menu" },
+      { keys: ["Handle → blank"], action: "Create a connected node" },
+      { keys: ["Hover edge"], action: "Delete edge" },
       { keys: ["Middle/right drag"], action: "Pan" },
       { keys: ["Left drag"], action: "Box select" },
       { keys: ["Shift/Ctrl + click"], action: "Add to selection" },

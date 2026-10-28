@@ -71,6 +71,60 @@ describe("nodes", () => {
   });
 });
 
+describe("connections", () => {
+  it("rejects self-connections and duplicate edges", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    const store = useCanvasStore.getState();
+    expect(store.isValidConnection({ source: a, target: a, sourceHandle: null, targetHandle: null })).toBe(
+      false,
+    );
+    expect(store.isValidConnection({ source: a, target: b, sourceHandle: null, targetHandle: null })).toBe(
+      true,
+    );
+    store.onConnect({ source: a, target: b, sourceHandle: null, targetHandle: null });
+    expect(useCanvasStore.getState().edges).toHaveLength(1);
+    useCanvasStore
+      .getState()
+      .onConnect({ source: a, target: b, sourceHandle: null, targetHandle: null });
+    expect(useCanvasStore.getState().edges).toHaveLength(1);
+  });
+
+  it("removes an edge and can undo it", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.setState({ edges: [{ id: "e1", source: a, target: b }] });
+    useCanvasStore.getState().removeEdge("e1");
+    expect(useCanvasStore.getState().edges).toHaveLength(0);
+    useCanvasStore.getState().undo();
+    expect(useCanvasStore.getState().edges).toHaveLength(1);
+  });
+
+  it("creates a downstream node connected from the source", () => {
+    const a = add("note", 0, 0);
+    useCanvasStore.getState().selectNodes([]);
+    const id = useCanvasStore.getState().addConnectedNode(
+      "note",
+      { x: 500, y: 300 },
+      { fromNodeId: a, fromHandleType: "source" },
+    );
+    expect(node(id).position).toEqual({ x: 500, y: 205 });
+    expect(useCanvasStore.getState().edges[0]).toMatchObject({ source: a, target: id });
+  });
+
+  it("creates an upstream node connected into the target", () => {
+    const a = add("note", 0, 0);
+    useCanvasStore.getState().selectNodes([]);
+    const id = useCanvasStore.getState().addConnectedNode(
+      "text",
+      { x: 500, y: 300 },
+      { fromNodeId: a, fromHandleType: "target" },
+    );
+    expect(node(id).position).toEqual({ x: 260, y: 245 });
+    expect(useCanvasStore.getState().edges[0]).toMatchObject({ source: id, target: a });
+  });
+});
+
 describe("history", () => {
   it("undoes and redoes an added node", () => {
     add("note", 0, 0);

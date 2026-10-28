@@ -9,6 +9,10 @@ export type ContextMenuState = {
   flow: XYPosition;
   targetIds: string[];
   hasGroup: boolean;
+  connection?: {
+    fromNodeId: string;
+    fromHandleType: "source" | "target";
+  };
 };
 
 type ContextMenuProps = {
@@ -27,6 +31,7 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
 export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   const addNode = useCanvasStore((state) => state.addNode);
+  const addConnectedNode = useCanvasStore((state) => state.addConnectedNode);
   const selectNodes = useCanvasStore((state) => state.selectNodes);
   const duplicateSelected = useCanvasStore((state) => state.duplicateSelected);
   const removeSelected = useCanvasStore((state) => state.removeSelected);
@@ -60,9 +65,17 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
   };
 
   const selectTargets = () => selectNodes(menu.targetIds);
+  const addItems = menu.connection
+    ? ADD_ITEMS.filter((item) => item.kind !== "group")
+    : ADD_ITEMS;
+
+  const handleAdd = (kind: NodeKind) => {
+    if (menu.connection) addConnectedNode(kind, menu.flow, menu.connection);
+    else addNode(kind, menu.flow);
+  };
 
   const width = 208;
-  const height = 430;
+  const height = menu.connection ? 260 : 430;
   const left = Math.min(menu.x, window.innerWidth - width - 8);
   const top = Math.min(menu.y, window.innerHeight - height - 8);
 
@@ -74,67 +87,87 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
       style={{ left: Math.max(8, left), top: Math.max(8, top) }}
       onContextMenu={(event) => event.preventDefault()}
     >
-      {menu.targetIds.length > 0 ? (
+      {menu.connection ? (
         <>
           <div className="context-label">
-            {menu.targetIds.length === 1 ? "1 node selected" : `${menu.targetIds.length} nodes selected`}
+            {menu.connection.fromHandleType === "source" ? "Add downstream node" : "Add upstream node"}
           </div>
-          <button type="button" role="menuitem" onClick={() => run(() => {
-            selectTargets();
-            duplicateSelected();
-          })}>
-            Duplicate <kbd>Ctrl D</kbd>
-          </button>
-          <button type="button" role="menuitem" onClick={() => run(() => bringToFront(menu.targetIds))}>
-            Bring to front
-          </button>
-          <button type="button" role="menuitem" onClick={() => run(() => sendToBack(menu.targetIds))}>
-            Send to back
-          </button>
-          {menu.targetIds.length >= 2 ? (
-            <button type="button" role="menuitem" onClick={() => run(() => {
-              selectTargets();
-              groupSelected();
-            })}>
-              Group selection
+          {addItems.map((item) => (
+            <button
+              key={item.kind}
+              type="button"
+              role="menuitem"
+              onClick={() => run(() => handleAdd(item.kind))}
+            >
+              {item.label}
             </button>
-          ) : null}
-          {menu.hasGroup ? (
-            <button type="button" role="menuitem" onClick={() => run(() => {
-              selectTargets();
-              ungroupSelected();
-            })}>
-              Ungroup
-            </button>
-          ) : null}
-          <button type="button" role="menuitem" className="context-danger" onClick={() => run(() => {
-            selectTargets();
-            removeSelected();
-          })}>
-            Delete <kbd>Del</kbd>
-          </button>
-          <div className="context-divider" />
+          ))}
         </>
-      ) : null}
+      ) : (
+        <>
+          {menu.targetIds.length > 0 ? (
+            <>
+              <div className="context-label">
+                {menu.targetIds.length === 1 ? "1 node selected" : `${menu.targetIds.length} nodes selected`}
+              </div>
+              <button type="button" role="menuitem" onClick={() => run(() => {
+                selectTargets();
+                duplicateSelected();
+              })}>
+                Duplicate <kbd>Ctrl D</kbd>
+              </button>
+              <button type="button" role="menuitem" onClick={() => run(() => bringToFront(menu.targetIds))}>
+                Bring to front
+              </button>
+              <button type="button" role="menuitem" onClick={() => run(() => sendToBack(menu.targetIds))}>
+                Send to back
+              </button>
+              {menu.targetIds.length >= 2 ? (
+                <button type="button" role="menuitem" onClick={() => run(() => {
+                  selectTargets();
+                  groupSelected();
+                })}>
+                  Group selection
+                </button>
+              ) : null}
+              {menu.hasGroup ? (
+                <button type="button" role="menuitem" onClick={() => run(() => {
+                  selectTargets();
+                  ungroupSelected();
+                })}>
+                  Ungroup
+                </button>
+              ) : null}
+              <button type="button" role="menuitem" className="context-danger" onClick={() => run(() => {
+                selectTargets();
+                removeSelected();
+              })}>
+                Delete <kbd>Del</kbd>
+              </button>
+              <div className="context-divider" />
+            </>
+          ) : null}
 
-      <div className="context-label">Add</div>
-      {ADD_ITEMS.map((item) => (
-        <button
-          key={item.kind}
-          type="button"
-          role="menuitem"
-          onClick={() => run(() => addNode(item.kind, menu.flow))}
-        >
-          {item.label}
-        </button>
-      ))}
-      <div className="context-divider" />
-      <button type="button" role="menuitem" onClick={() => run(paste)} disabled={!hasClipboard}>
-        Paste <kbd>Ctrl V</kbd>
-      </button>
-      <button type="button" role="menuitem" onClick={() => run(onFitView)}>
-        Fit view
-      </button>
+          <div className="context-label">Add</div>
+          {addItems.map((item) => (
+            <button
+              key={item.kind}
+              type="button"
+              role="menuitem"
+              onClick={() => run(() => handleAdd(item.kind))}
+            >
+              {item.label}
+            </button>
+          ))}
+          <div className="context-divider" />
+          <button type="button" role="menuitem" onClick={() => run(paste)} disabled={!hasClipboard}>
+            Paste <kbd>Ctrl V</kbd>
+          </button>
+          <button type="button" role="menuitem" onClick={() => run(onFitView)}>
+            Fit view
+          </button>
+        </>
+      )}
     </div>
   );
 }

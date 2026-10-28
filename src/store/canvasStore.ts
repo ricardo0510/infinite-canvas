@@ -212,6 +212,13 @@ type CanvasState = {
   onNodesChange: (changes: NodeChange<CanvasNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<CanvasEdge>[]) => void;
   onConnect: (connection: Connection) => void;
+  isValidConnection: (connection: Connection | CanvasEdge) => boolean;
+  removeEdge: (id: string) => void;
+  addConnectedNode: (
+    kind: NodeKind,
+    position: XYPosition,
+    connection: { fromNodeId: string; fromHandleType: "source" | "target" },
+  ) => string;
   commit: () => void;
   addNode: (kind: NodeKind, position: XYPosition) => string;
   addNote: (position: XYPosition) => string;
@@ -262,8 +269,54 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   onConnect: (connection) => {
     if (!connection.source || !connection.target) return;
+    if (!get().isValidConnection(connection)) return;
     get().commit();
     set({ edges: addEdge(defaultEdge(connection), get().edges) });
+  },
+
+  isValidConnection: (connection) => {
+    const { source, target } = connection;
+    if (!source || !target || source === target) return false;
+    const { nodes, edges } = get();
+    if (!nodes.some((node) => node.id === source) || !nodes.some((node) => node.id === target)) {
+      return false;
+    }
+    const handle = (value: string | null | undefined) => value ?? null;
+    return !edges.some(
+      (edge) =>
+        edge.source === source &&
+        edge.target === target &&
+        handle(edge.sourceHandle) === handle(connection.sourceHandle) &&
+        handle(edge.targetHandle) === handle(connection.targetHandle),
+    );
+  },
+
+  removeEdge: (id) => {
+    const { edges } = get();
+    if (!edges.some((edge) => edge.id === id)) return;
+    get().commit();
+    set({ edges: edges.filter((edge) => edge.id !== id) });
+  },
+
+  addConnectedNode: (kind, position, connection) => {
+    const size = DEFAULT_SIZE[kind];
+    const createPosition =
+      connection.fromHandleType === "source"
+        ? { x: position.x, y: position.y - size.height / 2 }
+        : { x: position.x - size.width, y: position.y - size.height / 2 };
+    get().commit();
+    const node = createNode(kind, createPosition);
+    const edge = defaultEdge({
+      source: connection.fromHandleType === "source" ? connection.fromNodeId : node.id,
+      target: connection.fromHandleType === "source" ? node.id : connection.fromNodeId,
+      sourceHandle: null,
+      targetHandle: null,
+    });
+    set({
+      nodes: [...get().nodes.map((item) => ({ ...item, selected: false })), node],
+      edges: addEdge(edge, get().edges),
+    });
+    return node.id;
   },
 
   commit: () => {

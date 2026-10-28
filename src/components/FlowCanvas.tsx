@@ -8,8 +8,10 @@ import {
   useReactFlow,
   useStoreApi,
   ViewportPortal,
+  type EdgeTypes,
   type NodeChange,
   type NodeTypes,
+  type OnConnectEnd,
   type OnNodeDrag,
 } from "@xyflow/react";
 import { useCallback, useEffect, useState, type MouseEvent } from "react";
@@ -21,6 +23,7 @@ import type { CanvasNode, NoteColor } from "../types";
 import { CanvasControls } from "./CanvasControls";
 import { ContextMenu, type ContextMenuState } from "./ContextMenu";
 import { EmptyState } from "./EmptyState";
+import { CanvasEdge } from "./edges/CanvasEdge";
 import { SelectionToolbar } from "./SelectionToolbar";
 import { StatusBar } from "./StatusBar";
 import { GroupNode } from "./nodes/GroupNode";
@@ -34,6 +37,10 @@ const nodeTypes = {
   image: ImageNode,
   group: GroupNode,
 } satisfies NodeTypes;
+
+// Override the built-in smoothstep edge so every existing edge gets the
+// hover delete affordance without a schema migration.
+const edgeTypes = { smoothstep: CanvasEdge } satisfies EdgeTypes;
 
 const edgeOptions = {
   type: "smoothstep",
@@ -49,12 +56,21 @@ function isEditableTarget(target: EventTarget | null): boolean {
   return Boolean(target.closest("input, textarea, [contenteditable='true']"));
 }
 
+function eventPoint(
+  event: globalThis.MouseEvent | globalThis.TouchEvent,
+): { x: number; y: number } | null {
+  if ("clientX" in event) return { x: event.clientX, y: event.clientY };
+  const touch = event.changedTouches[0] ?? event.touches[0];
+  return touch ? { x: touch.clientX, y: touch.clientY } : null;
+}
+
 export function FlowCanvas() {
   const nodes = useCanvasStore((state) => state.nodes);
   const edges = useCanvasStore((state) => state.edges);
   const storeOnNodesChange = useCanvasStore((state) => state.onNodesChange);
   const onEdgesChange = useCanvasStore((state) => state.onEdgesChange);
   const onConnect = useCanvasStore((state) => state.onConnect);
+  const isValidConnection = useCanvasStore((state) => state.isValidConnection);
   const commit = useCanvasStore((state) => state.commit);
   const addNote = useCanvasStore((state) => state.addNote);
   const raiseNode = useCanvasStore((state) => state.raiseNode);
@@ -175,15 +191,47 @@ export function FlowCanvas() {
     [flowStore],
   );
 
+  // Dropping a connection on empty canvas opens the add-node menu and connects
+  // the new node in the direction the user dragged.
+  const handleConnectEnd: OnConnectEnd = useCallback(
+    (event, state) => {
+      if (!state.fromNode || state.toNode) return;
+      const point = eventPoint(event);
+      if (!point) return;
+      const element = document.elementFromPoint(point.x, point.y);
+      if (!element || !element.closest(".canvas")) return;
+      if (
+        element.closest(
+          ".react-flow__node, .react-flow__edge, .react-flow__panel, .toolbar, .canvas-controls, .statusbar, .selection-toolbar, .help-modal, .context-menu, .modal-backdrop, .empty-state",
+        )
+      ) {
+        return;
+      }
+      const fromHandleType = state.fromHandle?.type === "target" ? "target" : "source";
+      setMenu({
+        x: point.x,
+        y: point.y,
+        flow: screenToFlowPosition(point),
+        targetIds: [],
+        hasGroup: false,
+        connection: { fromNodeId: state.fromNode.id, fromHandleType },
+      });
+    },
+    [screenToFlowPosition],
+  );
+
   return (
     <div className="canvas" onDoubleClick={handleDoubleClick}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
+        edgeTypes={edgeTypes}
         onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onConnectEnd={handleConnectEnd}
+        isValidConnection={isValidConnection}
         onNodeClick={(_event, node) => raiseNode(node.id)}
         onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}

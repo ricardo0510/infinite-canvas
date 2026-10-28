@@ -12,6 +12,8 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Node types: **Note**, **Text**, **Image**, **Group** (sub-flows)
 - Inline editing, accent colors, free resize with persisted sizes
 - Drag, connect, multi-select, box select, snap to grid (8 px)
+- Duplicate/self connections blocked; hover an edge to delete it
+- Drag a connection into blank canvas to create and connect a node (upstream or downstream)
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
@@ -74,6 +76,7 @@ src/
     KeyboardHelp.tsx      # shortcut cheatsheet
     EmptyState.tsx        # onboarding for an empty canvas
     nodes/                # Note, Text, Image, Group
+    edges/                # Smoothstep edge with hover delete
   hooks/
     useAutoSave.ts        # debounced localStorage writes
     useCanvasShortcuts.ts
