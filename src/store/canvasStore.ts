@@ -6,23 +6,40 @@ import {
   type Connection,
   type EdgeChange,
   type NodeChange,
+  type Viewport,
+  type XYPosition,
 } from "@xyflow/react";
 import { create } from "zustand";
-import { loadSnapshot } from "../lib/storage";
-import type { CanvasEdge, CanvasNode, CanvasSnapshot, NoteColor, NoteData } from "../types";
+import { absolutePosition, byId, DEFAULT_SIZE, descendantIds, nodeRect } from "../lib/geometry";
+import { loadSnapshot, SCHEMA_VERSION } from "../lib/storage";
+import type {
+  AlignKind,
+  CanvasEdge,
+  CanvasNode,
+  CanvasSnapshot,
+  DistributeAxis,
+  GroupData,
+  NodeKind,
+  NoteColor,
+} from "../types";
 
 const HISTORY_LIMIT = 50;
 const PASTE_OFFSET = 36;
+const GROUP_PADDING = 32;
 
 const demo: CanvasSnapshot = {
+  version: SCHEMA_VERSION,
   nodes: [
     {
       id: "welcome",
       type: "note",
       position: { x: 80, y: 120 },
+      width: 260,
+      height: 190,
+      style: { width: 260, height: 190 },
       data: {
         title: "Infinite Canvas",
-        body: "双击空白处添加节点。\n拖拽右侧端口连线。\nCtrl/Cmd + Z 撤销，Ctrl/Cmd + S 保存。",
+        body: "双击空白处添加节点。\n右键打开菜单，拖拽右侧端口连线。\nCtrl/Cmd + Z 撤销，Ctrl/Cmd + S 保存。",
         color: "violet",
       },
     },
@@ -30,9 +47,12 @@ const demo: CanvasSnapshot = {
       id: "idea",
       type: "note",
       position: { x: 460, y: 260 },
+      width: 260,
+      height: 190,
+      style: { width: 260, height: 190 },
       data: {
         title: "A small idea",
-        body: "每个节点都是一张卡片，标题和正文可以直接编辑。\n右下角可以拉高正文区域。",
+        body: "每个节点都是一张卡片，标题和正文可以直接编辑。\n选中后拖动四角可以调整大小。",
         color: "cyan",
       },
     },
@@ -49,37 +69,98 @@ const demo: CanvasSnapshot = {
   ],
 };
 
-function newId(prefix: "note" | "edge"): string {
-  return `${prefix}-${crypto.randomUUID()}`;
+function newId(prefix: string): string {
+  const uuid = globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
+  return `${prefix}-${uuid}`;
+}
+
+function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
+  const base = {
+    id: newId(kind),
+    position,
+    selected: true,
+    ...DEFAULT_SIZE[kind],
+    style: { ...DEFAULT_SIZE[kind] },
+  };
+  switch (kind) {
+    case "text": {
+      const node: CanvasNode = {
+        ...base,
+        type: "text",
+        data: { text: "Text", color: "emerald", fontSize: 16 },
+      };
+      return node;
+    }
+    case "image": {
+      const node: CanvasNode = {
+        ...base,
+        type: "image",
+        data: { src: "", alt: "" },
+      };
+      return node;
+    }
+    case "group": {
+      const node: CanvasNode = {
+        ...base,
+        type: "group",
+        data: { label: "Group", color: "amber" },
+        zIndex: -1,
+      };
+      return node;
+    }
+    default: {
+      const node: CanvasNode = {
+        ...base,
+        type: "note",
+        data: { title: "Untitled note", body: "", color: "violet" },
+      };
+      return node;
+    }
+  }
 }
 
 function cloneSelection(
   nodes: CanvasNode[],
   edges: CanvasEdge[],
-  offset: { x: number; y: number },
+  offset: XYPosition,
 ): CanvasSnapshot {
   const idMap = new Map<string, string>();
+  for (const node of nodes) idMap.set(node.id, newId(node.type ?? "node"));
+
   const nextNodes = nodes.map((node) => {
-    const id = newId("note");
-    idMap.set(node.id, id);
-    return {
+    const id = idMap.get(node.id) as string;
+    const copy = {
       ...node,
       id,
-      position: { x: node.position.x + offset.x, y: node.position.y + offset.y },
       selected: true,
       data: { ...node.data },
-    };
+      style: node.style ? { ...node.style } : undefined,
+      position: { ...node.position },
+    } as CanvasNode;
+    if (node.parentId && idMap.has(node.parentId)) {
+      copy.parentId = idMap.get(node.parentId);
+    } else {
+      delete copy.parentId;
+      delete copy.extent;
+      copy.position = {
+        x: node.position.x + offset.x,
+        y: node.position.y + offset.y,
+      };
+    }
+    return copy;
   });
+
   const nextEdges = edges
     .filter((edge) => idMap.has(edge.source) && idMap.has(edge.target))
     .map((edge) => ({
       ...edge,
       id: newId("edge"),
-      source: idMap.get(edge.source) ?? edge.source,
-      target: idMap.get(edge.target) ?? edge.target,
+      source: idMap.get(edge.source) as string,
+      target: idMap.get(edge.target) as string,
       selected: false,
     }));
-  return { nodes: nextNodes, edges: nextEdges };
+
+  return { version: SCHEMA_VERSION, nodes: nextNodes, edges: nextEdges };
 }
 
 function defaultEdge(connection: Connection): CanvasEdge {
@@ -92,18 +173,55 @@ function defaultEdge(connection: Connection): CanvasEdge {
   };
 }
 
+/** Selected nodes, minus any whose ancestor group is also selected. */
+function topLevelSelection(nodes: CanvasNode[]): CanvasNode[] {
+  const index = byId(nodes);
+  return nodes.filter((node) => {
+    if (!node.selected) return false;
+    let parentId = node.parentId;
+    const seen = new Set<string>([node.id]);
+    while (parentId && !seen.has(parentId)) {
+      seen.add(parentId);
+      const parent = index.get(parentId);
+      if (!parent) break;
+      if (parent.selected) return false;
+      parentId = parent.parentId;
+    }
+    return true;
+  });
+}
+
+function moveTo(node: CanvasNode, absolute: XYPosition, index: Map<string, CanvasNode>): CanvasNode {
+  if (!node.parentId) return { ...node, position: absolute };
+  const parent = index.get(node.parentId);
+  if (!parent) return { ...node, position: absolute };
+  const parentPosition = absolutePosition(parent, index);
+  return {
+    ...node,
+    position: { x: absolute.x - parentPosition.x, y: absolute.y - parentPosition.y },
+  };
+}
+
 type CanvasState = {
   nodes: CanvasNode[];
   edges: CanvasEdge[];
   past: CanvasSnapshot[];
   future: CanvasSnapshot[];
   clipboard: CanvasSnapshot | null;
+  viewport: Viewport | null;
   onNodesChange: (changes: NodeChange<CanvasNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<CanvasEdge>[]) => void;
   onConnect: (connection: Connection) => void;
   commit: () => void;
-  addNote: (position: { x: number; y: number }) => string;
-  updateNote: (id: string, patch: Partial<Pick<NoteData, "title" | "body" | "color">>) => void;
+  addNode: (kind: NodeKind, position: XYPosition) => string;
+  addNote: (position: XYPosition) => string;
+  updateNodeData: (id: string, patch: Record<string, unknown>) => void;
+  setViewport: (viewport: Viewport) => void;
+  selectNodes: (ids: string[]) => void;
+  selectAll: () => void;
+  clearSelection: () => void;
+  nudgeSelected: (dx: number, dy: number) => void;
+  raiseNode: (id: string) => void;
   removeSelected: () => void;
   copySelected: () => void;
   duplicateSelected: () => void;
@@ -113,6 +231,13 @@ type CanvasState = {
   clear: () => void;
   importSnapshot: (snapshot: CanvasSnapshot) => void;
   getSnapshot: () => CanvasSnapshot;
+  bringToFront: (ids: string[]) => void;
+  sendToBack: (ids: string[]) => void;
+  alignSelected: (kind: AlignKind) => void;
+  distributeSelected: (axis: DistributeAxis) => void;
+  groupSelected: () => string | null;
+  ungroupSelected: () => void;
+  autoLayout: () => Promise<void>;
 };
 
 const initial = loadSnapshot() ?? demo;
@@ -123,6 +248,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   past: [],
   future: [],
   clipboard: null,
+  viewport: initial.viewport ?? null,
 
   onNodesChange: (changes) => {
     if (changes.some((change) => change.type === "remove")) get().commit();
@@ -145,41 +271,109 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const last = past[past.length - 1];
     if (last && last.nodes === nodes && last.edges === edges) return;
     set({
-      past: [...past.slice(-(HISTORY_LIMIT - 1)), { nodes, edges }],
+      past: [...past.slice(-(HISTORY_LIMIT - 1)), { version: SCHEMA_VERSION, nodes, edges }],
       future: [],
     });
   },
 
-  addNote: (position) => {
+  addNode: (kind, position) => {
     get().commit();
-    const id = newId("note");
-    const node: CanvasNode = {
-      id,
-      type: "note",
-      position,
-      selected: true,
-      data: { title: "Untitled note", body: "", color: "violet" },
-    };
+    const node = createNode(kind, position);
     set({ nodes: [...get().nodes.map((item) => ({ ...item, selected: false })), node] });
-    return id;
+    return node.id;
   },
 
-  updateNote: (id, patch) => {
+  addNote: (position) => get().addNode("note", position),
+
+  updateNodeData: (id, patch) => {
     set({
       nodes: get().nodes.map((node) =>
-        node.id === id ? { ...node, data: { ...node.data, ...patch } } : node,
+        node.id === id ? ({ ...node, data: { ...node.data, ...patch } } as CanvasNode) : node,
       ),
+    });
+  },
+
+  setViewport: (viewport) => {
+    const current = get().viewport;
+    if (current && current.x === viewport.x && current.y === viewport.y && current.zoom === viewport.zoom) {
+      return;
+    }
+    set({ viewport });
+  },
+
+  selectNodes: (ids) => {
+    const selected = new Set(ids);
+    set({ nodes: get().nodes.map((node) => ({ ...node, selected: selected.has(node.id) })) });
+  },
+
+  selectAll: () => {
+    const { nodes } = get();
+    if (nodes.length === 0) return;
+    const allSelected = nodes.every((node) => node.selected);
+    set({
+      nodes: nodes.map((node) => ({ ...node, selected: !allSelected })),
+      edges: get().edges.map((edge) => (edge.selected ? { ...edge, selected: false } : edge)),
+    });
+  },
+
+  clearSelection: () => {
+    const { nodes, edges } = get();
+    const hasSelection = nodes.some((node) => node.selected) || edges.some((edge) => edge.selected);
+    if (!hasSelection) return;
+    set({
+      nodes: nodes.map((node) => (node.selected ? { ...node, selected: false } : node)),
+      edges: edges.map((edge) => (edge.selected ? { ...edge, selected: false } : edge)),
+    });
+  },
+
+  nudgeSelected: (dx, dy) => {
+    const { nodes } = get();
+    const selected = topLevelSelection(nodes);
+    if (selected.length === 0) return;
+    get().commit();
+    const selectedIds = new Set(selected.map((node) => node.id));
+    set({
+      nodes: nodes.map((node) =>
+        selectedIds.has(node.id)
+          ? { ...node, position: { x: node.position.x + dx, y: node.position.y + dy } }
+          : node,
+      ),
+    });
+  },
+
+  raiseNode: (id) => {
+    const { nodes } = get();
+    const node = nodes.find((item) => item.id === id);
+    if (!node) return;
+    if (node.type === "group") {
+      const minZ = Math.min(0, ...nodes.map((item) => item.zIndex ?? 0));
+      if ((node.zIndex ?? 0) <= minZ) return;
+      set({
+        nodes: nodes.map((item) => (item.id === id ? { ...item, zIndex: minZ - 1 } : item)),
+      });
+      return;
+    }
+    const maxZ = Math.max(0, ...nodes.map((item) => item.zIndex ?? 0));
+    const topCount = nodes.filter((item) => (item.zIndex ?? 0) === maxZ).length;
+    if ((node.zIndex ?? 0) === maxZ && topCount === 1) return;
+    set({
+      nodes: nodes.map((item) => (item.id === id ? { ...item, zIndex: maxZ + 1 } : item)),
     });
   },
 
   removeSelected: () => {
     const { nodes, edges } = get();
-    const selected = new Set(nodes.filter((node) => node.selected).map((node) => node.id));
-    if (selected.size === 0) return;
+    const selected = nodes.filter((node) => node.selected).map((node) => node.id);
+    const selectedEdges = new Set(edges.filter((edge) => edge.selected).map((edge) => edge.id));
+    if (selected.length === 0 && selectedEdges.size === 0) return;
     get().commit();
+    const removed = descendantIds(selected, nodes);
     set({
-      nodes: nodes.filter((node) => !selected.has(node.id)),
-      edges: edges.filter((edge) => !selected.has(edge.source) && !selected.has(edge.target)),
+      nodes: nodes.filter((node) => !removed.has(node.id)),
+      edges: edges.filter(
+        (edge) =>
+          !selectedEdges.has(edge.id) && !removed.has(edge.source) && !removed.has(edge.target),
+      ),
     });
   },
 
@@ -187,10 +381,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const { nodes, edges } = get();
     const selected = nodes.filter((node) => node.selected);
     if (selected.length === 0) return;
-    const ids = new Set(selected.map((node) => node.id));
+    const ids = descendantIds(
+      selected.map((node) => node.id),
+      nodes,
+    );
     set({
       clipboard: {
-        nodes: selected,
+        version: SCHEMA_VERSION,
+        nodes: nodes.filter((node) => ids.has(node.id)),
         edges: edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)),
       },
     });
@@ -198,12 +396,17 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
 
   duplicateSelected: () => {
     const { nodes, edges } = get();
-    const selected = nodes.filter((node) => node.selected);
-    if (selected.length === 0) return;
-    const ids = new Set(selected.map((node) => node.id));
-    const copiedEdges = edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target));
+    const ids = descendantIds(
+      nodes.filter((node) => node.selected).map((node) => node.id),
+      nodes,
+    );
+    if (ids.size === 0) return;
     get().commit();
-    const clone = cloneSelection(selected, copiedEdges, { x: PASTE_OFFSET, y: PASTE_OFFSET });
+    const clone = cloneSelection(
+      nodes.filter((node) => ids.has(node.id)),
+      edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)),
+      { x: PASTE_OFFSET, y: PASTE_OFFSET },
+    );
     set({
       nodes: [...nodes.map((node) => ({ ...node, selected: false })), ...clone.nodes],
       edges: [...edges, ...clone.edges],
@@ -214,7 +417,10 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     const { clipboard } = get();
     if (!clipboard || clipboard.nodes.length === 0) return;
     get().commit();
-    const clone = cloneSelection(clipboard.nodes, clipboard.edges, { x: PASTE_OFFSET, y: PASTE_OFFSET });
+    const clone = cloneSelection(clipboard.nodes, clipboard.edges, {
+      x: PASTE_OFFSET,
+      y: PASTE_OFFSET,
+    });
     set({
       nodes: [...get().nodes.map((node) => ({ ...node, selected: false })), ...clone.nodes],
       edges: [...get().edges, ...clone.edges],
@@ -229,7 +435,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: previous.nodes,
       edges: previous.edges,
       past: past.slice(0, -1),
-      future: [{ nodes, edges }, ...future].slice(0, HISTORY_LIMIT),
+      future: [{ version: SCHEMA_VERSION, nodes, edges }, ...future].slice(0, HISTORY_LIMIT),
     });
   },
 
@@ -240,12 +446,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     set({
       nodes: next.nodes,
       edges: next.edges,
-      past: [...past, { nodes, edges }].slice(-HISTORY_LIMIT),
+      past: [...past, { version: SCHEMA_VERSION, nodes, edges }].slice(-HISTORY_LIMIT),
       future: future.slice(1),
     });
   },
 
   clear: () => {
+    if (get().nodes.length === 0 && get().edges.length === 0) return;
     get().commit();
     set({ nodes: [], edges: [] });
   },
@@ -255,10 +462,214 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     set({
       nodes: snapshot.nodes.map((node) => ({ ...node, selected: false })),
       edges: snapshot.edges.map((edge) => ({ ...edge, selected: false })),
+      ...(snapshot.viewport ? { viewport: snapshot.viewport } : {}),
     });
   },
 
-  getSnapshot: () => ({ nodes: get().nodes, edges: get().edges }),
+  getSnapshot: () => {
+    const { nodes, edges, viewport } = get();
+    return {
+      version: SCHEMA_VERSION,
+      nodes,
+      edges,
+      ...(viewport ? { viewport } : {}),
+    };
+  },
+
+  bringToFront: (ids) => {
+    if (ids.length === 0) return;
+    get().commit();
+    const set_ = descendantIds(ids, get().nodes);
+    const maxZ = Math.max(0, ...get().nodes.map((node) => node.zIndex ?? 0));
+    let offset = 1;
+    set({
+      nodes: get().nodes.map((node) =>
+        set_.has(node.id) ? { ...node, zIndex: maxZ + offset++ } : node,
+      ),
+    });
+  },
+
+  sendToBack: (ids) => {
+    if (ids.length === 0) return;
+    get().commit();
+    const set_ = descendantIds(ids, get().nodes);
+    const minZ = Math.min(0, ...get().nodes.map((node) => node.zIndex ?? 0));
+    let offset = set_.size;
+    set({
+      nodes: get().nodes.map((node) =>
+        set_.has(node.id) ? { ...node, zIndex: minZ - offset-- } : node,
+      ),
+    });
+  },
+
+  alignSelected: (kind) => {
+    const { nodes } = get();
+    const selected = topLevelSelection(nodes);
+    if (selected.length < 2) return;
+    const index = byId(nodes);
+    const rects = selected.map((node) => nodeRect(node, index));
+    const left = Math.min(...rects.map((rect) => rect.x));
+    const top = Math.min(...rects.map((rect) => rect.y));
+    const right = Math.max(...rects.map((rect) => rect.x + rect.width));
+    const bottom = Math.max(...rects.map((rect) => rect.y + rect.height));
+    const centerX = (left + right) / 2;
+    const centerY = (top + bottom) / 2;
+    get().commit();
+    const selectedIds = new Set(selected.map((node) => node.id));
+    set({
+      nodes: nodes.map((node) => {
+        if (!selectedIds.has(node.id)) return node;
+        const rect = nodeRect(node, index);
+        let x = rect.x;
+        let y = rect.y;
+        if (kind === "left") x = left;
+        if (kind === "centerX") x = centerX - rect.width / 2;
+        if (kind === "right") x = right - rect.width;
+        if (kind === "top") y = top;
+        if (kind === "centerY") y = centerY - rect.height / 2;
+        if (kind === "bottom") y = bottom - rect.height;
+        return moveTo(node, { x, y }, index);
+      }),
+    });
+  },
+
+  distributeSelected: (axis) => {
+    const { nodes } = get();
+    const selected = topLevelSelection(nodes);
+    if (selected.length < 3) return;
+    const index = byId(nodes);
+    const rects = selected
+      .map((node) => ({ node, rect: nodeRect(node, index) }))
+      .sort((a, b) => (axis === "x" ? a.rect.x - b.rect.x : a.rect.y - b.rect.y));
+
+    const first = rects[0].rect;
+    const last = rects[rects.length - 1].rect;
+    const span =
+      axis === "x" ? last.x + last.width - first.x : last.y + last.height - first.y;
+    const totalSize = rects.reduce(
+      (sum, item) => sum + (axis === "x" ? item.rect.width : item.rect.height),
+      0,
+    );
+    const gap = (span - totalSize) / (rects.length - 1);
+    if (!Number.isFinite(gap)) return;
+
+    get().commit();
+    const updates = new Map<string, XYPosition>();
+    let cursor = axis === "x" ? first.x : first.y;
+    for (const item of rects) {
+      const size = axis === "x" ? item.rect.width : item.rect.height;
+      updates.set(
+        item.node.id,
+        axis === "x" ? { x: cursor, y: item.rect.y } : { x: item.rect.x, y: cursor },
+      );
+      cursor += size + gap;
+    }
+    set({
+      nodes: nodes.map((node) => {
+        const position_ = updates.get(node.id);
+        return position_ ? moveTo(node, position_, index) : node;
+      }),
+    });
+  },
+
+  groupSelected: () => {
+    const { nodes } = get();
+    const selected = topLevelSelection(nodes);
+    if (selected.length < 2) return null;
+    const index = byId(nodes);
+    const rects = selected.map((node) => nodeRect(node, index));
+    const left = Math.min(...rects.map((rect) => rect.x)) - GROUP_PADDING;
+    const top = Math.min(...rects.map((rect) => rect.y)) - GROUP_PADDING;
+    const right = Math.max(...rects.map((rect) => rect.x + rect.width)) + GROUP_PADDING;
+    const bottom = Math.max(...rects.map((rect) => rect.y + rect.height)) + GROUP_PADDING;
+    const groupId = newId("group");
+    const width = right - left;
+    const height = bottom - top;
+    const minZ = Math.min(0, ...nodes.map((node) => node.zIndex ?? 0)) - 1;
+
+    const group: CanvasNode = {
+      id: groupId,
+      type: "group",
+      position: { x: left, y: top },
+      width,
+      height,
+      style: { width, height },
+      data: { label: `${selected.length} items`, color: "amber" } satisfies GroupData,
+      zIndex: minZ,
+      selected: true,
+    };
+
+    const selectedIds = new Set(selected.map((node) => node.id));
+    const next = nodes.map((node) => {
+      if (!selectedIds.has(node.id)) return node;
+      const absolute = absolutePosition(node, index);
+      return {
+        ...node,
+        parentId: groupId,
+        extent: "parent" as const,
+        selected: false,
+        position: { x: absolute.x - left, y: absolute.y - top },
+      };
+    });
+
+    const firstIndex = next.findIndex((node) => selectedIds.has(node.id));
+    const withGroup = [...next];
+    withGroup.splice(firstIndex < 0 ? withGroup.length : firstIndex, 0, group);
+
+    get().commit();
+    set({ nodes: withGroup });
+    return groupId;
+  },
+
+  ungroupSelected: () => {
+    const { nodes, edges } = get();
+    const groups = nodes.filter((node) => node.selected && node.type === "group");
+    if (groups.length === 0) return;
+    const index = byId(nodes);
+    const groupIds = new Set(groups.map((group) => group.id));
+    get().commit();
+
+    const next = nodes
+      .filter((node) => !groupIds.has(node.id))
+      .map((node) => {
+        if (!node.parentId || !groupIds.has(node.parentId)) return node;
+        const absolute = absolutePosition(node, index);
+        const group = index.get(node.parentId);
+        const outerId = group?.parentId;
+        if (outerId) {
+          const outer = index.get(outerId);
+          const outerPosition = outer ? absolutePosition(outer, index) : { x: 0, y: 0 };
+          return {
+            ...node,
+            parentId: outerId,
+            position: { x: absolute.x - outerPosition.x, y: absolute.y - outerPosition.y },
+            selected: true,
+          };
+        }
+        return {
+          ...node,
+          parentId: undefined,
+          extent: undefined,
+          position: absolute,
+          selected: true,
+        } as CanvasNode;
+      });
+
+    const remaining = new Set(next.map((node) => node.id));
+    set({
+      nodes: next,
+      edges: edges.filter((edge) => remaining.has(edge.source) && remaining.has(edge.target)),
+    });
+  },
+
+  autoLayout: async () => {
+    if (get().nodes.length === 0) return;
+    // Dagre is only needed for this action, so keep it out of the initial bundle.
+    const { layoutNodes } = await import("../lib/layout");
+    const { nodes, edges } = get();
+    get().commit();
+    set({ nodes: layoutNodes(nodes, edges) });
+  },
 }));
 
 export const NOTE_COLORS: Record<NoteColor, string> = {

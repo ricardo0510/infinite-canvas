@@ -2,26 +2,43 @@ import { useRef } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { exportSnapshot, parseSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
+import { useUiStore } from "../store/uiStore";
+import type { NodeKind } from "../types";
+
+const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
+  { kind: "note", label: "Note", glyph: "+", title: "Add a note" },
+  { kind: "text", label: "Text", glyph: "T", title: "Add text" },
+  { kind: "image", label: "Image", glyph: "▣", title: "Add an image" },
+  { kind: "group", label: "Group", glyph: "▢", title: "Add a group" },
+];
 
 export function Toolbar() {
   const fileInput = useRef<HTMLInputElement>(null);
-  const { fitView, screenToFlowPosition } = useReactFlow();
-  const addNote = useCanvasStore((state) => state.addNote);
+  const { fitView, screenToFlowPosition, setViewport } = useReactFlow();
+  const addNode = useCanvasStore((state) => state.addNode);
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
   const clear = useCanvasStore((state) => state.clear);
   const importSnapshot = useCanvasStore((state) => state.importSnapshot);
   const getSnapshot = useCanvasStore((state) => state.getSnapshot);
+  const autoLayout = useCanvasStore((state) => state.autoLayout);
+  const snapToGrid = useUiStore((state) => state.snapToGrid);
+  const toggleSnap = useUiStore((state) => state.toggleSnap);
+  const setHelpOpen = useUiStore((state) => state.setHelpOpen);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
+  const hasNodes = useCanvasStore((state) => state.nodes.length > 0);
 
-  const handleAdd = () => {
+  const centerPosition = () => {
     const rect = document.querySelector<HTMLElement>(".canvas")?.getBoundingClientRect();
-    const position = screenToFlowPosition({
+    return screenToFlowPosition({
       x: (rect?.left ?? 0) + (rect?.width ?? window.innerWidth) / 2,
       y: (rect?.top ?? 0) + (rect?.height ?? window.innerHeight) / 2,
     });
-    addNote(position);
+  };
+
+  const handleAdd = (kind: NodeKind) => {
+    addNode(kind, centerPosition());
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,23 +53,43 @@ export function Toolbar() {
         return;
       }
       importSnapshot(snapshot);
-      window.setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 0);
+      window.setTimeout(() => {
+        if (snapshot.viewport) setViewport(snapshot.viewport);
+        else fitView({ padding: 0.2, duration: 300 });
+      }, 0);
     } catch {
       window.alert("Could not read that file as JSON.");
     }
   };
 
   const handleClear = () => {
-    if (useCanvasStore.getState().nodes.length === 0) return;
+    if (!hasNodes) return;
     if (window.confirm("Clear the canvas? This can be undone with Ctrl/Cmd + Z.")) clear();
+  };
+
+  const handleLayout = () => {
+    void autoLayout().then(() => {
+      window.setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 0);
+    });
   };
 
   return (
     <div className="toolbar">
-      <button type="button" className="tool-button tool-primary" onClick={handleAdd} title="Add a note (double-click the canvas)">
-        <span aria-hidden="true">+</span>
-        <span className="tool-label">Note</span>
-      </button>
+      <div className="tool-cluster">
+        {ADD_ITEMS.map((item) => (
+          <button
+            key={item.kind}
+            type="button"
+            className={`tool-button${item.kind === "note" ? " tool-primary" : ""}`}
+            onClick={() => handleAdd(item.kind)}
+            title={item.title}
+          >
+            <span aria-hidden="true">{item.glyph}</span>
+            <span className="tool-label">{item.label}</span>
+          </button>
+        ))}
+      </div>
+      <span className="tool-divider" />
       <button type="button" className="tool-button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl/Cmd + Z)">
         <span aria-hidden="true">↶</span>
         <span className="tool-label">Undo</span>
@@ -61,10 +98,31 @@ export function Toolbar() {
         <span aria-hidden="true">↷</span>
         <span className="tool-label">Redo</span>
       </button>
-      <button type="button" className="tool-button" onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })} title="Fit view">
-        <span aria-hidden="true">⌖</span>
+      <span className="tool-divider" />
+      <button type="button" className="tool-button" onClick={handleLayout} disabled={!hasNodes} title="Auto layout (Ctrl/Cmd + L)">
+        <span aria-hidden="true">⤢</span>
+        <span className="tool-label">Layout</span>
+      </button>
+      <button
+        type="button"
+        className={`tool-button${snapToGrid ? " is-on" : ""}`}
+        onClick={toggleSnap}
+        aria-pressed={snapToGrid}
+        title={`Snap to grid: ${snapToGrid ? "on" : "off"}`}
+      >
+        <span aria-hidden="true">⌗</span>
+        <span className="tool-label">Snap</span>
+      </button>
+      <button
+        type="button"
+        className="tool-button"
+        onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
+        title="Fit view"
+      >
+        <span aria-hidden="true">⛶</span>
         <span className="tool-label">Fit</span>
       </button>
+      <span className="tool-divider" />
       <button type="button" className="tool-button" onClick={() => exportSnapshot(getSnapshot())} title="Export JSON">
         <span aria-hidden="true">↓</span>
         <span className="tool-label">Export</span>
@@ -73,7 +131,11 @@ export function Toolbar() {
         <span aria-hidden="true">↑</span>
         <span className="tool-label">Import</span>
       </button>
-      <button type="button" className="tool-button tool-danger" onClick={handleClear} title="Clear canvas">
+      <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="Keyboard shortcuts (?)">
+        <span aria-hidden="true">?</span>
+        <span className="tool-label">Shortcuts</span>
+      </button>
+      <button type="button" className="tool-button tool-danger" onClick={handleClear} disabled={!hasNodes} title="Clear canvas">
         <span aria-hidden="true">×</span>
         <span className="tool-label">Clear</span>
       </button>

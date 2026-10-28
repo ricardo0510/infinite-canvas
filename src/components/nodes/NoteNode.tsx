@@ -1,10 +1,12 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react";
+import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
 import { useRef, type CSSProperties } from "react";
+import { MIN_SIZE } from "../../lib/geometry";
 import { NOTE_COLORS, useCanvasStore } from "../../store/canvasStore";
-import type { CanvasNode, NoteColor } from "../../types";
+import type { NoteNodeModel } from "../../types";
+import { NodeColors } from "./NodeColors";
 
-export function NoteNode({ id, data, selected }: NodeProps<CanvasNode>) {
-  const updateNote = useCanvasStore((state) => state.updateNote);
+export function NoteNode({ id, data, selected }: NodeProps<NoteNodeModel>) {
+  const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const commit = useCanvasStore((state) => state.commit);
   const editing = useRef(false);
   const accent = NOTE_COLORS[data.color] ?? NOTE_COLORS.violet;
@@ -14,7 +16,7 @@ export function NoteNode({ id, data, selected }: NodeProps<CanvasNode>) {
       commit();
       editing.current = true;
     }
-    updateNote(id, patch);
+    updateNodeData(id, patch);
   };
 
   return (
@@ -22,6 +24,12 @@ export function NoteNode({ id, data, selected }: NodeProps<CanvasNode>) {
       className={`note-node${selected ? " is-selected" : ""}`}
       style={{ "--note-accent": accent } as CSSProperties}
     >
+      <NodeResizer
+        isVisible={selected}
+        minWidth={MIN_SIZE.note.width}
+        minHeight={MIN_SIZE.note.height}
+        onResizeStart={() => commit()}
+      />
       <Handle type="target" position={Position.Left} className="note-handle" />
       <div className="note-head">
         <span className="note-dot" />
@@ -35,28 +43,19 @@ export function NoteNode({ id, data, selected }: NodeProps<CanvasNode>) {
           }}
           onChange={(event) => handleEdit({ title: event.target.value })}
         />
-        <div className="note-colors">
-          {(Object.keys(NOTE_COLORS) as NoteColor[]).map((color) => (
-            <button
-              key={color}
-              type="button"
-              className={`nodrag color-dot${data.color === color ? " is-active" : ""}`}
-              style={{ background: NOTE_COLORS[color] }}
-              aria-label={`Use ${color} accent`}
-              onClick={() => {
-                commit();
-                updateNote(id, { color });
-              }}
-            />
-          ))}
-        </div>
+        <NodeColors
+          value={data.color}
+          onChange={(color) => {
+            commit();
+            updateNodeData(id, { color });
+          }}
+        />
       </div>
       <textarea
         className="nodrag nowheel note-body"
         value={data.body}
         placeholder="Write something…"
         aria-label="Note body"
-        rows={4}
         onFocus={() => {
           editing.current = false;
         }}

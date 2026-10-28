@@ -1,5 +1,6 @@
 import { ReactFlowProvider } from "@xyflow/react";
 import { FlowCanvas } from "./components/FlowCanvas";
+import { KeyboardHelp } from "./components/KeyboardHelp";
 import { Toolbar } from "./components/Toolbar";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useCanvasShortcuts } from "./hooks/useCanvasShortcuts";
@@ -24,6 +25,7 @@ function App() {
           <Toolbar />
         </header>
         <FlowCanvas />
+        <KeyboardHelp />
       </div>
     </ReactFlowProvider>
   );

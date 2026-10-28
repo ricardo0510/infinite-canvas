@@ -1,20 +1,39 @@
 import {
   Background,
   BackgroundVariant,
-  Controls,
   MarkerType,
   MiniMap,
   ReactFlow,
+  SelectionMode,
   useReactFlow,
+  useStoreApi,
+  ViewportPortal,
+  type NodeChange,
   type NodeTypes,
+  type OnNodeDrag,
 } from "@xyflow/react";
-import type { MouseEvent } from "react";
+import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { GRID_SIZE } from "../lib/geometry";
+import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
 import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
-import type { NoteColor } from "../types";
-import { NoteNode } from "./nodes/NoteNode";
+import { useUiStore } from "../store/uiStore";
+import type { CanvasNode, NoteColor } from "../types";
+import { CanvasControls } from "./CanvasControls";
+import { ContextMenu, type ContextMenuState } from "./ContextMenu";
+import { EmptyState } from "./EmptyState";
+import { SelectionToolbar } from "./SelectionToolbar";
 import { StatusBar } from "./StatusBar";
+import { GroupNode } from "./nodes/GroupNode";
+import { ImageNode } from "./nodes/ImageNode";
+import { NoteNode } from "./nodes/NoteNode";
+import { TextNode } from "./nodes/TextNode";
 
-const nodeTypes = { note: NoteNode } satisfies NodeTypes;
+const nodeTypes = {
+  note: NoteNode,
+  text: TextNode,
+  image: ImageNode,
+  group: GroupNode,
+} satisfies NodeTypes;
 
 const edgeOptions = {
   type: "smoothstep",
@@ -22,21 +41,94 @@ const edgeOptions = {
   style: { stroke: "#5b6478", strokeWidth: 1.5 },
 };
 
+/** Above this node count the minimap is collapsed automatically (it can be reopened). */
+const MINIMAP_AUTO_HIDE = 60;
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false;
+  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
+}
+
 export function FlowCanvas() {
   const nodes = useCanvasStore((state) => state.nodes);
   const edges = useCanvasStore((state) => state.edges);
-  const onNodesChange = useCanvasStore((state) => state.onNodesChange);
+  const storeOnNodesChange = useCanvasStore((state) => state.onNodesChange);
   const onEdgesChange = useCanvasStore((state) => state.onEdgesChange);
   const onConnect = useCanvasStore((state) => state.onConnect);
   const commit = useCanvasStore((state) => state.commit);
   const addNote = useCanvasStore((state) => state.addNote);
-  const { screenToFlowPosition } = useReactFlow();
+  const raiseNode = useCanvasStore((state) => state.raiseNode);
+  const setViewport = useCanvasStore((state) => state.setViewport);
+  const [initialViewport] = useState(() => useCanvasStore.getState().viewport);
+  const snapToGrid = useUiStore((state) => state.snapToGrid);
+  const showMiniMap = useUiStore((state) => state.showMiniMap);
+  const setMiniMap = useUiStore((state) => state.setMiniMap);
+  const flowStore = useStoreApi();
+  const { screenToFlowPosition, fitView } = useReactFlow();
+  const [menu, setMenu] = useState<ContextMenuState | null>(null);
+  const [guides, setGuides] = useState<Guide[]>([]);
+
+  useEffect(() => {
+    if (nodes.length >= MINIMAP_AUTO_HIDE) setMiniMap(false);
+  }, [nodes.length, setMiniMap]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isEditableTarget(event.target)) return;
+      const mod = event.metaKey || event.ctrlKey;
+      if (mod && event.key === "0") {
+        event.preventDefault();
+        fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 });
+        return;
+      }
+      if (!mod && !event.shiftKey && event.key.toLowerCase() === "f") {
+        const selected = useCanvasStore.getState().nodes.filter((node) => node.selected);
+        if (selected.length === 0) return;
+        event.preventDefault();
+        fitView({
+          nodes: selected.map((node) => ({ id: node.id })),
+          padding: 0.4,
+          duration: 300,
+          maxZoom: 1.25,
+        });
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [fitView]);
+
+  // Keep browser page zoom out of the way; the canvas handles its own zoom.
+  useEffect(() => {
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey || event.metaKey) event.preventDefault();
+    };
+    const zoomKeys = new Set(["+", "=", "-", "_", "0"]);
+    const handleZoomKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.altKey && zoomKeys.has(event.key)) {
+        event.preventDefault();
+      }
+    };
+    window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("keydown", handleZoomKeyDown);
+    return () => {
+      window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("keydown", handleZoomKeyDown);
+    };
+  }, []);
+
+  const handleNodesChange = useCallback(
+    (changes: NodeChange<CanvasNode>[]) => {
+      const zoom = flowStore.getState().transform[2] || 1;
+      storeOnNodesChange(snapDragChanges(changes, useCanvasStore.getState().nodes, zoom));
+    },
+    [flowStore, storeOnNodesChange],
+  );
 
   const handleDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
     if (
       target.closest(
-        ".react-flow__node, .react-flow__edge, .react-flow__panel, .react-flow__controls, .react-flow__minimap, .statusbar",
+        ".react-flow__node, .react-flow__edge, .react-flow__panel, .react-flow__controls, .react-flow__minimap, .statusbar, .canvas-controls, .context-menu, .selection-toolbar, .empty-state",
       )
     ) {
       return;
@@ -44,39 +136,120 @@ export function FlowCanvas() {
     addNote(screenToFlowPosition({ x: event.clientX, y: event.clientY }));
   };
 
+  const openMenu = (event: MouseEvent, targetIds: string[]) => {
+    event.preventDefault();
+    const targetNodes = targetIds
+      .map((id) => nodes.find((node) => node.id === id))
+      .filter((node): node is CanvasNode => Boolean(node));
+    setMenu({
+      x: event.clientX,
+      y: event.clientY,
+      flow: screenToFlowPosition({ x: event.clientX, y: event.clientY }),
+      targetIds,
+      hasGroup: targetNodes.some((node) => node.type === "group"),
+    });
+  };
+
+  const handlePaneContextMenu = (event: MouseEvent | globalThis.MouseEvent) => {
+    openMenu(event as MouseEvent, []);
+  };
+
+  const handleNodeContextMenu = (event: MouseEvent, node: CanvasNode) => {
+    const selected = nodes.filter((item) => item.selected).map((item) => item.id);
+    openMenu(event, node.selected && selected.length > 0 ? selected : [node.id]);
+  };
+
+  const handleNodeDragStart: OnNodeDrag<CanvasNode> = useCallback(
+    (_event, node) => {
+      commit();
+      raiseNode(node.id);
+    },
+    [commit, raiseNode],
+  );
+
+  const handleNodeDrag: OnNodeDrag<CanvasNode> = useCallback(
+    () => {
+      const zoom = flowStore.getState().transform[2] || 1;
+      setGuides(computeGuidesForDragging(useCanvasStore.getState().nodes, zoom));
+    },
+    [flowStore],
+  );
+
   return (
     <div className="canvas" onDoubleClick={handleDoubleClick}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
         nodeTypes={nodeTypes}
-        onNodesChange={onNodesChange}
+        onNodesChange={handleNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
-        onNodeDragStart={() => commit()}
+        onNodeClick={(_event, node) => raiseNode(node.id)}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={() => setGuides([])}
+        onPaneContextMenu={handlePaneContextMenu}
+        onNodeContextMenu={handleNodeContextMenu}
+        onPaneClick={() => setGuides([])}
+        onMoveEnd={(_event, viewport) => setViewport(viewport)}
         deleteKeyCode={null}
-        fitView
+        colorMode="dark"
+        defaultMarkerColor="#7c8598"
+        defaultViewport={initialViewport ?? undefined}
+        fitView={!initialViewport}
         fitViewOptions={{ padding: 0.25, maxZoom: 1.25 }}
         minZoom={0.15}
-        maxZoom={2}
+        maxZoom={4}
+        snapToGrid={snapToGrid}
+        snapGrid={[GRID_SIZE, GRID_SIZE]}
         panOnDrag={[1, 2]}
         selectionOnDrag
+        selectionMode={SelectionMode.Partial}
         selectionKeyCode={null}
+        multiSelectionKeyCode={["Shift", "Control", "Meta"]}
         zoomOnDoubleClick={false}
         defaultEdgeOptions={edgeOptions}
         connectionLineStyle={{ stroke: "#8b5cf6", strokeWidth: 2 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2a3040" />
-        <Controls position="bottom-left" showInteractive={false} />
-        <MiniMap
-          position="bottom-right"
-          pannable
-          zoomable
-          maskColor="rgba(8, 10, 15, 0.72)"
-          nodeStrokeWidth={2}
-          nodeColor={(node) => NOTE_COLORS[node.data?.color as NoteColor] ?? "#5b6478"}
-        />
+        {showMiniMap ? (
+          <MiniMap
+            position="bottom-right"
+            pannable
+            zoomable
+            maskColor="rgba(8, 10, 15, 0.72)"
+            nodeStrokeWidth={2}
+            nodeColor={(node) => {
+              if (node.type === "group") return "#2c2518";
+              const color = (node.data as { color?: NoteColor } | undefined)?.color;
+              return color ? NOTE_COLORS[color] : "#5b6478";
+            }}
+          />
+        ) : null}
+        <ViewportPortal>
+          {guides.map((guide) => (
+            <div
+              key={`${guide.orientation}-${guide.position}`}
+              className={`align-guide align-guide-${guide.orientation}`}
+              style={
+                guide.orientation === "vertical"
+                  ? { left: guide.position, top: guide.start, height: guide.end - guide.start }
+                  : { top: guide.position, left: guide.start, width: guide.end - guide.start }
+              }
+            />
+          ))}
+        </ViewportPortal>
       </ReactFlow>
+      <CanvasControls />
+      <EmptyState />
+      <SelectionToolbar />
+      {menu ? (
+        <ContextMenu
+          menu={menu}
+          onClose={() => setMenu(null)}
+          onFitView={() => fitView({ padding: 0.2, duration: 300 })}
+        />
+      ) : null}
       <StatusBar />
     </div>
   );
