@@ -72,6 +72,34 @@ describe("nodes", () => {
   });
 });
 
+describe("images", () => {
+  it("adds multiple image nodes in one history step", () => {
+    const ids = useCanvasStore.getState().addImages([
+      { position: { x: 0, y: 0 }, src: "data:image/png;base64,AAAA", width: 320, height: 240, alt: "a.png" },
+      { position: { x: 400, y: 0 }, src: "data:image/png;base64,BBBB", width: 140, height: 100, alt: "b.png" },
+    ]);
+    const state = useCanvasStore.getState();
+    expect(ids).toHaveLength(2);
+    expect(state.nodes).toHaveLength(2);
+    expect(state.nodes.every((item) => item.type === "image" && item.selected)).toBe(true);
+    expect(node(ids[0]).data).toMatchObject({ src: "data:image/png;base64,AAAA", alt: "a.png" });
+    expect(node(ids[0]).width).toBe(320);
+    expect(state.past).toHaveLength(1);
+
+    useCanvasStore.getState().undo();
+    expect(useCanvasStore.getState().nodes).toHaveLength(0);
+  });
+
+  it("resizes a node without adding history", () => {
+    const id = add("image", 0, 0);
+    const history = useCanvasStore.getState().past.length;
+    useCanvasStore.getState().resizeNode(id, 200, 150);
+    expect(node(id).width).toBe(200);
+    expect(node(id).height).toBe(150);
+    expect(useCanvasStore.getState().past.length).toBe(history);
+  });
+});
+
 describe("templates", () => {
   it("inserts a centered flowchart with edges and selects it", () => {
     const existing = add("note", -1000, -1000);

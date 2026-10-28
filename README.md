@@ -18,6 +18,8 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Edge toolbar: label, color, solid/dashed/dotted line, arrow toggle
 - Command palette (`/`) for nodes, templates, layout, export and view actions
 - Starter templates: flowchart, mind map, kanban, meeting notes
+- Drop image files anywhere or paste from the clipboard; images are fitted to a readable node size
+- Global error boundary and toast notifications for import/upload failures
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
@@ -78,6 +80,8 @@ src/
     CommandPalette.tsx    # `/` command palette
     SelectionToolbar.tsx  # align / distribute / group
     EdgeToolbar.tsx       # edge label / color / dash / arrow
+    ErrorBoundary.tsx     # render-crash fallback
+    ToastHost.tsx         # transient notifications
     StatusBar.tsx
     ContextMenu.tsx       # right-click actions
     KeyboardHelp.tsx      # shortcut cheatsheet
@@ -92,6 +96,7 @@ src/
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math
     templates.ts          # starter canvases
+    images.ts             # image validation, decode and fit sizing
     layout.ts             # Dagre (dynamic import)
   store/
     canvasStore.ts        # nodes/edges/history/clipboard

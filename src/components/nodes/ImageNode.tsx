@@ -1,23 +1,14 @@
 import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
 import { useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
+import { fitImageSize, readImageFile } from "../../lib/images";
 import { sanitizeImageSrc } from "../../lib/storage";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { ImageNodeModel } from "../../types";
 
-const MAX_FILE_BYTES = 4 * 1024 * 1024;
-
-function readFile(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(reader.error);
-    reader.readAsDataURL(file);
-  });
-}
-
 export function ImageNode({ id, data, selected }: NodeProps<ImageNodeModel>) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
+  const resizeNode = useCanvasStore((state) => state.resizeNode);
   const commit = useCanvasStore((state) => state.commit);
   const fileInput = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -31,19 +22,17 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageNodeModel>) {
   const loadFiles = async (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) {
-      setError("Only image files are supported.");
-      return;
-    }
-    if (file.size > MAX_FILE_BYTES) {
-      setError("Image is larger than 4 MB.");
-      return;
-    }
     try {
       setError(null);
-      setSrc(await readFile(file));
-    } catch {
-      setError("Could not read that image.");
+      const image = await readImageFile(file);
+      const size = fitImageSize(image.width, image.height);
+      commit();
+      updateNodeData(id, { src: image.src, alt: image.name });
+      resizeNode(id, size.width, size.height);
+    } catch (readError) {
+      setError(
+        readError instanceof Error ? readError.message : "Could not read that image.",
+      );
     }
   };
 
@@ -80,17 +69,23 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageNodeModel>) {
         </button>
       )}
       <div className="image-bar">
-        <input
-          className="nodrag image-url"
-          value={data.src}
-          placeholder="https://…"
-          aria-label="Image URL"
-          onChange={(event) => updateNodeData(id, { src: event.target.value })}
-          onBlur={(event) => setSrc(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") setSrc(event.currentTarget.value);
-          }}
-        />
+        {data.src.startsWith("data:") ? (
+          <span className="image-uploaded" title={data.alt || "Uploaded image"}>
+            {data.alt || "Uploaded image"}
+          </span>
+        ) : (
+          <input
+            className="nodrag image-url"
+            value={data.src}
+            placeholder="https://…"
+            aria-label="Image URL"
+            onChange={(event) => updateNodeData(id, { src: event.target.value })}
+            onBlur={(event) => setSrc(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") setSrc(event.currentTarget.value);
+            }}
+          />
+        )}
         <button type="button" className="nodrag image-upload" onClick={() => fileInput.current?.click()}>
           Upload
         </button>

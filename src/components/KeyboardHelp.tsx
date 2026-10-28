@@ -31,6 +31,8 @@ const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] =
       { keys: ["Double-click"], action: "Add a note" },
       { keys: ["Right-click"], action: "Context menu" },
       { keys: ["Handle → blank"], action: "Create a connected node" },
+      { keys: ["Drop image file"], action: "Create image nodes" },
+      { keys: ["Ctrl/Cmd + V"], action: "Paste image from clipboard" },
       { keys: ["Click edge"], action: "Edit label / style" },
       { keys: ["Hover edge"], action: "Delete edge" },
       { keys: ["Middle/right drag"], action: "Pan" },

@@ -583,6 +583,18 @@ button {
   border-color: var(--accent-2);
 }
 
+.image-uploaded {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  padding: 0 4px;
+  color: var(--muted);
+  font-size: 10.5px;
+  line-height: 25px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .image-upload {
   height: 25px;
   padding: 0 8px;
@@ -1362,4 +1374,182 @@ kbd {
   .selection-count {
     display: none;
   }
+}
+
+/* ---------- File drop overlay ---------- */
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgb(34 211 238 / 45%);
+  background: rgb(5 7 11 / 55%);
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: rgb(17 20 27 / 92%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 50%);
+  color: var(--text);
+}
+
+.drop-plus {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: rgb(34 211 238 / 15%);
+  color: var(--accent-2);
+  font-size: 24px;
+  line-height: 1;
+}
+
+.drop-card strong {
+  font-size: 14px;
+}
+
+.drop-card > span:last-child {
+  color: var(--muted);
+  font-size: 11px;
+}
+
+/* ---------- Toasts ---------- */
+
+.toast-host {
+  position: fixed;
+  top: 72px;
+  right: 16px;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 10px 10px 12px;
+  border: 1px solid var(--border-strong);
+  border-left-width: 3px;
+  border-radius: 10px;
+  background: #141821;
+  color: #cbd2e1;
+  font-size: 12px;
+  line-height: 1.45;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
+  pointer-events: auto;
+  animation: toast-in 0.18s ease-out;
+}
+
+.toast-info {
+  border-left-color: var(--accent-2);
+}
+
+.toast-success {
+  border-left-color: #34d399;
+}
+
+.toast-error {
+  border-left-color: #f87171;
+}
+
+.toast-message {
+  flex: 1 1 auto;
+}
+
+.toast-close {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: #fff;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Crash screen ---------- */
+
+.crash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+}
+
+.crash-card {
+  max-width: 460px;
+  padding: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: 16px;
+  background: var(--panel);
+  text-align: center;
+}
+
+.crash-card h1 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.crash-card p {
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.crash-card code {
+  display: block;
+  margin: 12px 0;
+  padding: 8px;
+  overflow: auto;
+  border-radius: 8px;
+  background: #0b0d12;
+  color: #fca5a5;
+  font-size: 11px;
+  text-align: left;
+}
+
+.crash-card button {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgb(139 92 246 / 55%);
+  border-radius: 8px;
+  background: rgb(139 92 246 / 14%);
+  color: #ddd6fe;
+  cursor: pointer;
+}
+
+.crash-card button:hover {
+  background: rgb(139 92 246 / 22%);
 }

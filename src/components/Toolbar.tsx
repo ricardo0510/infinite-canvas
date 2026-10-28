@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { exportSnapshot, parseSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
+import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 
@@ -26,6 +27,7 @@ export function Toolbar() {
   const toggleSnap = useUiStore((state) => state.toggleSnap);
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
+  const pushToast = useToastStore((state) => state.push);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
   const hasNodes = useCanvasStore((state) => state.nodes.length > 0);
@@ -50,7 +52,7 @@ export function Toolbar() {
     try {
       const snapshot = parseSnapshot(JSON.parse(await file.text()));
       if (!snapshot) {
-        window.alert("This JSON does not look like a canvas snapshot.");
+        pushToast("This JSON does not look like a canvas snapshot.", "error");
         return;
       }
       importSnapshot(snapshot);
@@ -58,8 +60,9 @@ export function Toolbar() {
         if (snapshot.viewport) setViewport(snapshot.viewport);
         else fitView({ padding: 0.2, duration: 300 });
       }, 0);
+      pushToast("Canvas imported.", "success");
     } catch {
-      window.alert("Could not read that file as JSON.");
+      pushToast("Could not read that file as JSON.", "error");
     }
   };
 

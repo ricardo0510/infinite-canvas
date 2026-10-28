@@ -19,7 +19,7 @@ import {
   nodeRect,
   nodeSize,
 } from "../lib/geometry";
-import { loadSnapshot, SCHEMA_VERSION } from "../lib/storage";
+import { loadSnapshot, sanitizeImageSrc, SCHEMA_VERSION } from "../lib/storage";
 import { TEMPLATE_MAP } from "../lib/templates";
 import type {
   AlignKind,
@@ -294,6 +294,16 @@ type CanvasState = {
   commit: () => void;
   addNode: (kind: NodeKind, position: XYPosition) => string;
   addNote: (position: XYPosition) => string;
+  addImages: (
+    images: {
+      position: XYPosition;
+      src: string;
+      width: number;
+      height: number;
+      alt?: string;
+    }[],
+  ) => string[];
+  resizeNode: (id: string, width: number, height: number) => void;
   insertTemplate: (templateId: string, anchor: XYPosition) => string[];
   updateNodeData: (id: string, patch: Record<string, unknown>) => void;
   setViewport: (viewport: Viewport) => void;
@@ -420,6 +430,35 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   addNote: (position) => get().addNode("note", position),
+
+  addImages: (images) => {
+    if (images.length === 0) return [];
+    get().commit();
+    const created = images.map((image) => {
+      const base = createNode("image", image.position);
+      return {
+        ...base,
+        width: image.width,
+        height: image.height,
+        style: { ...(base.style ?? {}), width: image.width, height: image.height },
+        data: { src: sanitizeImageSrc(image.src), alt: image.alt ?? "" },
+      } as CanvasNode;
+    });
+    set({
+      nodes: [...get().nodes.map((node) => ({ ...node, selected: false })), ...created],
+    });
+    return created.map((node) => node.id);
+  },
+
+  resizeNode: (id, width, height) => {
+    set({
+      nodes: get().nodes.map((node) =>
+        node.id === id
+          ? { ...node, width, height, style: { ...node.style, width, height } }
+          : node,
+      ),
+    });
+  },
 
   insertTemplate: (templateId, anchor) => {
     const template = TEMPLATE_MAP[templateId];

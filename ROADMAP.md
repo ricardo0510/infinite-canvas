@@ -86,8 +86,8 @@ src/
 
 **当前构建指标**
 
-- 首屏 JS：460 KB（gzip 143 KB）；Dagre 自动布局单独分包 47 KB（gzip 16 KB）
-- CSS：33.9 KB（gzip 6.3 KB）
+- 首屏 JS：466 KB（gzip 144 KB）；Dagre 自动布局单独分包 47 KB（gzip 16 KB）
+- CSS：36.1 KB（gzip 6.8 KB）
 - 首次加载未做路由/代码分割，重依赖（Dagre）已按需加载
 
 **已知限制**
@@ -167,9 +167,9 @@ store 变化
 - [x] Schema 版本号 + 迁移函数（v1 → v2）
 - [ ] IndexedDB 存储适配器（大图/图片节点）
 - [ ] 历史记录改为增量 patch 或压缩快照（控制内存）
-- [ ] 图片节点：上传、拖入已支持（data URL）；粘贴与对象 URL 管理待做
-- [x] 导入导出兼容旧版本；导入失败给出可读错误
-- [ ] Error Boundary + 全局错误提示
+- [x] 图片节点：上传/拖入/粘贴 + 自动尺寸（仍以 data URL 存储）
+- [x] 导入导出兼容旧版本；导入失败给出可读 toast
+- [x] Error Boundary + 全局错误提示
 - [ ] 500 / 1000 节点性能基准与优化（memo、visible elements）
 - [x] 单元测试：store、history、storage、迁移
 - [ ] Playwright E2E：新建、连线、撤销、导入导出

@@ -14,10 +14,12 @@ import {
   type OnConnectEnd,
   type OnNodeDrag,
 } from "@xyflow/react";
-import { useCallback, useEffect, useState, type MouseEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
+import { fitImageSize, readImageFile, type LoadedImage } from "../lib/images";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
 import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
+import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { CanvasNode, NoteColor } from "../types";
 import { CanvasControls } from "./CanvasControls";
@@ -85,10 +87,108 @@ export function FlowCanvas() {
   const { screenToFlowPosition, fitView } = useReactFlow();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [guides, setGuides] = useState<Guide[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const mouseRef = useRef({
+    x: window.innerWidth / 2,
+    y: window.innerHeight / 2,
+  });
 
   useEffect(() => {
     if (nodes.length >= MINIMAP_AUTO_HIDE) setMiniMap(false);
   }, [nodes.length, setMiniMap]);
+
+  const importImages = useCallback(
+    async (files: File[], point: { x: number; y: number }) => {
+      if (files.length === 0) return;
+      const selected = files.slice(0, 12);
+      const results = await Promise.allSettled(selected.map(readImageFile));
+      const loaded = results
+        .filter((result): result is PromiseFulfilledResult<LoadedImage> => result.status === "fulfilled")
+        .map((result) => result.value);
+      const rejected = results.find(
+        (result): result is PromiseRejectedResult => result.status === "rejected",
+      );
+      const toast = useToastStore.getState().push;
+
+      if (loaded.length === 0) {
+        toast(
+          rejected?.reason instanceof Error
+            ? rejected.reason.message
+            : "No images could be read.",
+          "error",
+        );
+        return;
+      }
+
+      const origin = screenToFlowPosition(point);
+      const specs = loaded.map((image, index) => {
+        const size = fitImageSize(image.width, image.height);
+        const single = loaded.length === 1;
+        return {
+          position: {
+            x: single ? origin.x - size.width / 2 : origin.x + (index % 3) * 344,
+            y: single ? origin.y - size.height / 2 : origin.y + Math.floor(index / 3) * 344,
+          },
+          src: image.src,
+          width: size.width,
+          height: size.height,
+          alt: image.name,
+        };
+      });
+
+      useCanvasStore.getState().addImages(specs);
+      if (loaded.length > 1) toast(`Added ${loaded.length} images.`, "success");
+      if (rejected) {
+        toast(
+          rejected.reason instanceof Error ? rejected.reason.message : "Some files were skipped.",
+          "error",
+        );
+      }
+      if (files.length > selected.length) {
+        toast(`Only the first ${selected.length} images were added.`, "info");
+      }
+    },
+    [screenToFlowPosition],
+  );
+
+  useEffect(() => {
+    const onMove = (event: globalThis.MouseEvent) => {
+      mouseRef.current = { x: event.clientX, y: event.clientY };
+    };
+    const onPaste = (event: ClipboardEvent) => {
+      if (isEditableTarget(event.target)) return;
+      const files: File[] = [];
+      const items = event.clipboardData?.items;
+      if (items) {
+        for (const item of Array.from(items)) {
+          if (item.kind === "file" && item.type.startsWith("image/")) {
+            const file = item.getAsFile();
+            if (file) files.push(file);
+          }
+        }
+      }
+      if (files.length === 0 && event.clipboardData?.files?.length) {
+        for (const file of Array.from(event.clipboardData.files)) {
+          if (file.type.startsWith("image/")) files.push(file);
+        }
+      }
+      if (files.length === 0) return;
+      event.preventDefault();
+      void importImages(files, mouseRef.current);
+    };
+    const clearDragOver = () => setDragOver(false);
+
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("paste", onPaste);
+    window.addEventListener("drop", clearDragOver);
+    window.addEventListener("dragend", clearDragOver);
+    return () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("paste", onPaste);
+      window.removeEventListener("drop", clearDragOver);
+      window.removeEventListener("dragend", clearDragOver);
+    };
+  }, [importImages]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -141,6 +241,48 @@ export function FlowCanvas() {
     },
     [flowStore, storeOnNodesChange],
   );
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    if (!Array.from(event.dataTransfer.types).includes("Files")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest(
+        ".canvas-controls, .statusbar, .selection-toolbar, .edge-toolbar, .context-menu, .command-backdrop, .modal-backdrop, .react-flow__panel",
+      )
+    ) {
+      setDragOver(false);
+      return;
+    }
+    setDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+    setDragOver(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setDragOver(false);
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest(
+        ".canvas-controls, .statusbar, .selection-toolbar, .edge-toolbar, .context-menu, .command-backdrop, .modal-backdrop, .react-flow__panel",
+      )
+    ) {
+      return;
+    }
+    const files = Array.from(event.dataTransfer.files);
+    if (files.length === 0) return;
+    const images = files.filter((file) => file.type.startsWith("image/"));
+    if (images.length === 0) {
+      useToastStore.getState().push("Drop image files to add them to the canvas.", "error");
+      return;
+    }
+    void importImages(images, { x: event.clientX, y: event.clientY });
+  };
 
   const handleDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
@@ -283,7 +425,13 @@ export function FlowCanvas() {
   );
 
   return (
-    <div className="canvas" onDoubleClick={handleDoubleClick}>
+    <div
+      className="canvas"
+      onDoubleClick={handleDoubleClick}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -350,6 +498,17 @@ export function FlowCanvas() {
           ))}
         </ViewportPortal>
       </ReactFlow>
+      {dragOver ? (
+        <div className="drop-overlay">
+          <div className="drop-card">
+            <span className="drop-plus" aria-hidden="true">
+              +
+            </span>
+            <strong>Drop images to add nodes</strong>
+            <span>PNG, JPG, GIF or WebP · up to 4 MB each</span>
+          </div>
+        </div>
+      ) : null}
       <CanvasControls />
       <EmptyState />
       <SelectionToolbar />
