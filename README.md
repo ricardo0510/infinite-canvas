@@ -10,6 +10,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 
 - Infinite pan/zoom, minimap, controls, fit view
 - Node types: **Note**, **Text**, **Image**, **Group** (sub-flows)
+- Drag a node into a group to join it, drag it out to leave; groups expand to fit
 - Inline editing, accent colors, free resize with persisted sizes
 - Drag, connect, multi-select, box select, snap to grid (8 px)
 - Duplicate/self connections blocked; hover an edge to delete it

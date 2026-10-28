@@ -126,7 +126,6 @@ function sanitizeNode(value: unknown): CanvasNode | null {
     height,
     style: { width, height },
     ...(typeof value.parentId === "string" ? { parentId: value.parentId } : {}),
-    ...(value.extent === "parent" ? { extent: "parent" as const } : {}),
     ...(typeof value.zIndex === "number" && Number.isFinite(value.zIndex) ? { zIndex: value.zIndex } : {}),
   };
   return base as CanvasNode;

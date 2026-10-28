@@ -241,6 +241,7 @@ describe("grouping", () => {
     expect(group.width).toBe(624);
     expect(group.height).toBe(254);
     expect(node(a).parentId).toBe(groupId);
+    expect(node(a).extent).toBeUndefined();
     expect(node(a).position).toEqual({ x: 32, y: 32 });
 
     useCanvasStore.getState().selectNodes([groupId]);
@@ -316,6 +317,69 @@ describe("viewport", () => {
       viewport: { x: 1, y: 2, zoom: 0.75 },
     });
     expect(useCanvasStore.getState().viewport).toEqual({ x: 1, y: 2, zoom: 0.75 });
+  });
+});
+
+describe("reparenting", () => {
+  it("moves a node into a group, expands the group and keeps positions", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.getState().selectNodes([a, b]);
+    const groupId = useCanvasStore.getState().groupSelected() as string;
+    const c = add("note", 0, 400);
+    useCanvasStore.getState().selectNodes([]);
+
+    useCanvasStore.getState().reparentNode(c, groupId);
+
+    expect(node(c).parentId).toBe(groupId);
+    expect(node(c).position).toEqual({ x: 32, y: 432 });
+    expect(node(a).position).toEqual({ x: 32, y: 32 });
+    expect(node(groupId).height).toBe(654);
+    expect(node(groupId).width).toBe(624);
+  });
+
+  it("moves a child out while preserving its absolute position", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.getState().selectNodes([a, b]);
+    const groupId = useCanvasStore.getState().groupSelected() as string;
+
+    useCanvasStore.getState().reparentNode(a, null);
+
+    expect(node(a).parentId).toBeUndefined();
+    expect(node(a).position).toEqual({ x: 0, y: 0 });
+    expect(node(groupId).width).toBe(624);
+  });
+
+  it("keeps a parent before its new child in the node array", () => {
+    const early = add("note", 0, 500);
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.getState().selectNodes([a, b]);
+    const groupId = useCanvasStore.getState().groupSelected() as string;
+
+    useCanvasStore.getState().reparentNode(early, groupId);
+
+    const ids = useCanvasStore.getState().nodes.map((item) => item.id);
+    expect(ids.indexOf(groupId)).toBeLessThan(ids.indexOf(early));
+  });
+
+  it("moves a node between groups", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.getState().selectNodes([a, b]);
+    const firstGroup = useCanvasStore.getState().groupSelected() as string;
+
+    const c = add("note", 900, 0);
+    const d = add("note", 1200, 0);
+    useCanvasStore.getState().selectNodes([c, d]);
+    const secondGroup = useCanvasStore.getState().groupSelected() as string;
+
+    useCanvasStore.getState().reparentNode(c, firstGroup);
+
+    expect(node(c).parentId).toBe(firstGroup);
+    expect(node(c).position).toEqual({ x: 932, y: 32 });
+    expect(node(d).parentId).toBe(secondGroup);
   });
 });
 

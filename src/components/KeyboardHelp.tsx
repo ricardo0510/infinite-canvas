@@ -36,6 +36,7 @@ const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] =
       { keys: ["Middle/right drag"], action: "Pan" },
       { keys: ["Left drag"], action: "Box select" },
       { keys: ["Shift/Ctrl + click"], action: "Add to selection" },
+      { keys: ["Drag node over group"], action: "Join / leave group" },
       { keys: ["Ctrl/Cmd + 0"], action: "Fit view" },
       { keys: ["?"], action: "This panel" },
       { keys: ["Esc"], action: "Clear selection / close panels" },

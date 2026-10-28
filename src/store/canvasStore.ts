@@ -10,7 +10,15 @@ import {
   type XYPosition,
 } from "@xyflow/react";
 import { create } from "zustand";
-import { absolutePosition, byId, DEFAULT_SIZE, descendantIds, nodeRect } from "../lib/geometry";
+import {
+  absolutePosition,
+  byId,
+  DEFAULT_SIZE,
+  descendantIds,
+  hasAncestor,
+  nodeRect,
+  nodeSize,
+} from "../lib/geometry";
 import { loadSnapshot, SCHEMA_VERSION } from "../lib/storage";
 import type {
   AlignKind,
@@ -191,6 +199,65 @@ function topLevelSelection(nodes: CanvasNode[]): CanvasNode[] {
   });
 }
 
+/**
+ * Expands a group just enough to contain the given absolute child rect with
+ * padding. Existing children keep their absolute positions.
+ */
+function expandGroupToFit(
+  nodes: CanvasNode[],
+  groupId: string,
+  childAbsolute: XYPosition,
+  childSize: { width: number; height: number },
+): CanvasNode[] {
+  const index = byId(nodes);
+  const group = index.get(groupId);
+  if (!group) return nodes;
+
+  const groupRect = nodeRect(group, index);
+  const minX = Math.min(groupRect.x, childAbsolute.x - GROUP_PADDING);
+  const minY = Math.min(groupRect.y, childAbsolute.y - GROUP_PADDING);
+  const maxX = Math.max(
+    groupRect.x + groupRect.width,
+    childAbsolute.x + childSize.width + GROUP_PADDING,
+  );
+  const maxY = Math.max(
+    groupRect.y + groupRect.height,
+    childAbsolute.y + childSize.height + GROUP_PADDING,
+  );
+  const unchanged =
+    minX === groupRect.x &&
+    minY === groupRect.y &&
+    maxX === groupRect.x + groupRect.width &&
+    maxY === groupRect.y + groupRect.height;
+  if (unchanged) return nodes;
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+  const parent = group.parentId ? index.get(group.parentId) : undefined;
+  const parentPosition = parent ? absolutePosition(parent, index) : { x: 0, y: 0 };
+  const groupPosition = { x: minX - parentPosition.x, y: minY - parentPosition.y };
+
+  return nodes.map((node) => {
+    if (node.id === groupId) {
+      return {
+        ...node,
+        position: groupPosition,
+        width,
+        height,
+        style: { ...node.style, width, height },
+      };
+    }
+    if (node.parentId === groupId) {
+      const absolute = absolutePosition(node, index);
+      return {
+        ...node,
+        position: { x: absolute.x - minX, y: absolute.y - minY },
+      };
+    }
+    return node;
+  });
+}
+
 function moveTo(node: CanvasNode, absolute: XYPosition, index: Map<string, CanvasNode>): CanvasNode {
   if (!node.parentId) return { ...node, position: absolute };
   const parent = index.get(node.parentId);
@@ -248,6 +315,8 @@ type CanvasState = {
   distributeSelected: (axis: DistributeAxis) => void;
   groupSelected: () => string | null;
   ungroupSelected: () => void;
+  /** Moves a node into a group (or out when groupId is null). Does not push history. */
+  reparentNode: (nodeId: string, groupId: string | null) => void;
   autoLayout: () => Promise<void>;
 };
 
@@ -671,7 +740,6 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       return {
         ...node,
         parentId: groupId,
-        extent: "parent" as const,
         selected: false,
         position: { x: absolute.x - left, y: absolute.y - top },
       };
@@ -725,6 +793,52 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       nodes: next,
       edges: edges.filter((edge) => remaining.has(edge.source) && remaining.has(edge.target)),
     });
+  },
+
+  reparentNode: (nodeId, groupId) => {
+    const { nodes } = get();
+    const node = nodes.find((item) => item.id === nodeId);
+    if (!node || node.type === "group" || node.id === groupId) return;
+    if ((node.parentId ?? null) === groupId) return;
+
+    const index = byId(nodes);
+    const target = groupId ? nodes.find((item) => item.id === groupId && item.type === "group") : null;
+    if (groupId && !target) return;
+    if (target && hasAncestor(target, nodeId, index)) return;
+
+    const absolute = absolutePosition(node, index);
+    const size = nodeSize(node);
+    let next = nodes.map((item) => {
+      if (item.id !== nodeId) return item;
+      if (!groupId) {
+        return {
+          ...item,
+          parentId: undefined,
+          extent: undefined,
+          position: absolute,
+        } as CanvasNode;
+      }
+      const groupPosition = absolutePosition(target as CanvasNode, index);
+      return {
+        ...item,
+        parentId: groupId,
+        extent: undefined,
+        position: {
+          x: absolute.x - groupPosition.x,
+          y: absolute.y - groupPosition.y,
+        },
+      } as CanvasNode;
+    });
+
+    if (target) {
+      next = expandGroupToFit(next, target.id, absolute, size);
+      // React Flow requires a parent to appear before its children in the array.
+      const nodeIndex = next.findIndex((item) => item.id === nodeId);
+      const [moved] = next.splice(nodeIndex, 1);
+      const groupIndex = next.findIndex((item) => item.id === groupId);
+      next.splice(groupIndex + 1, 0, moved);
+    }
+    set({ nodes: next });
   },
 
   autoLayout: async () => {
