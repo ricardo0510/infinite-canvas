@@ -1,4 +1,4 @@
-﻿import { useReactFlow } from "@xyflow/react";
+import { useReactFlow } from "@xyflow/react";
 import { TEMPLATES } from "../lib/templates";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NodeKind } from "../types";

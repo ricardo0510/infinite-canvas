@@ -1,4 +1,4 @@
-﻿import { useEffect } from "react";
+import { useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
 
 const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] = [

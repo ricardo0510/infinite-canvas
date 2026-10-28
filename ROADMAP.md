@@ -1,266 +1,398 @@
-﻿# Infinite Canvas 寮€鍙戣鍒?
-> 鐩爣锛氬仛涓€涓?*鍙暱鏈熺淮鎶ゃ€佸彲灞曠ず銆佸彲寮€婧?*鐨勬棤闄愮敾甯冪紪杈戝櫒銆?> 褰撳墠鐗堟湰锛歚v0.2.0-dev`锛堢紪杈戝櫒鍩虹锛屽熀浜?`v0.1.0` / commit `2c92671`锛?> 浠撳簱锛?https://github.com/ricardo0510/infinite-canvas>
+# Infinite Canvas 开发规划
+
+> 目标：做一个**可长期维护、可展示、可开源**的无限画布编辑器。
+> 当前版本：`v0.2.0-dev`（编辑器基础，基于 `v0.1.0` / commit `2c92671`）
+> 仓库：<https://github.com/ricardo0510/infinite-canvas>
 
 ---
 
-## 1. 椤圭洰瀹氫綅
+## 1. 项目定位
 
-**涓€鍙ヨ瘽**锛歀ocal-first 鐨勬棤闄愮敾甯冪紪杈戝櫒锛岄潰鍚戠瑪璁般€佹祦绋嬪浘銆佺伒鎰熸暣鐞嗗拰 AI 宸ヤ綔娴佺殑鍓嶇搴曞骇銆?
-**鏍稿績鍘熷垯**
+**一句话**：Local-first 的无限画布编辑器，面向笔记、流程图、灵感整理和 AI 工作流的前端底座。
 
-- **鏈湴浼樺厛**锛氶粯璁や笉涓婁紶鏁版嵁锛宭ocalStorage / IndexedDB 鍗冲彲宸ヤ綔銆?- **灏忔牳蹇冦€佸彲鎵╁睍**锛氱敾甯冨紩鎿庛€佺姸鎬併€佸瓨鍌ㄣ€佽妭鐐圭被鍨嬪郊姝よВ鑰︼紝鏂逛究鍔犳柊鑺傜偣鍜屾彃浠躲€?- **鍙睍绀?*锛氭瘡涓樁娈甸兘鏈夊彲杩愯 Demo 鍜屾埅鍥撅紝鑳界洿鎺ユ斁杩涚畝鍘?浣滃搧闆嗐€?- **涓嶈繃搴﹁璁?*锛氬厛瑙ｅ喅鐪熷疄缂栬緫浣撻獙锛屽啀鑰冭檻鍗忎綔鍜?AI銆?
-**鐩爣鐢ㄦ埛**
+**核心原则**
 
-1. 闇€瑕佸揩閫熺敾娴佺▼鍥?鎬濈淮瀵煎浘鐨勪釜浜虹敤鎴枫€?2. 鎯充簩娆″紑鍙戠敾甯冧骇鍝佺殑寮€鍙戣€呫€?3. 闈㈣瘯瀹?寮€婧愮敤鎴凤細鐪嬩唬鐮佺粨鏋勩€佷氦浜掔粏鑺傚拰宸ョ▼璐ㄩ噺銆?
-**闈炵洰鏍囷紙v1.0 鍓嶄笉鍋氾級**
+- **本地优先**：默认不上传数据，localStorage / IndexedDB 即可工作。
+- **小核心、可扩展**：画布引擎、状态、存储、节点类型彼此解耦，方便加新节点和插件。
+- **可展示**：每个阶段都有可运行 Demo 和截图，能直接放进简历/作品集。
+- **不过度设计**：先解决真实编辑体验，再考虑协作和 AI。
 
-- 涓嶅仛瀹屾暣 Miro/Figma 鏇夸唬鍝併€?- 涓嶅仛璐﹀彿浣撶郴銆佷簯绔悓姝ャ€佽璐广€?- 涓嶅湪鏍稿績绋冲畾鍓嶅仛澶氫汉鍗忎綔鍜?AI 鑷姩鎵ц銆?- 涓嶈拷姹傜Щ鍔ㄧ瀹屾暣缂栬緫浣撻獙锛屽厛淇濊瘉妗岄潰绔€?
+**目标用户**
+
+1. 需要快速画流程图/思维导图的个人用户。
+2. 想二次开发画布产品的开发者。
+3. 面试官/开源用户：看代码结构、交互细节和工程质量。
+
+**非目标（v1.0 前不做）**
+
+- 不做完整 Miro/Figma 替代品。
+- 不做账号体系、云端同步、计费。
+- 不在核心稳定前做多人协作和 AI 自动执行。
+- 不追求移动端完整编辑体验，先保证桌面端。
+
 ---
 
-## 2. 褰撳墠鍩虹嚎锛坴0.1.0锛?
-**鎶€鏈爤**
+## 2. 当前基线（v0.1.0）
 
-| 灞?| 閫夊瀷 |
+**技术栈**
+
+| 层 | 选型 |
 | --- | --- |
-| 妗嗘灦 | React 19 + TypeScript |
-| 鏋勫缓 | Vite 8 |
-| 鐢诲竷 | @xyflow/react 12 |
-| 鐘舵€?| Zustand 5 |
-| 鏍峰紡 | 鍘熺敓 CSS + CSS Variables |
-| 璐ㄩ噺 | oxlint + `tsc -b` |
+| 框架 | React 19 + TypeScript |
+| 构建 | Vite 8 |
+| 画布 | @xyflow/react 12 |
+| 状态 | Zustand 5 |
+| 样式 | 原生 CSS + CSS Variables |
+| 质量 | oxlint + `tsc -b` |
 
-**宸插疄鐜?*
+**已实现**
 
-- 鏃犻檺骞崇Щ/缂╂斁銆丮iniMap銆丆ontrols銆丗it View
-- 鑷畾涔?Note 鑺傜偣锛氭爣棰?姝ｆ枃鐩存帴缂栬緫銆? 绉嶅己璋冭壊
-- 鎷栨嫿銆佽繛绾裤€佸閫夈€佹閫?- 鎾ら攢/閲嶅仛锛?0 姝ワ級銆佸鍒?绮樿创銆丆trl+D 澶嶅埗
-- localStorage 鑷姩淇濆瓨锛?00ms debounce锛?- JSON 瀵煎叆/瀵煎嚭
-- 蹇嵎閿細鎾ら攢/閲嶅仛/澶嶅埗/绮樿创/鍒犻櫎/淇濆瓨
-- 鐘舵€佹爮锛氳妭鐐规暟銆佽繛绾挎暟銆佺缉鏀炬瘮渚?
-**浠ｇ爜缁撴瀯**
+- 无限平移/缩放、MiniMap、Controls、Fit View
+- 自定义 Note 节点：标题/正文直接编辑、4 种强调色
+- 拖拽、连线、多选、框选
+- 撤销/重做（50 步）、复制/粘贴、Ctrl+D 复制
+- localStorage 自动保存（400ms debounce）
+- JSON 导入/导出
+- 快捷键：撤销/重做/复制/粘贴/删除/保存
+- 状态栏：节点数、连线数、缩放比例
+
+**代码结构**
 
 ```
 src/
   components/
-    FlowCanvas.tsx        # React Flow 瀹瑰櫒銆佸彸閿?杈呭姪绾?娴眰
-    Toolbar.tsx           # 鏂板缓鑺傜偣銆佹挙閿€銆佸竷灞€銆佸惛闄勩€佸鍏ュ鍑?    SelectionToolbar.tsx  # 瀵归綈/鍒嗗竷/鎴愮粍
-    ContextMenu.tsx       # 鍙抽敭鑿滃崟
-    KeyboardHelp.tsx      # 蹇嵎閿潰鏉匡紙?锛?    EmptyState.tsx        # 绌虹敾甯冨紩瀵?    StatusBar.tsx         # 鑺傜偣/杩炵嚎/缂╂斁鐘舵€?    nodes/                # Note / Text / Image / Group
+    FlowCanvas.tsx        # React Flow 容器、右键/辅助线/浮层
+    Toolbar.tsx           # 新建节点、撤销、布局、吸附、导入导出
+    SelectionToolbar.tsx  # 对齐/分布/成组
+    ContextMenu.tsx       # 右键菜单
+    KeyboardHelp.tsx      # 快捷键面板（?）
+    EmptyState.tsx        # 空画布引导
+    StatusBar.tsx         # 节点/连线/缩放状态
+    nodes/                # Note / Text / Image / Group
   hooks/
-    useAutoSave.ts        # 璁㈤槄 store锛岄槻鎶栧啓 localStorage
+    useAutoSave.ts        # 订阅 store，防抖写 localStorage
     useCanvasShortcuts.ts
   lib/
-    storage.ts            # schema v2銆佹牎楠屻€佽縼绉汇€佸鍏ュ鍑?    geometry.ts           # 灏哄銆佺粷瀵瑰潗鏍囥€佸悗浠ｈ妭鐐?    guides.ts             # 瀵归綈杈呭姪绾胯绠?    layout.ts             # Dagre 鑷姩甯冨眬锛堟寜闇€鍔犺浇锛?  store/
+    storage.ts            # schema v2、校验、迁移、导入导出
+    geometry.ts           # 尺寸、绝对坐标、后代节点
+    guides.ts             # 对齐辅助线计算
+    layout.ts             # Dagre 自动布局（按需加载）
+  store/
     canvasStore.ts        # nodes/edges/history/clipboard
-    uiStore.ts            # 鍚搁檮寮€鍏炽€佸府鍔╅潰鏉?  types.ts
+    uiStore.ts            # 吸附开关、帮助面板
+  types.ts
   App.tsx / main.tsx / index.css
 ```
 
-**褰撳墠鏋勫缓鎸囨爣**
+**当前构建指标**
 
-- 棣栧睆 JS锛?67 KB锛坓zip 145 KB锛夛紱Dagre 鑷姩甯冨眬鍗曠嫭鍒嗗寘 47 KB锛坓zip 16 KB锛?- CSS锛?6.3 KB锛坓zip 6.8 KB锛?- 鎬ц兘锛坔eadless Chrome锛?440脳900锛夛細500 鑺傜偣 setup 323ms / 鎷栧姩 60.1 FPS锛?000 鑺傜偣 setup 380ms / 鎷栧姩 60.0 FPS锛涘彲瑙?DOM 绾?15 涓妭鐐?- 棣栨鍔犺浇鏈仛璺敱/浠ｇ爜鍒嗗壊锛岄噸渚濊禆锛圖agre锛夊凡鎸夐渶鍔犺浇
+- 首屏 JS：467 KB（gzip 145 KB）；Dagre 自动布局单独分包 47 KB（gzip 16 KB）
+- CSS：36.3 KB（gzip 6.8 KB）
+- 首次加载未做路由/代码分割，重依赖（Dagre）已按需加载
+- 性能（headless Chrome，1440×900）：500 节点 setup 323ms / 拖动 60.1 FPS；1000 节点 setup 396ms / 拖动 60.1 FPS；可见 DOM 约 15 个节点
 
-**宸茬煡闄愬埗**
+**已知限制**
 
-- 娌℃湁杈规爣绛?杈规牱寮忕紪杈戯紝娌℃湁褰㈢姸鑺傜偣銆?- 鍘嗗彶璁板綍鍩轰簬蹇収锛岃妭鐐瑰緢澶氭椂鍐呭瓨浼氬闀裤€?- 鍙敮鎸?localStorage锛涘浘鐗囦互 data URL 瀛樺偍锛屽ぇ鍥句細鍗犻厤棰濄€?- 娌℃湁 E2E銆丩icense銆?- 鍙闂€у拰绉诲姩绔彧鍋氫簡鍩虹澶勭悊銆?
+- 没有形状节点。
+- 历史记录基于快照，节点很多时内存会增长。
+- 只支持 localStorage；图片以 data URL 存储，大图会占配额。
+- 没有 E2E、License。
+- 可访问性和移动端只做了基础处理。
+
 ---
 
-## 3. 鏋舵瀯涓庢墿灞曠偣
+## 3. 架构与扩展点
 
-### 3.1 鏁版嵁娴?
+### 3.1 数据流
+
 ```
-鐢ㄦ埛鎿嶄綔
-  鈫?React Flow 浜嬩欢锛坥nNodesChange / onConnect / onNodeDragStart锛?  鈫?Zustand store锛坅pplyNodeChanges / commit / history锛?  鈫?鍙楁帶 nodes / edges
-  鈫?React Flow 閲嶆覆鏌?
-store 鍙樺寲
-  鈫?useAutoSave 璁㈤槄
-  鈫?debounce 400ms
-  鈫?localStorage
+用户操作
+  → React Flow 事件（onNodesChange / onConnect / onNodeDragStart）
+  → Zustand store（applyNodeChanges / commit / history）
+  → 受控 nodes / edges
+  → React Flow 重渲染
+
+store 变化
+  → useAutoSave 订阅
+  → debounce 400ms
+  → localStorage
 ```
 
-### 3.2 鐘舵€佽亴璐?
-| 鐘舵€?| 褰掑睘 | 璇存槑 |
+### 3.2 状态职责
+
+| 状态 | 归属 | 说明 |
 | --- | --- | --- |
-| `nodes` / `edges` | canvasStore | 鍞竴鏁版嵁婧愶紝React Flow 鍙楁帶 |
-| `past` / `future` | canvasStore | 蹇収鍘嗗彶锛屾渶澶?50 姝?|
-| `clipboard` | canvasStore | 鍐呴儴澶嶅埗/绮樿创锛屼笉渚濊禆绯荤粺鍓创鏉?|
-| 瑙嗗彛 | React Flow | 涓嶆斁杩?store锛岄伩鍏嶉珮棰戦噸娓叉煋 |
-| 閫変腑鎬?| node/edge 鐨?`selected` | 鐢?React Flow 缁存姢 |
-| 鎸佷箙鍖?| storage.ts | 鐗堟湰鍖?JSON锛屽悗缁彲鎹?IndexedDB |
+| `nodes` / `edges` | canvasStore | 唯一数据源，React Flow 受控 |
+| `past` / `future` | canvasStore | 快照历史，最多 50 步 |
+| `clipboard` | canvasStore | 内部复制/粘贴，不依赖系统剪贴板 |
+| 视口 | React Flow | 不放进 store，避免高频重渲染 |
+| 选中态 | node/edge 的 `selected` | 由 React Flow 维护 |
+| 持久化 | storage.ts | 版本化 JSON，后续可换 IndexedDB |
 
-### 3.3 鎵╁睍鐐?
-- **鏂拌妭鐐圭被鍨?*锛氭柊澧?`components/nodes/XxxNode.tsx`锛屾敞鍐屽埌 `nodeTypes`锛屽湪 `types.ts` 澧炲姞 data 绫诲瀷銆?- **鏂拌竟绫诲瀷**锛歚edgeTypes` + `defaultEdgeOptions`銆?- **鏂板伐鍏?*锛歍oolbar 鍔犳寜閽紝store 鍔?action銆?- **瀛樺偍閫傞厤鍣?*锛歚lib/storage.ts` 鎶芥垚 `StorageAdapter`锛屾敮鎸?localStorage / IndexedDB / 鏂囦欢銆?- **鍛戒护绯荤粺**锛氬悗缁妸 Toolbar/蹇嵎閿粺涓€鎴?command registry锛屾柟渚垮仛鍛戒护闈㈡澘鍜屾挙閿€鍒嗙粍銆?
+### 3.3 扩展点
+
+- **新节点类型**：新增 `components/nodes/XxxNode.tsx`，注册到 `nodeTypes`，在 `types.ts` 增加 data 类型。
+- **新边类型**：`edgeTypes` + `defaultEdgeOptions`。
+- **新工具**：Toolbar 加按钮，store 加 action。
+- **存储适配器**：`lib/storage.ts` 抽成 `StorageAdapter`，支持 localStorage / IndexedDB / 文件。
+- **命令系统**：后续把 Toolbar/快捷键统一成 command registry，方便做命令面板和撤销分组。
+
 ---
 
-## 4. 璺嚎鍥?
-### v0.2 鈥?缂栬緫鍣ㄥ熀纭€锛?鈥? 鍛級
+## 4. 路线图
 
-**鐩爣**锛氫粠鈥滆兘鐢烩€濆埌鈥滃ソ鐢ㄢ€濄€?
-- [x] 鏂板鑺傜偣绫诲瀷锛歍ext銆両mage銆丟roup
-- [x] 鍙抽敭鑿滃崟锛氭柊寤鸿妭鐐广€佸鍒躲€佸垹闄ゃ€佺疆椤?缃簳
-- [x] 閫変腑宸ュ叿鏍忥細鎵归噺鍒犻櫎銆佸榻愩€佸垎甯冦€佹垚缁?- [x] 缃戞牸鍚搁檮锛?px锛? 鏅鸿兘瀵归綈鍚搁檮锛?px/缂╂斁锛屽閫夊寘鍥寸洅锛?- [x] 瑙嗗彛鎸佷箙鍖栥€佺缉鏀鹃璁俱€佸皬鍦板浘寮€鍏?- [x] 杩炵嚎鏍￠獙锛堣嚜杩?閲嶅锛夈€佹偓鍋滃垹闄ゃ€佹嫋鍒扮┖鐧藉垱寤鸿妭鐐瑰苟鑷姩杩炴帴
-- [x] 鍒嗙粍鎷栧叆/鎷栧嚭锛屽垎缁勮嚜鍔ㄦ墿灞曞绾虫柊鑺傜偣
-- [x] 鑷姩甯冨眬锛圖agre锛夛細涓€閿暣鐞嗭紙鎸夐渶鍔犺浇锛?- [x] 杈规爣绛?杈规牱寮忥紙棰滆壊銆佽櫄绾裤€佺澶达級
-- [x] 鑺傜偣灏哄鎸佷箙鍖栦笌鏈€灏忓昂瀵哥害鏉?- [x] 蹇嵎閿潰鏉匡紙`?` 鎵撳紑锛?- [x] 绌虹敾甯冨紩瀵?+ 娴佺▼鍥?鎬濈淮瀵煎浘/鐪嬫澘/浼氳妯℃澘
-- [x] 鍛戒护闈㈡澘锛坄/`锛?
-**楠屾敹**锛氭柊寤?缂栬緫/杩炵嚎/鍒嗙粍/鏁寸悊 5 鏉′富娴佺▼鏃犻樆濉烇紱鍒锋柊鍚庡竷灞€涓嶄涪锛沗npm run build` + `lint` 閫氳繃銆?
-### v0.3 鈥?鏁版嵁涓庣ǔ瀹氭€э紙1鈥? 鍛級
+### v0.2 — 编辑器基础（1–2 周）
 
-**鐩爣**锛氭暟鎹笉涓紝鐗堟湰鍙崌绾э紝鎬ц兘鍙噺鍖栥€?
-- [x] Schema 鐗堟湰鍙?+ 杩佺Щ鍑芥暟锛坴1 鈫?v2锛?- [ ] IndexedDB 瀛樺偍閫傞厤鍣紙澶у浘/鍥剧墖鑺傜偣锛?- [ ] 鍘嗗彶璁板綍鏀逛负澧為噺 patch 鎴栧帇缂╁揩鐓э紙鎺у埗鍐呭瓨锛?- [x] 鍥剧墖鑺傜偣锛氫笂浼?鎷栧叆/绮樿创 + 鑷姩灏哄锛堜粛浠?data URL 瀛樺偍锛?- [x] 瀵煎叆瀵煎嚭鍏煎鏃х増鏈紱瀵煎叆澶辫触缁欏嚭鍙 toast
-- [x] Error Boundary + 鍏ㄥ眬閿欒鎻愮ず
-- [x] 500 / 1000 鑺傜偣鎬ц兘鍩哄噯涓庝紭鍖栵紙鑺傜偣 memo銆?80 鑺傜偣浠呮覆鏌撳彲瑙嗗厓绱狅級
-- [x] 鍗曞厓娴嬭瘯锛歴tore銆乭istory銆乻torage銆佽縼绉?- [ ] Playwright E2E锛氭柊寤恒€佽繛绾裤€佹挙閿€銆佸鍏ュ鍑?
-**楠屾敹**锛?000 鑺傜偣鎷栨嫿 鈮?45 FPS锛堜腑绔満锛夛紱鍒锋柊/閲嶅惎涓嶄涪鏁版嵁锛涙祴璇曡鐩栨牳蹇冭矾寰勩€?
-### v0.4 鈥?寮€婧愬彂甯冿紙1 鍛級
+**目标**：从“能画”到“好用”。
 
-**鐩爣**锛氬埆浜鸿兘鐪嬫噦銆佽兘璺戙€佽兘璐＄尞銆?
-- [ ] README锛欴emo GIF銆佸姛鑳姐€佹灦鏋勩€佸揩閫熷紑濮嬨€佽矾绾垮浘閾炬帴
-- [ ] GitHub Pages 鍦ㄧ嚎 Demo锛圴ite `base` 閰嶇疆锛?- [ ] MIT License
-- [ ] CONTRIBUTING + Issue/PR 妯℃澘
-- [ ] GitHub Actions锛歵ypecheck銆乴int銆乽nit銆乥uild銆丳laywright
+- [x] 新增节点类型：Text、Image、Group
+- [x] 右键菜单：新建节点、复制、删除、置顶/置底
+- [x] 选中工具栏：批量删除、对齐、分布、成组
+- [x] 网格吸附（8px）+ 智能对齐吸附（6px/缩放，多选包围盒）
+- [x] 视口持久化、缩放预设、小地图开关
+- [x] 连线校验（自连/重复）、悬停删除、拖到空白创建节点并自动连接
+- [x] 分组拖入/拖出，分组自动扩展容纳新节点
+- [x] 自动布局（Dagre）：一键整理（按需加载）
+- [x] 边标签/边样式（颜色、虚线、箭头）
+- [x] 节点尺寸持久化与最小尺寸约束
+- [x] 快捷键面板（`?` 打开）
+- [x] 空画布引导 + 流程图/思维导图/看板/会议模板
+- [x] 命令面板（`/`）
+
+**验收**：新建/编辑/连线/分组/整理 5 条主流程无阻塞；刷新后布局不丢；`npm run build` + `lint` 通过。
+
+### v0.3 — 数据与稳定性（1–2 周）
+
+**目标**：数据不丢，版本可升级，性能可量化。
+
+- [x] Schema 版本号 + 迁移函数（v1 → v2）
+- [ ] IndexedDB 存储适配器（大图/图片节点）
+- [ ] 历史记录改为增量 patch 或压缩快照（控制内存）
+- [x] 图片节点：上传/拖入/粘贴 + 自动尺寸（仍以 data URL 存储）
+- [x] 导入导出兼容旧版本；导入失败给出可读 toast
+- [x] Error Boundary + 全局错误提示
+- [x] 500 / 1000 节点性能基准与优化（节点 memo、>80 节点仅渲染可视元素）
+- [x] 单元测试：store、history、storage、迁移
+- [ ] Playwright E2E：新建、连线、撤销、导入导出
+
+**验收**：1000 节点拖拽 ≥ 45 FPS（中端机）；刷新/重启不丢数据；测试覆盖核心路径。
+
+### v0.4 — 开源发布（1 周）
+
+**目标**：别人能看懂、能跑、能贡献。
+
+- [ ] README：Demo GIF、功能、架构、快速开始、路线图链接
+- [ ] GitHub Pages 在线 Demo（Vite `base` 配置）
+- [ ] MIT License
+- [ ] CONTRIBUTING + Issue/PR 模板
+- [ ] GitHub Actions：typecheck、lint、unit、build、Playwright
 - [ ] CHANGELOG + `v0.1.0` / `v0.2.0` tag
-- [ ] 3鈥? 寮犻珮璐ㄩ噺鎴浘/鐭棰?- [ ] 浠撳簱 description/topics
+- [ ] 3–5 张高质量截图/短视频
+- [ ] 仓库 description/topics
 
-**楠屾敹**锛氭柊鐢ㄦ埛 3 鍒嗛挓鍐呮湰鍦拌窇璧锋潵锛汣I 鍏ㄧ豢锛汥emo 鍙洿鎺ヨ闂€?
-### v0.5 鈥?鍙€夋柟鍚戯紙鎸夋眰鑱岀洰鏍囬€変竴涓級
+**验收**：新用户 3 分钟内本地跑起来；CI 全绿；Demo 可直接访问。
 
-**A. AI 鎸囦护鏍忥紙2 鍛紝鎺ㄨ崘锛?*
+### v0.5 — 可选方向（按求职目标选一个）
 
-- 鑷劧璇█ 鈫?缁撴瀯鍖栧姩浣滐紙鏂板鑺傜偣/杩炵嚎/鏀归鑹?鏁寸悊锛?- 鍔ㄤ綔纭鍗＄墖 + 鎾ら攢
-- Mock 妯″瀷 + 鐪熷疄 LLM 閫傞厤鍣?- 宸ュ叿 schema + eval 鐢ㄤ緥锛?0 鏉★級
-- 浠峰€硷細鍜?AI Agent 绠€鍘嗕富绾垮己鐩稿叧
+**A. AI 指令栏（2 周，推荐）**
 
-**B. 澶氫汉鍗忎綔锛?鈥? 鍛級**
+- 自然语言 → 结构化动作（新增节点/连线/改颜色/整理）
+- 动作确认卡片 + 撤销
+- Mock 模型 + 真实 LLM 适配器
+- 工具 schema + eval 用例（10 条）
+- 价值：和 AI Agent 简历主线强相关
+
+**B. 多人协作（3–4 周）**
 
 - Yjs + WebSocket/WebRTC
-- 鍏夋爣/鍦ㄧ嚎鐘舵€?鎴块棿
-- 鍐茬獊鍚堝苟涓庣绾块噸杩?- 浠峰€硷細鎶€鏈繁搴﹂珮锛屼絾璋冭瘯鎴愭湰楂?
-**C. 鎻掍欢绯荤粺锛? 鍛級**
+- 光标/在线状态/房间
+- 冲突合并与离线重连
+- 价值：技术深度高，但调试成本高
 
-- 鑺傜偣/鍛戒护/瀛樺偍鎻掍欢鎺ュ彛
-- 绀轰緥鎻掍欢锛氫究绛俱€佸浘鐗囥€丮arkdown
-- 浠峰€硷細鏋舵瀯鑳藉姏灞曠ず
+**C. 插件系统（3 周）**
 
-### v1.0 鈥?绋冲畾鐗堬紙鎸佺画锛?
-- [ ] Schema 绋冲畾 + 杩佺Щ鏂囨。
-- [ ] 鎻掍欢 API 鏂囨。
-- [ ] 5000 鑺傜偣鎬ц兘鐩爣
-- [ ] 瀹屾暣閿洏瀵艰埅/鍙闂€?- [ ] i18n锛堜腑/鑻憋級
-- [ ] 涓婚锛堟繁/娴?璺熼殢绯荤粺锛?- [ ] 鏂囨。绔欙紙VitePress/Astro锛?- [ ] 绀惧尯 issue/PR 鍝嶅簲鏈哄埗
+- 节点/命令/存储插件接口
+- 示例插件：便签、图片、Markdown
+- 价值：架构能力展示
+
+### v1.0 — 稳定版（持续）
+
+- [ ] Schema 稳定 + 迁移文档
+- [ ] 插件 API 文档
+- [ ] 5000 节点性能目标
+- [ ] 完整键盘导航/可访问性
+- [ ] i18n（中/英）
+- [ ] 主题（深/浅/跟随系统）
+- [ ] 文档站（VitePress/Astro）
+- [ ] 社区 issue/PR 响应机制
 
 ---
 
-## 5. 鎶€鏈笓椤?
-### 5.1 鎬ц兘
+## 5. 技术专项
 
-| 椋庨櫓 | 鎺柦 |
+### 5.1 性能
+
+| 风险 | 措施 |
 | --- | --- |
-| 鑺傜偣澶氭椂閲嶆覆鏌?| 宸插仛锛氳妭鐐圭粍浠?`memo`锛坄nodePropsEqual` 蹇界暐浣嶇疆/灏哄锛?|
-| 杈?鑺傜偣 DOM 杩囧 | 宸插仛锛?80 鑺傜偣寮€鍚?`onlyRenderVisibleElements`锛屽皬鍦板浘 >60 鑷姩鏀惰捣 |
-| 鎷栨嫿鎺夊抚 | 鎷栨嫿鏈熼棿鍏抽棴鍔ㄧ敾/闃村奖锛沗nodeDragThreshold` |
-| 鍘嗗彶蹇収鍐呭瓨 | 闄愬埗 50 姝ワ紱鍚庣画鏀瑰閲?patch |
-| localStorage 瀹归噺 | 鍥剧墖璧?IndexedDB锛屼笉濉?base64 |
+| 节点多时重渲染 | 已做：节点组件 `memo`（`nodePropsEqual` 忽略位置/尺寸） |
+| 边/节点 DOM 过多 | 已做：>80 节点开启 `onlyRenderVisibleElements`，小地图 >60 自动收起 |
+| 拖拽掉帧 | 拖拽期间关闭动画/阴影；`nodeDragThreshold` |
+| 历史快照内存 | 限制 50 步；后续改增量 patch |
+| localStorage 容量 | 图片走 IndexedDB，不塞 base64 |
 
-**鍩哄噯鍦烘櫙**锛?00 / 1000 / 2000 鑺傜偣锛岃褰?FPS銆佹嫋鎷藉欢杩熴€侀灞忔椂闂淬€?
-### 5.2 鍘嗗彶涓庢挙閿€
+**基准场景**：500 / 1000 / 2000 节点，记录 FPS、拖拽延迟、首屏时间。
 
-- 褰撳墠锛氱粨鏋勫彉鏇?鎷栨嫿寮€濮?棣栨缂栬緫鍓?`commit()` 蹇収銆?- 闂锛氭枃鏈紪杈戞瘡娆?focus 鍚庨娆¤緭鍏ユ墠鎻愪氦锛岄€昏緫鍒嗘暎銆?- 璁″垝锛氭娊 `history` 涓棿浠讹紝缁熶竴 `transaction(fn)`锛?  - 缁撴瀯鎿嶄綔鑷姩蹇収锛?  - 杩炵画杈撳叆鍚堝苟涓轰竴娆★紱
-  - 鏀寔鍛戒护寮?undo/redo 鍜屽垎缁勩€?
-### 5.3 瀛樺偍
+### 5.2 历史与撤销
 
-- v0.2 淇濇寔 localStorage锛泇0.3 寮曞叆 `StorageAdapter`銆?- JSON schema锛?  ```json
+- 当前：结构变更/拖拽开始/首次编辑前 `commit()` 快照。
+- 问题：文本编辑每次 focus 后首次输入才提交，逻辑分散。
+- 计划：抽 `history` 中间件，统一 `transaction(fn)`：
+  - 结构操作自动快照；
+  - 连续输入合并为一次；
+  - 支持命令式 undo/redo 和分组。
+
+### 5.3 存储
+
+- v0.2 保持 localStorage；v0.3 引入 `StorageAdapter`。
+- JSON schema：
+  ```json
   { "version": 2, "nodes": [], "edges": [], "viewport": { "x": 0, "y": 0, "zoom": 1 } }
   ```
-- 杩佺Щ锛歚migrate(snapshot): Snapshot`锛岄€愮増鏈崌绾э紝澶辫触鍥為€€鍒扮┖鐢诲竷骞舵彁绀恒€?- 瀵煎叆鏍￠獙锛氳妭鐐瑰繀椤绘湁 `id/type/position/data`锛岃竟蹇呴』鏈?`id/source/target`銆?
-### 5.4 娴嬭瘯
+- 迁移：`migrate(snapshot): Snapshot`，逐版本升级，失败回退到空画布并提示。
+- 导入校验：节点必须有 `id/type/position/data`，边必须有 `id/source/target`。
 
-| 灞傜骇 | 宸ュ叿 | 瑕嗙洊 |
+### 5.4 测试
+
+| 层级 | 工具 | 覆盖 |
 | --- | --- | --- |
-| 鍗曞厓 | Vitest | store銆乭istory銆乻torage銆佸揩鎹烽敭銆佸鍏ユ牎楠?|
-| 缁勪欢 | React Testing Library | NoteNode 缂栬緫銆乀oolbar 鎸夐挳鐘舵€?|
-| E2E | Playwright | 鏂板缓銆佽繛绾裤€佹挙閿€銆佸鍏ュ鍑恒€佸埛鏂版仮澶?|
-| 鎬ц兘 | 鑷畾涔夎剼鏈?| 500/1000 鑺傜偣 FPS 涓庡唴瀛?|
+| 单元 | Vitest | store、history、storage、快捷键、导入校验 |
+| 组件 | React Testing Library | NoteNode 编辑、Toolbar 按钮状态 |
+| E2E | Playwright | 新建、连线、撤销、导入导出、刷新恢复 |
+| 性能 | 自定义脚本 | 500/1000 节点 FPS 与内存 |
 
-**璐ㄩ噺闂ㄧ**锛歚tsc -b`銆乣oxlint`銆乣vitest run`銆乣playwright test`銆乣vite build` 鍏ㄩ儴閫氳繃鎵嶈兘鍚堝苟銆?
-### 5.5 鍙闂€?
-- 鎵€鏈夋寜閽湁 `aria-label` / `title`銆?- 閿洏锛歍ab 鑱氱劍宸ュ叿鏍忥紝Enter/Space 瑙﹀彂锛涜妭鐐圭紪杈戝彲 Esc 閫€鍑恒€?- 棰滆壊瀵规瘮搴?鈮?4.5:1锛涗笉鍙敤棰滆壊琛ㄨ揪鐘舵€併€?- 鍑忓皯鍔ㄧ敾锛歚prefers-reduced-motion`銆?
-### 5.6 瀹夊叏
+**质量门禁**：`tsc -b`、`oxlint`、`vitest run`、`playwright test`、`vite build` 全部通过才能合并。
 
-- 瀵煎叆 JSON 鍙帴鍙楃櫧鍚嶅崟瀛楁锛屽拷鐣ユ湭鐭ュ瓧娈点€?- 鍥剧墖 URL 鍙厑璁?`blob:` / `https:`锛屾嫆缁?`javascript:`銆?- 涓嶆墽琛岀敤鎴疯緭鍏ヤ腑鐨?HTML/鑴氭湰銆?- 绗笁鏂逛緷璧栧畾鏈?`npm audit`銆?
+### 5.5 可访问性
+
+- 所有按钮有 `aria-label` / `title`。
+- 键盘：Tab 聚焦工具栏，Enter/Space 触发；节点编辑可 Esc 退出。
+- 颜色对比度 ≥ 4.5:1；不只用颜色表达状态。
+- 减少动画：`prefers-reduced-motion`。
+
+### 5.6 安全
+
+- 导入 JSON 只接受白名单字段，忽略未知字段。
+- 图片 URL 只允许 `blob:` / `https:`，拒绝 `javascript:`。
+- 不执行用户输入中的 HTML/脚本。
+- 第三方依赖定期 `npm audit`。
+
 ---
 
-## 6. 鍙戝竷涓庡紑婧愯繍钀?
-### 6.1 鍙戝竷娴佺▼
+## 6. 发布与开源运营
 
-1. `npm run build` + `lint` + `test` 鍏ㄧ豢銆?2. 鏇存柊 `CHANGELOG.md` 鍜?`package.json` 鐗堟湰銆?3. `git tag v0.x.0` + `git push --tags`銆?4. GitHub Release 鍐欏彉鏇存憳瑕?+ Demo 閾炬帴銆?5. 閮ㄧ讲 GitHub Pages锛坄gh-pages` 鍒嗘敮鎴?Actions锛夈€?
+### 6.1 发布流程
+
+1. `npm run build` + `lint` + `test` 全绿。
+2. 更新 `CHANGELOG.md` 和 `package.json` 版本。
+3. `git tag v0.x.0` + `git push --tags`。
+4. GitHub Release 写变更摘要 + Demo 链接。
+5. 部署 GitHub Pages（`gh-pages` 分支或 Actions）。
+
 ### 6.2 GitHub Pages
 
-- `vite.config.ts` 澧炲姞 `base: '/infinite-canvas/'`锛堥」鐩〉锛夈€?- Actions锛歚npm ci` 鈫?`npm run build` 鈫?涓婁紶 `dist` 鈫?deploy銆?- 鑷畾涔夊煙鍚嶆椂鏀?`base: '/'`銆?
-### 6.3 绀惧尯
+- `vite.config.ts` 增加 `base: '/infinite-canvas/'`（项目页）。
+- Actions：`npm ci` → `npm run build` → 上传 `dist` → deploy。
+- 自定义域名时改 `base: '/'`。
 
-- Issue 妯℃澘锛欱ug / Feature / Question銆?- PR 妯℃澘锛氭敼浜嗕粈涔堛€佹€庝箞楠岃瘉銆佹埅鍥俱€?- 姣忎袱鍛ㄦ暣鐞嗕竴娆?roadmap 鍜?good first issue銆?- 涓嶈拷姹?star锛屽厛淇濊瘉 3 涓湡瀹炵敤鎴疯兘鐢ㄣ€?
+### 6.3 社区
+
+- Issue 模板：Bug / Feature / Question。
+- PR 模板：改了什么、怎么验证、截图。
+- 每两周整理一次 roadmap 和 good first issue。
+- 不追求 star，先保证 3 个真实用户能用。
+
 ---
 
-## 7. 鎸囨爣
+## 7. 指标
 
-| 鎸囨爣 | v0.1 鐜扮姸 | v0.4 鐩爣 |
+| 指标 | v0.1 现状 | v0.4 目标 |
 | --- | --- | --- |
-| 棣栧睆 JS gzip | 145 KB | 鈮?150 KB |
-| 1000 鑺傜偣鎷栨嫿 FPS | 60锛坔eadless 鍩哄噯锛?| 鈮?45 |
-| 鏍稿績 E2E 鐢ㄤ緥 | 0 | 鈮?8 |
-| 鍗曞厓娴嬭瘯 | 79 | 鈮?25 |
-| CI 鏃堕暱 | 鏃?| 鈮?3 min |
-| 鏂扮敤鎴疯窇璧锋潵 | 闇€鎵嬪姩 | 鈮?3 min |
-| Lighthouse Performance | 鏈祴 | 鈮?90 |
+| 首屏 JS gzip | 145 KB | ≤ 150 KB |
+| 1000 节点拖拽 FPS | 60（headless 基准） | ≥ 45 |
+| 核心 E2E 用例 | 0 | ≥ 8 |
+| 单元测试 | 79 | ≥ 25 |
+| CI 时长 | 无 | ≤ 3 min |
+| 新用户跑起来 | 需手动 | ≤ 3 min |
+| Lighthouse Performance | 未测 | ≥ 90 |
 
 ---
 
-## 8. 椋庨櫓涓庡簲瀵?
-| 椋庨櫓 | 褰卞搷 | 搴斿 |
+## 8. 风险与应对
+
+| 风险 | 影响 | 应对 |
 | --- | --- | --- |
-| 鑼冨洿鑶ㄨ儉锛堝崗浣?AI/鎻掍欢涓€璧峰仛锛?| 姘歌繙鍙戜笉鍑?v1.0 | 姣忛樁娈靛彧閫変竴涓柟鍚戯紝鍏朵綑杩?backlog |
-| React Flow 澶у浘鎬ц兘鐡堕 | 1000+ 鑺傜偣鍗￠】 | 鍏堝仛鍩哄噯锛屽繀瑕佹椂铏氭嫙鍖?鍒嗗眰娓叉煋 |
-| 鎾ら攢璇箟澶嶆潅 | 鐢ㄦ埛涓嶆暍鐢?| 缁熶竴 transaction锛岃ˉ E2E |
-| localStorage 瀹归噺/杩佺Щ | 鏁版嵁涓㈠け | v0.3 涓?IndexedDB + schema 杩佺Щ |
-| GitHub Pages base 閰嶉敊 | Demo 404 | CI 閲岃窇涓€娆?Pages 鏋勫缓浜х墿妫€鏌?|
-| 绗笁鏂?License | 寮€婧愬悎瑙?| MIT + 淇濈暀 React Flow attribution |
-| 娌℃湁鐢ㄦ埛 | 鑷棬 | 鍏堢粰 3 涓湅鍙嬭瘯鐢紝鏀堕泦 5 鏉″弽棣?|
+| 范围膨胀（协作/AI/插件一起做） | 永远发不出 v1.0 | 每阶段只选一个方向，其余进 backlog |
+| React Flow 大图性能瓶颈 | 1000+ 节点卡顿 | 先做基准，必要时虚拟化/分层渲染 |
+| 撤销语义复杂 | 用户不敢用 | 统一 transaction，补 E2E |
+| localStorage 容量/迁移 | 数据丢失 | v0.3 上 IndexedDB + schema 迁移 |
+| GitHub Pages base 配错 | Demo 404 | CI 里跑一次 Pages 构建产物检查 |
+| 第三方 License | 开源合规 | MIT + 保留 React Flow attribution |
+| 没有用户 | 自嗨 | 先给 3 个朋友试用，收集 5 条反馈 |
 
 ---
 
-## 9. 鎺掓湡寤鸿
+## 9. 排期建议
 
-**鍏艰亴锛堟瘡鍛?8鈥?0 灏忔椂锛?*
+**兼职（每周 8–10 小时）**
 
-| 鍛?| 鍐呭 |
+| 周 | 内容 |
 | --- | --- |
-| 绗?1 鍛?| 娴嬭瘯 + CI + Pages + README 闂ㄩ潰 |
-| 绗?2 鍛?| 鑺傜偣绫诲瀷 + 鍙抽敭鑿滃崟 + 閫変腑宸ュ叿鏍?|
-| 绗?3 鍛?| 瀵归綈/鍚搁檮 + 鑷姩甯冨眬 + 杈规牱寮?|
-| 绗?4 鍛?| schema/杩佺Щ + IndexedDB + 閿欒杈圭晫 |
-| 绗?5 鍛?| 鎬ц兘鍩哄噯 + 浼樺寲 + E2E |
-| 绗?6 鍛?| 鍙戝竷 v0.2.0锛屾敹闆嗗弽棣?|
-| 绗?7鈥? 鍛?| 閫変竴涓柟鍚戯細AI 鎸囦护鏍?/ 鍗忎綔 / 鎻掍欢 |
+| 第 1 周 | 测试 + CI + Pages + README 门面 |
+| 第 2 周 | 节点类型 + 右键菜单 + 选中工具栏 |
+| 第 3 周 | 对齐/吸附 + 自动布局 + 边样式 |
+| 第 4 周 | schema/迁移 + IndexedDB + 错误边界 |
+| 第 5 周 | 性能基准 + 优化 + E2E |
+| 第 6 周 | 发布 v0.2.0，收集反馈 |
+| 第 7–8 周 | 选一个方向：AI 指令栏 / 协作 / 插件 |
 
-**鍏ㄨ亴**锛氱害 2鈥? 鍛ㄥ埌 v0.4 鍙彂甯冪姸鎬併€?
----
-
-## 10. 涓嬩竴涓?Sprint锛?0 涓换鍔★級
-
-鎸変紭鍏堢骇鎺掑簭锛屽彲鐩存帴寮€ issue锛?
-1. [x] 鍔?Vitest + store/history/storage 鍗曟祴锛?h锛?2. [x] 鍔?GitHub Actions锛歵ypecheck/lint/test/build锛?h锛?3. [x] 閰?GitHub Pages 閮ㄧ讲锛?h锛?4. [ ] README 鍔?Demo GIF/鎴浘锛?h锛?5. [x] 鍙抽敭鑿滃崟 + 閫変腑宸ュ叿鏍忥紙4h锛?6. [x] 瀵归綈杈呭姪绾?+ 缃戞牸鍚搁檮锛?h锛?7. [x] Dagre 鑷姩甯冨眬锛?h锛?8. [x] Text/Image/Group 鑺傜偣锛?h锛?9. [x] schema 鐗堟湰 + 杩佺Щ锛?h锛?10. [ ] 500/1000 鑺傜偣鎬ц兘鍩哄噯锛?h锛?
----
-
-## 11. 寰呭喅绛?
-- [ ] License锛歁IT锛堟帹鑽愶級/ Apache-2.0
-- [ ] 閮ㄧ讲锛欸itHub Pages锛堟帹鑽愶級/ Cloudflare Pages / Vercel
-- [ ] 鍖呯鐞嗭細npm锛堝綋鍓嶏級/ pnpm
-- [ ] 鏄惁淇濈暀 `private: true`锛堝彧褰卞搷 npm 鍙戝竷锛?- [ ] v0.5 鏂瑰悜锛欰I 鎸囦护鏍忥紙鎺ㄨ崘锛屽拰绠€鍘嗕富绾夸竴鑷达級/ 鍗忎綔 / 鎻掍欢
+**全职**：约 2–3 周到 v0.4 可发布状态。
 
 ---
 
-## 12. 瀹屾垚瀹氫箟锛圖efinition of Done锛?
-涓€涓姛鑳界畻瀹屾垚锛屽繀椤诲悓鏃舵弧瓒筹細
+## 10. 下一个 Sprint（10 个任务）
 
-- 浠ｇ爜閫氳繃 `tsc -b`銆乣oxlint`銆佸崟鍏冩祴璇曘€丒2E銆?- 鏈夋槑纭氦浜掑弽棣堬紙hover/disabled/loading/error锛夈€?- 鍒锋柊鍚庢暟鎹?鐘舵€佺鍚堥鏈熴€?- 涓嶅紩鍏ユ湭浣跨敤渚濊禆銆?- README/CHANGELOG 鏈夊搴旇鏄庯紙鍙戝竷闃舵锛夈€?- 鏈夋埅鍥炬垨褰曞睆鍙獙璇併€?
+按优先级排序，可直接开 issue：
+
+1. [x] 加 Vitest + store/history/storage 单测（4h）
+2. [x] 加 GitHub Actions：typecheck/lint/test/build（2h）
+3. [x] 配 GitHub Pages 部署（2h）
+4. [ ] README 加 Demo GIF/截图（3h）
+5. [x] 右键菜单 + 选中工具栏（4h）
+6. [x] 对齐辅助线 + 网格吸附（6h）
+7. [x] Dagre 自动布局（4h）
+8. [x] Text/Image/Group 节点（8h）
+9. [x] schema 版本 + 迁移（3h）
+10. [ ] 500/1000 节点性能基准（4h）
+
+---
+
+## 11. 待决策
+
+- [ ] License：MIT（推荐）/ Apache-2.0
+- [ ] 部署：GitHub Pages（推荐）/ Cloudflare Pages / Vercel
+- [ ] 包管理：npm（当前）/ pnpm
+- [ ] 是否保留 `private: true`（只影响 npm 发布）
+- [ ] v0.5 方向：AI 指令栏（推荐，和简历主线一致）/ 协作 / 插件
+
+---
+
+## 12. 完成定义（Definition of Done）
+
+一个功能算完成，必须同时满足：
+
+- 代码通过 `tsc -b`、`oxlint`、单元测试、E2E。
+- 有明确交互反馈（hover/disabled/loading/error）。
+- 刷新后数据/状态符合预期。
+- 不引入未使用依赖。
+- README/CHANGELOG 有对应说明（发布阶段）。
+- 有截图或录屏可验证。

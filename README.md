@@ -1,4 +1,4 @@
-﻿# Infinite Canvas
+# Infinite Canvas
 
 A local-first infinite canvas built with React 19, TypeScript, [@xyflow/react](https://reactflow.dev), and Zustand.
 
@@ -62,7 +62,7 @@ The benchmark builds the app, starts a preview server and drives a throwaway hea
 | 500 | 15 | 323 ms | 60.3 fps | 60.1 fps | 0 |
 | 1000 | 15 | 396 ms | 60.3 fps | 60.1 fps | 0 |
 
-Headless Chrome, 1440脳900, production build.
+Headless Chrome, 1440×900, production build.
 
 ## Shortcuts
 
@@ -126,4 +126,3 @@ Data model: `{ version: 2, nodes, edges, viewport? }`. Older `v1` snapshots are 
 
 - Everything stays in the browser. Image uploads are stored as data URLs, so very large images will hit the `localStorage` quota.
 - `BASE_PATH` controls the Vite `base`; the Pages workflow builds with `/infinite-canvas/`.
-
