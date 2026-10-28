@@ -22,6 +22,7 @@ import { useUiStore } from "../store/uiStore";
 import type { CanvasNode, NoteColor } from "../types";
 import { CanvasControls } from "./CanvasControls";
 import { ContextMenu, type ContextMenuState } from "./ContextMenu";
+import { EdgeToolbar } from "./EdgeToolbar";
 import { EmptyState } from "./EmptyState";
 import { CanvasEdge } from "./edges/CanvasEdge";
 import { SelectionToolbar } from "./SelectionToolbar";
@@ -291,6 +292,7 @@ export function FlowCanvas() {
       <CanvasControls />
       <EmptyState />
       <SelectionToolbar />
+      <EdgeToolbar />
       {menu ? (
         <ContextMenu
           menu={menu}

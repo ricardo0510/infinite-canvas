@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
+import { MarkerType } from "@xyflow/react";
 import { useCanvasStore } from "./canvasStore";
 import type { CanvasNode, CanvasEdge } from "../types";
 
@@ -88,6 +89,35 @@ describe("connections", () => {
       .getState()
       .onConnect({ source: a, target: b, sourceHandle: null, targetHandle: null });
     expect(useCanvasStore.getState().edges).toHaveLength(1);
+  });
+
+  it("updates label, style and marker on one edge only", () => {
+    const a = add("note", 0, 0);
+    const b = add("note", 300, 0);
+    useCanvasStore.setState({
+      edges: [
+        { id: "e1", source: a, target: b },
+        { id: "e2", source: b, target: a },
+      ],
+    });
+    useCanvasStore.getState().updateEdge("e1", {
+      label: "flow",
+      style: { stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" },
+      markerEnd: {
+        type: MarkerType.ArrowClosed,
+        width: 16,
+        height: 16,
+        color: "#f59e0b",
+      },
+    });
+    const [e1, e2] = useCanvasStore.getState().edges;
+    expect(e1).toMatchObject({
+      label: "flow",
+      style: { stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" },
+      markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16, color: "#f59e0b" },
+    });
+    expect(e2.label).toBeUndefined();
+    expect(e2.style).toBeUndefined();
   });
 
   it("removes an edge and can undo it", () => {

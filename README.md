@@ -14,6 +14,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Drag, connect, multi-select, box select, snap to grid (8 px)
 - Duplicate/self connections blocked; hover an edge to delete it
 - Drag a connection into blank canvas to create and connect a node (upstream or downstream)
+- Edge toolbar: label, color, solid/dashed/dotted line, arrow toggle
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
@@ -71,6 +72,7 @@ src/
     Toolbar.tsx           # add nodes, undo, layout, snap, import/export
     CanvasControls.tsx    # zoom presets, fit view, minimap toggle
     SelectionToolbar.tsx  # align / distribute / group
+    EdgeToolbar.tsx       # edge label / color / dash / arrow
     StatusBar.tsx
     ContextMenu.tsx       # right-click actions
     KeyboardHelp.tsx      # shortcut cheatsheet

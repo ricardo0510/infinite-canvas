@@ -109,6 +109,33 @@ describe("migrateSnapshot", () => {
   });
 });
 
+describe("edge styling", () => {
+  it("keeps label, dash pattern and marker through validation", () => {
+    const snapshot = migrateSnapshot({
+      version: 2,
+      nodes: [
+        { id: "a", type: "note", position: { x: 0, y: 0 }, data: {} },
+        { id: "b", type: "note", position: { x: 300, y: 0 }, data: {} },
+      ],
+      edges: [
+        {
+          id: "e1",
+          source: "a",
+          target: "b",
+          label: "flow",
+          style: { stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" },
+          markerEnd: { type: "arrowclosed", width: 16, height: 16, color: "#f59e0b" },
+        },
+      ],
+    });
+    expect(snapshot?.edges[0]).toMatchObject({
+      label: "flow",
+      style: { stroke: "#f59e0b", strokeWidth: 2, strokeDasharray: "6 4" },
+      markerEnd: { type: "arrowclosed", width: 16, height: 16, color: "#f59e0b" },
+    });
+  });
+});
+
 describe("viewport persistence", () => {
   it("round-trips a valid viewport through localStorage", () => {
     localStorage.clear();

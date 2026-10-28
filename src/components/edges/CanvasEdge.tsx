@@ -18,6 +18,7 @@ export function CanvasEdge({
   markerEnd,
   style,
   selected,
+  label,
   interactionWidth,
 }: EdgeProps) {
   const [hovered, setHovered] = useState(false);
@@ -31,14 +32,13 @@ export function CanvasEdge({
     targetPosition,
   });
 
-  const baseStroke = (style?.stroke as string | undefined) ?? "#5b6478";
   const baseWidth = (style?.strokeWidth as number | undefined) ?? 1.5;
   const pathStyle: CSSProperties = {
     ...style,
-    stroke: selected ? "#8b5cf6" : hovered ? "#a78bfa" : baseStroke,
-    strokeWidth: selected ? 2.5 : baseWidth,
+    strokeWidth: selected ? 3 : hovered ? 2.5 : baseWidth,
   };
   const showButton = hovered || Boolean(selected);
+  const showLabel = Boolean(label);
 
   return (
     <g onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
@@ -49,11 +49,23 @@ export function CanvasEdge({
         style={pathStyle}
         interactionWidth={interactionWidth ?? 24}
       />
+      {showLabel ? (
+        <EdgeLabelRenderer>
+          <div
+            className="edge-label"
+            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+          >
+            {label}
+          </div>
+        </EdgeLabelRenderer>
+      ) : null}
       {showButton ? (
         <EdgeLabelRenderer>
           <div
             className="edge-delete-wrap nodrag nopan"
-            style={{ transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)` }}
+            style={{
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 20}px)`,
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
           >

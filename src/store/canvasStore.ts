@@ -213,6 +213,10 @@ type CanvasState = {
   onEdgesChange: (changes: EdgeChange<CanvasEdge>[]) => void;
   onConnect: (connection: Connection) => void;
   isValidConnection: (connection: Connection | CanvasEdge) => boolean;
+  updateEdge: (
+    id: string,
+    patch: { label?: string; style?: CanvasEdge["style"]; markerEnd?: CanvasEdge["markerEnd"] },
+  ) => void;
   removeEdge: (id: string) => void;
   addConnectedNode: (
     kind: NodeKind,
@@ -289,6 +293,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         handle(edge.sourceHandle) === handle(connection.sourceHandle) &&
         handle(edge.targetHandle) === handle(connection.targetHandle),
     );
+  },
+
+  updateEdge: (id, patch) => {
+    const { edges } = get();
+    if (!edges.some((edge) => edge.id === id)) return;
+    set({
+      edges: edges.map((edge) => (edge.id === id ? { ...edge, ...patch } : edge)),
+    });
   },
 
   removeEdge: (id) => {
