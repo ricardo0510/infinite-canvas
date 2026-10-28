@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { exportSnapshot, saveSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
+import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 
 function isEditable(target: EventTarget | null): boolean {
@@ -71,6 +72,10 @@ export function useCanvasShortcuts(): void {
       }
       if (mod && key === "s") {
         event.preventDefault();
+        if (new URLSearchParams(window.location.search).has("bench")) {
+          useToastStore.getState().push("Saving is disabled in benchmark mode.", "info");
+          return;
+        }
         saveSnapshot(store.getSnapshot());
         return;
       }

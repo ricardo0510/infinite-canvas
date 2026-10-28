@@ -10,6 +10,7 @@
     "lint": "oxlint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "bench": "node scripts/benchmark.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

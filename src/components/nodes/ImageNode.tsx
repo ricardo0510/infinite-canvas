@@ -1,12 +1,13 @@
 import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
-import { useRef, useState, type CSSProperties, type DragEvent } from "react";
+import { memo, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
 import { fitImageSize, readImageFile } from "../../lib/images";
 import { sanitizeImageSrc } from "../../lib/storage";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { ImageNodeModel } from "../../types";
+import { nodePropsEqual } from "./nodePropsEqual";
 
-export function ImageNode({ id, data, selected }: NodeProps<ImageNodeModel>) {
+function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const resizeNode = useCanvasStore((state) => state.resizeNode);
   const commit = useCanvasStore((state) => state.commit);
@@ -105,3 +106,6 @@ export function ImageNode({ id, data, selected }: NodeProps<ImageNodeModel>) {
     </div>
   );
 }
+
+
+export const ImageNode = memo(ImageNodeImpl, nodePropsEqual);

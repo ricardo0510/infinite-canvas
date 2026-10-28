@@ -17,6 +17,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
 import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
 import { fitImageSize, readImageFile, type LoadedImage } from "../lib/images";
+import { buildStressSnapshot } from "../lib/stress";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
 import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
@@ -54,6 +55,8 @@ const edgeOptions = {
 
 /** Above this node count the minimap is collapsed automatically (it can be reopened). */
 const MINIMAP_AUTO_HIDE = 60;
+/** Above this node count only nodes inside the viewport are mounted. */
+const VIRTUALIZE_THRESHOLD = 80;
 
 function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -80,11 +83,15 @@ export function FlowCanvas() {
   const raiseNode = useCanvasStore((state) => state.raiseNode);
   const setViewport = useCanvasStore((state) => state.setViewport);
   const [initialViewport] = useState(() => useCanvasStore.getState().viewport);
+  const [benchCount] = useState(() => {
+    const count = Number(new URLSearchParams(window.location.search).get("bench"));
+    return Number.isFinite(count) && count > 0 ? Math.min(3000, Math.floor(count)) : 0;
+  });
   const snapToGrid = useUiStore((state) => state.snapToGrid);
   const showMiniMap = useUiStore((state) => state.showMiniMap);
   const setMiniMap = useUiStore((state) => state.setMiniMap);
   const flowStore = useStoreApi();
-  const { screenToFlowPosition, fitView } = useReactFlow();
+  const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [guides, setGuides] = useState<Guide[]>([]);
   const [dragOver, setDragOver] = useState(false);
@@ -96,6 +103,17 @@ export function FlowCanvas() {
   useEffect(() => {
     if (nodes.length >= MINIMAP_AUTO_HIDE) setMiniMap(false);
   }, [nodes.length, setMiniMap]);
+
+  useEffect(() => {
+    if (!benchCount) return;
+    useCanvasStore.getState().importSnapshot(buildStressSnapshot(benchCount));
+    window.setTimeout(() => {
+      setFlowViewport({ x: 40, y: 40, zoom: 1 });
+      document.documentElement.dataset.bench = String(benchCount);
+      document.documentElement.dataset.benchReady = String(Math.round(performance.now()));
+      useToastStore.getState().push(`Benchmark mode: ${benchCount} nodes`, "info");
+    }, 0);
+  }, [benchCount, setFlowViewport]);
 
   const importImages = useCallback(
     async (files: File[], point: { x: number; y: number }) => {
@@ -454,8 +472,9 @@ export function FlowCanvas() {
         colorMode="dark"
         defaultMarkerColor="#7c8598"
         defaultViewport={initialViewport ?? undefined}
-        fitView={!initialViewport}
+        fitView={!initialViewport && benchCount === 0}
         fitViewOptions={{ padding: 0.25, maxZoom: 1.25 }}
+        onlyRenderVisibleElements={nodes.length >= VIRTUALIZE_THRESHOLD}
         minZoom={0.15}
         maxZoom={4}
         snapToGrid={snapToGrid}

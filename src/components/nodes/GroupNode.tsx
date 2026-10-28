@@ -1,11 +1,12 @@
 import { NodeResizer, type NodeProps } from "@xyflow/react";
-import { useRef, type CSSProperties } from "react";
+import { memo, useRef, type CSSProperties } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
 import { NOTE_COLORS, useCanvasStore } from "../../store/canvasStore";
 import type { GroupNodeModel } from "../../types";
 import { NodeColors } from "./NodeColors";
+import { nodePropsEqual } from "./nodePropsEqual";
 
-export function GroupNode({ id, data, selected }: NodeProps<GroupNodeModel>) {
+function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const commit = useCanvasStore((state) => state.commit);
   const editing = useRef(false);
@@ -51,3 +52,6 @@ export function GroupNode({ id, data, selected }: NodeProps<GroupNodeModel>) {
     </div>
   );
 }
+
+
+export const GroupNode = memo(GroupNodeImpl, nodePropsEqual);

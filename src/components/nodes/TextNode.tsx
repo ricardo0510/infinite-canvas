@@ -1,11 +1,12 @@
 import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
-import { useRef, type CSSProperties } from "react";
+import { memo, useRef, type CSSProperties } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
 import { NOTE_COLORS, useCanvasStore } from "../../store/canvasStore";
 import type { TextNodeModel } from "../../types";
 import { NodeColors } from "./NodeColors";
+import { nodePropsEqual } from "./nodePropsEqual";
 
-export function TextNode({ id, data, selected }: NodeProps<TextNodeModel>) {
+function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const commit = useCanvasStore((state) => state.commit);
   const editing = useRef(false);
@@ -67,3 +68,6 @@ export function TextNode({ id, data, selected }: NodeProps<TextNodeModel>) {
     </div>
   );
 }
+
+
+export const TextNode = memo(TextNodeImpl, nodePropsEqual);

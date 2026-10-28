@@ -5,6 +5,8 @@ import { useCanvasStore } from "../store/canvasStore";
 /** Debounced local-first autosave. */
 export function useAutoSave(): void {
   useEffect(() => {
+    // Benchmark mode replaces the canvas in memory and must not overwrite local data.
+    if (new URLSearchParams(window.location.search).has("bench")) return;
     let timer: number | undefined;
     const unsubscribe = useCanvasStore.subscribe((state, previous) => {
       if (

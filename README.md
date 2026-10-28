@@ -1,4 +1,4 @@
-# Infinite Canvas
+﻿# Infinite Canvas
 
 A local-first infinite canvas built with React 19, TypeScript, [@xyflow/react](https://reactflow.dev), and Zustand.
 
@@ -47,6 +47,22 @@ npm test           # vitest run
 ```
 
 CI runs typecheck, lint, unit tests, and a production build on every push and pull request.
+
+## Performance
+
+```bash
+npm run bench -- 500
+npm run bench -- 1000
+```
+
+The benchmark builds the app, starts a preview server and drives a throwaway headless Chrome (`CHROME_PATH` overrides auto-detection). It reports setup time, idle FPS, drag FPS, long tasks and JS heap. Above 80 nodes only nodes inside the viewport are mounted.
+
+| Nodes | Rendered DOM | Setup | Idle | Drag | Long tasks |
+| --- | --- | --- | --- | --- | --- |
+| 500 | 15 | 323 ms | 60.3 fps | 60.1 fps | 0 |
+| 1000 | 15 | 396 ms | 60.3 fps | 60.1 fps | 0 |
+
+Headless Chrome, 1440脳900, production build.
 
 ## Shortcuts
 
@@ -97,6 +113,7 @@ src/
     guides.ts             # smart snapping + alignment guide math
     templates.ts          # starter canvases
     images.ts             # image validation, decode and fit sizing
+    stress.ts             # deterministic canvas used by the benchmark
     layout.ts             # Dagre (dynamic import)
   store/
     canvasStore.ts        # nodes/edges/history/clipboard
@@ -109,3 +126,4 @@ Data model: `{ version: 2, nodes, edges, viewport? }`. Older `v1` snapshots are 
 
 - Everything stays in the browser. Image uploads are stored as data URLs, so very large images will hit the `localStorage` quota.
 - `BASE_PATH` controls the Vite `base`; the Pages workflow builds with `/infinite-canvas/`.
+
