@@ -10,6 +10,7 @@ import { defaultParams } from "../../lib/ai/models";
 import { useAiModels } from "../../lib/ai/useModels";
 import { Button } from "../ui/Button";
 import { Select, Textarea } from "../ui/Control";
+import { ErrorBanner } from "../ui/Feedback";
 import { NodeSettingsDialog } from "./NodeSettingsDialog";
 
 function isRunning(generation: GenerationMeta): boolean {
@@ -144,12 +145,10 @@ export function AiPanel() {
           </div>
 
           {generation.error ? (
-            <p className="error-banner ai-error" role="alert">
-              {generation.error.message}
-            </p>
+            <ErrorBanner className="ai-error">{generation.error.message}</ErrorBanner>
           ) : null}
           {modelsState.error ? (
-            <p className="error-banner ai-error">{modelsState.error}</p>
+            <ErrorBanner className="ai-error">{modelsState.error}</ErrorBanner>
           ) : null}
         </div>
       </NodeToolbar>

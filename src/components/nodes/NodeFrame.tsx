@@ -1,5 +1,6 @@
 import { Handle, Position } from "@xyflow/react";
 import type { CSSProperties, ReactNode } from "react";
+import { ErrorBanner } from "../ui/Feedback";
 import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
 import { NodeTitleBar } from "./NodeTitleBar";
 
@@ -42,11 +43,7 @@ export function NodeFrame({
       {running ? <NodeLoadingOverlay label={loadingLabel} progress={progress} /> : null}
       <div className="node-body nowheel">
         {children}
-        {error ? (
-          <p className="error-banner node-error" role="alert">
-            {error}
-          </p>
-        ) : null}
+        {error ? <ErrorBanner className="node-error">{error}</ErrorBanner> : null}
       </div>
       <Handle type="source" position={Position.Right} className="node-handle" />
     </div>

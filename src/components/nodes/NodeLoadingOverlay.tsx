@@ -1,3 +1,5 @@
+import { ProgressBar, Spinner } from "../ui/Feedback";
+
 type NodeLoadingOverlayProps = {
   label?: string;
   progress?: number;
@@ -6,12 +8,10 @@ type NodeLoadingOverlayProps = {
 export function NodeLoadingOverlay({ label = "生成中", progress }: NodeLoadingOverlayProps) {
   return (
     <div className="node-loading" aria-live="polite">
-      <span className="node-loading-spinner" aria-hidden="true" />
+      <Spinner />
       <strong>{label}</strong>
       {progress !== undefined ? (
-        <span className="node-loading-track" aria-hidden="true">
-          <span style={{ width: `${Math.min(100, Math.max(0, progress))}%` }} />
-        </span>
+        <ProgressBar value={progress} className="node-loading-track" label={label} />
       ) : null}
     </div>
   );

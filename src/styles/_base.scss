@@ -49,14 +49,6 @@ kbd {
   border: 0;
 }
 
-.error-banner {
-  margin: 0;
-  border-radius: var(--radius-sm);
-  background: rgb(248 113 113 / 16%);
-  color: var(--danger-soft);
-  line-height: 1.45;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
