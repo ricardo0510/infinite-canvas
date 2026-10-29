@@ -1,9 +1,23 @@
+@media (min-width: 1281px) {
+  .react-flow__minimap {
+    bottom: 92px !important;
+  }
+}
+
+@media (max-width: 1280px) {
+  .tool-label {
+    display: none;
+  }
+
+  .toolbar .btn {
+    padding: 0 9px;
+  }
+}
+
 @media (max-width: 760px) {
-  .topbar {
-    flex-wrap: wrap;
-    height: auto;
-    min-height: 56px;
-    padding: var(--space-2) 10px;
+  .brand-dock {
+    top: 10px;
+    left: 10px;
   }
 
   .brand-copy p,
@@ -11,33 +25,40 @@
     display: none;
   }
 
-  .toolbar {
-    flex: 1 1 100%;
+  .bottom-dock {
+    right: 10px;
+    bottom: 10px;
+    left: 10px;
     width: auto;
+    align-items: stretch;
+    transform: none;
+  }
+
+  .toolbar {
+    flex-wrap: nowrap;
     justify-content: flex-start;
+    overflow-x: auto;
     gap: var(--space-1);
   }
 
   .statusbar {
-    bottom: 52px;
-    left: var(--space-3);
-    max-width: calc(100vw - 24px);
-    transform: none;
+    display: none;
+  }
+
+  .canvas-controls {
+    bottom: 60px;
   }
 
   /* 小屏缩小第三方小地图，避免遮挡画布与控制条 */
   .react-flow__minimap {
     width: 132px !important;
     height: 88px !important;
+    bottom: 60px !important;
   }
 
   .toolbar .btn {
     height: 30px;
     padding: 0 var(--space-2);
-  }
-
-  .tool-label {
-    display: none;
   }
 
   .help-grid {

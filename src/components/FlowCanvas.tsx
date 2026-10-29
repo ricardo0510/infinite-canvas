@@ -33,7 +33,6 @@ import { EmptyState } from "./EmptyState";
 import { MediaPreviewModal } from "./MediaPreviewModal";
 import { CanvasEdge } from "./edges/CanvasEdge";
 import { SelectionToolbar } from "./SelectionToolbar";
-import { StatusBar } from "./StatusBar";
 import { GroupNode } from "./nodes/GroupNode";
 import { ImageNode } from "./nodes/ImageNode";
 import { TextNode } from "./nodes/TextNode";
@@ -315,7 +314,6 @@ export function FlowCanvas() {
           onFitView={() => fitView({ padding: 0.2, duration: 300 })}
         />
       ) : null}
-      <StatusBar />
     </div>
   );
 }

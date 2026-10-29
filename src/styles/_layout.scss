@@ -1,30 +1,28 @@
 @use "surfaces" as surface;
 
 .app {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.topbar {
-  z-index: var(--z-toolbar);
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  height: 60px;
-  padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--border);
-  background: rgb(17 20 27 / 92%);
-  backdrop-filter: blur(12px);
+.brand-dock {
+  position: absolute;
+  top: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-float);
 }
 
 .brand {
+  @include surface.glass;
+
   display: flex;
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+  padding: 5px 10px 5px 6px;
+  border-radius: var(--radius-xl);
 }
 
 .brand-mark {
@@ -71,17 +69,27 @@
   background: transparent;
 }
 
-.statusbar {
-  @include surface.card(var(--border), var(--radius-md), rgb(17 20 27 / 78%), none, 10px);
-
+.bottom-dock {
   position: absolute;
   bottom: var(--space-3);
   left: 50%;
-  z-index: var(--z-status);
+  z-index: var(--z-float);
+  display: flex;
+  width: max-content;
+  max-width: calc(100vw - 24px);
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   transform: translateX(-50%);
+}
+
+.statusbar {
+  @include surface.card(var(--border), var(--radius-md), rgb(17 20 27 / 78%), none, 10px);
+
   display: flex;
   align-items: center;
   gap: 7px;
+  max-width: 100%;
   padding: 6px 10px;
   color: var(--muted);
   font-size: var(--font-xs);

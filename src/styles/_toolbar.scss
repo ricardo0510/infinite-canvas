@@ -1,10 +1,16 @@
+@use "surfaces" as surface;
+
 .toolbar {
+  @include surface.glass;
+
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: center;
   gap: 6px;
-  min-width: 0;
+  max-width: 100%;
+  padding: 5px 6px;
+  border-radius: var(--radius-xl);
 }
 
 .tool-cluster {
