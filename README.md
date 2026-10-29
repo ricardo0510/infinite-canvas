@@ -54,6 +54,17 @@ npm run build      # tsc -b + vite build
 npm run preview
 ```
 
+## Backend
+
+```bash
+cd server
+cp .env.example .env
+npm install
+npm run dev        # http://localhost:8790/v1
+```
+
+前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。当前后端骨架使用内存任务、本地磁盘上传和 Mock Provider，完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)。
+
 ## Quality
 
 ```bash

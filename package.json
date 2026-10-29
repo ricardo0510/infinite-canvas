@@ -12,6 +12,11 @@
     "test:watch": "vitest",
     "bench": "node scripts/benchmark.mjs",
     "audit:css": "node scripts/css-audit.mjs",
+    "dev:api": "npm --prefix server run dev",
+    "build:api": "npm --prefix server run build",
+    "typecheck:api": "npm --prefix server run typecheck",
+    "lint:api": "npm --prefix server run lint",
+    "test:api": "npm --prefix server run test",
     "preview": "vite preview"
   },
   "dependencies": {
