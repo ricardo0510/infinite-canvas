@@ -1,0 +1,44 @@
+/* 浮层表面：把重复的边框/背景/圆角/阴影收敛成可复用 mixin */
+@mixin menu {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+@mixin dialog(
+  $radius: var(--radius-2xl),
+  $bg: var(--panel),
+  $shadow: 0 24px 60px rgb(0 0 0 / 55%)
+) {
+  border: 1px solid var(--border-strong);
+  border-radius: $radius;
+  background: $bg;
+  box-shadow: $shadow;
+}
+
+@mixin palette(
+  $radius: var(--radius-2xl),
+  $bg: var(--panel-dialog),
+  $shadow: var(--shadow-xl)
+) {
+  border: 1px solid var(--border-strong);
+  border-radius: $radius;
+  background: $bg;
+  box-shadow: $shadow;
+}
+
+@mixin glass {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(17 20 27 / 92%);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+}
+
+@mixin toast {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-raised);
+  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
+}

@@ -1,3 +1,34 @@
+@use "surfaces" as surface;
+
+/* ---------- Shared dialog header ---------- */
+
+.dialog-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 13px var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.dialog-head-copy {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 650;
+}
+
+.dialog-head p {
+  margin: 2px 0 0;
+  color: var(--muted);
+  font-size: var(--font-xs);
+  line-height: 1.5;
+}
+
 /* ---------- Shared modal ---------- */
 
 .modal-backdrop {
@@ -12,51 +43,29 @@
 }
 
 .modal {
+  @include surface.dialog;
+
   width: 360px;
   max-width: calc(100vw - 28px);
   padding: var(--space-4);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-2xl);
-  background: var(--panel);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 55%);
-}
-
-.modal h2 {
-  margin: 0 0 var(--space-1);
-  font-size: var(--font-lg);
 }
 
 /* ---------- Help modal ---------- */
 
 .help-modal {
+  @include surface.dialog(var(--radius-3xl), var(--panel-dialog), var(--shadow-xl));
+
   width: min(760px, 100%);
   max-height: min(82vh, 640px);
   overflow: auto;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-3xl);
-  background: var(--panel-dialog);
-  box-shadow: var(--shadow-xl);
 }
 
 .help-head {
   position: sticky;
   top: 0;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--border);
+  z-index: 1;
   background: var(--panel-dialog);
 }
-
-.help-head h2 {
-  margin: 0;
-  font-size: var(--font-lg);
-  font-weight: 650;
-}
-
-
-
 
 .help-grid {
   display: grid;
@@ -109,25 +118,6 @@
   padding: 0;
   overflow: hidden;
 }
-
-.node-settings-head {
-  display: flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 13px var(--space-4);
-  border-bottom: 1px solid var(--border);
-}
-
-.modal.node-settings .node-settings-head h2 {
-  flex: 1 1 auto;
-  margin: 0;
-  font-size: var(--font-md);
-  font-weight: 600;
-}
-
-
-
 
 .node-settings-body {
   display: flex;

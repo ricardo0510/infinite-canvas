@@ -1,3 +1,5 @@
+@use "surfaces" as surface;
+
 /* ---------- File drop overlay ---------- */
 
 .drop-overlay {
@@ -61,18 +63,16 @@
 }
 
 .toast {
+  @include surface.toast;
+
   display: flex;
   align-items: flex-start;
   gap: var(--space-3);
   padding: 10px 10px 10px var(--space-3);
-  border: 1px solid var(--border-strong);
   border-left-width: 3px;
-  border-radius: var(--radius-lg);
-  background: var(--panel-raised);
   color: var(--text-2);
   font-size: var(--font-sm);
   line-height: 1.45;
-  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
   pointer-events: auto;
   animation: toast-in 0.18s ease-out;
 }

@@ -189,10 +189,15 @@
 
 /* ---------- AI settings ---------- */
 
-.ai-settings {
+.modal.ai-settings {
+  padding: 0;
+}
+
+.ai-settings-body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: var(--space-4);
 }
 
 .ai-settings-note {

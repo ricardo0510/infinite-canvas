@@ -18,7 +18,11 @@ const styleFiles = walk(STYLES_DIR).filter((file) => file.endsWith(".scss"));
 const sourceFiles = walk(SRC_DIR).filter((file) => /\.(tsx?|jsx?)$/.test(file));
 
 const styles = styleFiles
-  .map((file) => readFileSync(file, "utf8").replace(/\/\*[\s\S]*?\*\//g, ""))
+  .map((file) =>
+    readFileSync(file, "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/@include[^;]+;/g, ""),
+  )
   .join("\n");
 const componentStyles = styleFiles
   .filter((file) => !file.endsWith("_tokens.scss"))

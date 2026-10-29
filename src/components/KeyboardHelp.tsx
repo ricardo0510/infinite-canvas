@@ -1,6 +1,6 @@
 ﻿import { useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
-import { Button } from "./ui/Button";
+import { DialogHeader } from "./ui/DialogHeader";
 import { Modal } from "./ui/Modal";
 
 const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] = [
@@ -72,12 +72,12 @@ export function KeyboardHelp() {
 
   return (
     <Modal onClose={() => setOpen(false)} className="help-modal" labelledBy="help-title">
-      <header className="help-head">
-        <h2 id="help-title">键盘快捷键</h2>
-        <Button size="md" icon onClick={() => setOpen(false)} aria-label="关闭">
-          ×
-        </Button>
-      </header>
+      <DialogHeader
+        id="help-title"
+        title="键盘快捷键"
+        onClose={() => setOpen(false)}
+        className="help-head"
+      />
       <div className="help-grid">
         {GROUPS.map((group) => (
           <section key={group.title} className="help-group">

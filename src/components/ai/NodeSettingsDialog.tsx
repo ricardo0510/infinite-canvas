@@ -2,6 +2,7 @@ import type { GenerationMeta, GenerationParams, GenerationResultItem } from "../
 import { activateResult, patchGeneration } from "../../lib/ai/controller";
 import type { AiModel } from "../../lib/ai/types";
 import { Button } from "../ui/Button";
+import { DialogHeader } from "../ui/DialogHeader";
 import { Field, SelectField } from "../ui/Field";
 import { Modal } from "../ui/Modal";
 
@@ -46,12 +47,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
 
   return (
     <Modal onClose={onClose} className="modal node-settings" labelledBy="node-settings-title">
-      <header className="node-settings-head">
-        <h2 id="node-settings-title">生成设置</h2>
-        <Button size="sm" icon onClick={onClose} aria-label="关闭设置">
-          ×
-        </Button>
-      </header>
+      <DialogHeader id="node-settings-title" title="生成设置" onClose={onClose} />
       <div className="node-settings-body">
         {imageOutput ? (
           <>

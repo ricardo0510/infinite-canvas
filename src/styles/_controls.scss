@@ -1,3 +1,5 @@
+@use "surfaces" as surface;
+
 .canvas-controls {
   position: absolute;
   bottom: var(--space-3);
@@ -9,15 +11,12 @@
 }
 
 .canvas-control-group {
+  @include surface.glass;
+
   display: flex;
   align-items: center;
   gap: 1px;
   padding: 3px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: rgb(17 20 27 / 90%);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(12px);
 }
 
 .canvas-zoom-value {
@@ -52,6 +51,8 @@
 }
 
 .selection-toolbar {
+  @include surface.glass;
+
   position: absolute;
   top: var(--space-3);
   left: 50%;
@@ -60,12 +61,8 @@
   align-items: center;
   gap: 2px;
   padding: var(--space-1) 6px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: rgb(17 20 27 / 92%);
   box-shadow: 0 12px 34px rgb(0 0 0 / 45%);
   transform: translateX(-50%);
-  backdrop-filter: blur(12px);
 }
 
 .selection-count {

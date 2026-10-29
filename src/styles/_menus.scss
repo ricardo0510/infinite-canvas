@@ -1,14 +1,14 @@
+@use "surfaces" as surface;
+
 .context-menu {
+  @include surface.menu;
+
   position: fixed;
   z-index: var(--z-menu);
   display: flex;
   flex-direction: column;
   min-width: 200px;
   padding: 5px;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--panel-raised);
-  box-shadow: var(--shadow-lg);
 }
 
 .context-label {
@@ -42,12 +42,10 @@
 }
 
 .command-palette {
+  @include surface.palette;
+
   width: min(560px, 100%);
   overflow: hidden;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-2xl);
-  background: var(--panel-dialog);
-  box-shadow: var(--shadow-xl);
 }
 
 .command-input {
