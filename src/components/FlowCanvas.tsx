@@ -175,7 +175,8 @@ export function FlowCanvas() {
   };
 
   const handlePaneContextMenu = (event: MouseEvent | globalThis.MouseEvent) => {
-    openMenu(event as MouseEvent, []);
+    const selected = nodes.filter((node) => node.selected).map((node) => node.id);
+    openMenu(event as MouseEvent, selected);
   };
 
   const handleNodeContextMenu = (event: MouseEvent, node: CanvasNode) => {
