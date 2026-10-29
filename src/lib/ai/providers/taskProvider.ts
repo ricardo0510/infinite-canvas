@@ -1,6 +1,6 @@
 import { AI_TIMEOUTS } from "../config";
 import { AiRequestError, aiRequest } from "../http";
-import { buildImageBody, buildVideoBody } from "../payload";
+import { buildImageBody, buildTextBody, buildVideoBody } from "../payload";
 import { cancelRemoteTask } from "../taskManager";
 import type { AiProvider, ApiSubmitResult, GenerateInput, GenerationEvent } from "../types";
 
@@ -49,5 +49,6 @@ function createTaskProvider(
   };
 }
 
+export const textProvider = createTaskProvider("/text/generations", buildTextBody);
 export const imageProvider = createTaskProvider("/image/generations", buildImageBody);
 export const videoProvider = createTaskProvider("/video/generations", buildVideoBody);

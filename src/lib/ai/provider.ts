@@ -1,7 +1,6 @@
 import { isAiMock } from "./config";
-import { imageProvider, videoProvider } from "./providers/taskProvider";
+import { imageProvider, textProvider, videoProvider } from "./providers/taskProvider";
 import { mockProvider } from "./providers/mock";
-import { textProvider } from "./providers/text";
 import type { AiProvider, GenerationKind } from "./types";
 
 export function providerFor(kind: GenerationKind): AiProvider {

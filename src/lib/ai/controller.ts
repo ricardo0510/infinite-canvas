@@ -196,15 +196,13 @@ function applyEvent(nodeId: string, event: GenerationEvent): void {
     useCanvasStore.getState().updateNodeData(nodeId, {
       generation: { ...current, status: "running", taskId: event.taskId },
     });
-    if (kind === "image" || kind === "video") {
-      const meta: Partial<PendingTask> = {
-        kind,
-        modelId: current.modelId,
-        prompt: current.prompt,
-        startedAt: Date.now(),
-      };
-      watchTask(event.taskId, nodeId, meta);
-    }
+    const meta: Partial<PendingTask> = {
+      kind,
+      modelId: current.modelId,
+      prompt: current.prompt,
+      startedAt: Date.now(),
+    };
+    watchTask(event.taskId, nodeId, meta);
     return;
   }
   if (event.type === "progress") {

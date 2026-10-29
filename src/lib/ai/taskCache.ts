@@ -1,15 +1,19 @@
+import type { GenerationKind } from "../../types";
+
 const KEY = "infinite-canvas:ai-tasks";
 const MAX_AGE = 30 * 60 * 1000;
 
 export type PendingTask = {
   taskId: string;
   nodeId: string;
-  kind: "image" | "video";
+  kind: GenerationKind;
   modelId: string;
   prompt: string;
   startedAt: number;
   progress?: number;
 };
+
+const KINDS: GenerationKind[] = ["text", "image", "video"];
 
 function read(): PendingTask[] {
   try {
@@ -23,7 +27,7 @@ function read(): PendingTask[] {
         item !== null &&
         typeof item.taskId === "string" &&
         typeof item.nodeId === "string" &&
-        (item.kind === "image" || item.kind === "video") &&
+        KINDS.includes(item.kind) &&
         typeof item.startedAt === "number",
     );
   } catch {

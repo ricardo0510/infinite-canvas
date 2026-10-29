@@ -34,7 +34,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
             onChange={(event) => setApiBase(event.target.value)}
           />
         </Field>
-        <Field label="实时通道地址（可选）">
+        <Field label="实时通道地址（必填）">
           <Input
             value={realtimeBase}
             placeholder="wss://api.example.com"

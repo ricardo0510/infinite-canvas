@@ -4,10 +4,8 @@ const ENV_MOCK = import.meta.env.VITE_AI_MOCK === "1";
 
 export const AI_TIMEOUTS = {
   request: 30_000,
-  text: 300_000,
   upload: 300_000,
   task: 30 * 60 * 1000,
-  poll: 4_000,
 };
 
 function sessionValue(key: string): string {

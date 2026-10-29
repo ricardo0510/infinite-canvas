@@ -4,7 +4,7 @@
 > 目标仓库：`D:\Desktop\code\infinite-canvas`（Vite + React 19 + React Flow + Zustand，local-first）  
 > 接口策略：重新设计一套 camelCase API；HTTP 响应统一 `{ code, message, data }`；文本生成不流式，后端生成完成后一次性返回  
 > 文档状态：已进入开发，核心链路已落地  
-> 实现进度：Mock 默认开启；文本同步、图片/视频任务、任务恢复、AI 面板、Video 节点已实现；真实接口需按本文契约联调  
+> 实现进度：Mock 默认开启；文本/图片/视频异步任务、任务恢复、AI 面板、Video 节点已实现；真实接口需按本文契约联调  
 > 后端实现方案与完整 API 文档：`docs/backend-api-plan.md`（联调以该文档 §11.12 兼容性清单为准）
 
 ---
@@ -49,7 +49,7 @@
 | 多图 URL 用逗号拼成一个字符串 | `items[]` 数组 | 避免拆分、转义和空值问题 |
 | `taskStatus` 与 `status` 两种字段 | 统一 `status` | 减少映射 |
 | `gen_status: "done"` / `"queuing"` | `status: "succeeded"` / `"queued"` | 枚举语义统一 |
-| 文本生成依赖 Chat 会话或 SSE | 独立同步文本接口 | 画布节点不需要会话与逐字输出，结构更简单 |
+| 文本生成依赖 Chat 会话或 SSE | 独立异步文本任务 | 画布节点不需要会话与逐字输出，结构更简单 |
 | 图片生成使用 `input.messages[].content[{image},{text}]` | `prompt` + `references[]` | 画布场景没有多轮消息，结构更直接 |
 | 图片参数 `ratio` / `aspect_ratio` / `size` / `quality` 重叠 | `aspectRatio` / `resolution` / `qualityTier` | 三个字段各司其职 |
 | 任务只靠 WebSocket、HTTP 查询仅兜底 | WebSocket 与 HTTP 查询都是一等公民 | 静态部署、代理限制下 WebSocket 可能不可用 |
@@ -69,11 +69,11 @@
       -> MediaUploader         本地 idb:/data:/blob: -> https URL
       -> ModelRegistry         模型能力与参数约束
       -> AiProvider            可替换实现
-        -> TextProvider        POST /v1/text/generations（同步一次性返回）
+        -> TextProvider        POST /v1/text/generations（异步任务）
         -> ImageProvider       POST /v1/image/generations + Task
         -> VideoProvider       POST /v1/video/generations + Task
         -> MockProvider        无后端演示
-      -> TaskManager           WS 订阅 + HTTP 轮询兜底 + 刷新恢复
+      -> TaskManager           WS 订阅 + 快照恢复
     -> canvasStore.updateNodeData（写状态/结果）
 ```
 
@@ -299,7 +299,8 @@ Content-Type: multipart/form-data
 - `assetId` 可选，用于内容身份；没有就省略。
 - 返回的 URL 若带过期时间，需同时返回 `expiresAt`。
 
-### 3.4 文本生成（同步一次性返回）
+### 3.4 历史方案：文本同步生成（已被异步任务替代）
+> **2026-10-29 变更**：文本已改为异步任务 + WebSocket；接口返回 `taskId`，结果通过 `task.updated` 推送。以下同步内容保留为历史设计参考，后端实现见 `docs/backend-api-plan.md`。
 
 ```http
 POST /v1/text/generations
@@ -892,7 +893,7 @@ type PendingTask = {
 };
 ```
 
-- 只存图片/视频的未终态任务；文本是同步请求，不进任务缓存。
+- 存所有未终态任务（文本/图片/视频）；文本也通过任务缓存恢复。
 - 终态、节点删除、画布清空时移除。
 - 启动时与节点 `generation.taskId` 对齐。
 - 超过 30 分钟未终态：清理并标记失败。
@@ -919,7 +920,7 @@ src/lib/ai/
     image.ts
     video.ts
   controller.ts      # 生成编排与状态机
-  taskManager.ts     # 任务订阅、轮询、恢复
+  taskManager.ts     # 任务订阅、快照恢复
   taskCache.ts       # 未完成任务缓存
   media.ts           # 本地引用上传
   refs.ts            # 上游引用收集
@@ -1003,7 +1004,7 @@ export async function aiRequest<T>(
 - 拼接 `apiBase + path`。
 - 自动加 `Authorization`。
 - JSON 序列化，`FormData` 不设置 `Content-Type`。
-- 默认 30s 超时；文本 300s；上传 5 分钟。
+- 默认 30s 超时；上传 5 分钟；任务超时 30 分钟。
 - 解析 `{ code, message, data }`：
   - `code === 0` → 返回 `data`。
   - `code !== 0` → 抛 `AiRequestError(code, message, data, httpStatus)`。
@@ -1016,7 +1017,7 @@ export async function aiRequest<T>(
 
 `providers/text.ts`：
 
-- 调用 `POST /v1/text/generations`，超时 300s。
+- 调用 `POST /v1/text/generations`，返回 taskId；结果通过 WebSocket 推送。
 - 请求期间节点状态 `running`，UI 显示不确定进度/“生成中”。
 - 成功：用 `data.text` 整体替换节点文本，写入结果。
 - 失败：保留旧文本，写入错误，状态 `failed`。
@@ -1033,7 +1034,7 @@ export async function aiRequest<T>(
 - 心跳 20s；50s 无 `pong` 重连。
 - 重连后重新订阅所有未终态 taskId。
 - 事件只做转发，不直接写节点；由 `taskManager` 处理。
-- 没有 `realtimeBase` 或连接失败 → 纯轮询模式。
+- 没有 `realtimeBase` 时任务提交后无法接收结果，直接报错；连接失败会重连，不降级轮询。
 
 ### 5.6 模型
 
@@ -1074,7 +1075,7 @@ export interface AiProvider {
 }
 ```
 
-- `TextProvider`：同步请求；无 `accepted`，直接 `completed` / `failed`。
+- `TextProvider`：异步任务；发 `accepted`，等待 `task.updated`。
 - `ImageProvider` / `VideoProvider`：提交任务后 emit `accepted`，由 `taskManager` 推送进度与终态。
 - `MockProvider`：按延时输出；用于无后端演示。
 - 未来更换后端只需新增/替换 Provider。
@@ -1221,6 +1222,7 @@ idle
 - 成功写入结果后，把下游节点 `generation.stale = true`（第一版只标直接下游）。
 
 ### 6.6 任务管理
+> **2026-10-29 变更**：取消 HTTP 轮询兜底；任务结果只依赖 WebSocket，`subscribe` 时服务端立即下发现状快照。
 
 `taskManager.ts`：
 
@@ -1247,8 +1249,7 @@ export const taskManager = {
 
 - `watch`：加入映射、订阅实时通道、写入任务缓存。
 - 实时事件到达：按 taskId 找 nodeId，写节点；终态时 `unwatch`。
-- 无实时通道或 10s 未收到任何事件：启动轮询，每 5s 查一次 `GET /v1/tasks/{taskId}`。
-- 轮询和实时同时可用时，以先到终态为准；用 `settledTaskIds` 去重。
+- 不轮询：`subscribe` 时服务端立即推送每个任务的现状快照，断线重连后重新订阅即可补齐。
 - 任务超 30 分钟：标记失败并清理。
 - 节点删除：`disposeNode` 取消订阅、清理缓存；不调用取消接口（避免误伤用户可能仍想要的结果），可在后续版本提供“删除时取消任务”开关。
 
@@ -1264,16 +1265,16 @@ export const taskManager = {
    - 终态 → 写结果并清理。
    - 非终态 → `watch`。
 5. `kind=text` 且状态为 `running`：
-   - 文本是同步请求，刷新后请求已中断。
+   - 文本是异步任务，刷新后从任务缓存恢复并重新订阅。
    - 保留旧文本，状态改 `failed`，错误提示“生成已中断，请重新生成”。
 6. 超过 30 分钟未终态：标记失败并清理。
 
-### 6.8 文本一次性写入
+### 6.8 文本任务写入
 
-- 请求期间不修改 `data.text`，只把 `generation.status` 设为 `running`，UI 显示“生成中”。
+- 请求期间不修改 `data.text`，只把 `generation.status` 设为 `queued` / `running`，UI 显示“生成中”。
 - 成功后：
-  - 用返回的 `data.text` 整体替换 `data.text`。
-  - `results` 插入一条文本结果，`id = data.generationId`。
+  - 用任务结果项的 `text` 整体替换 `data.text`。
+  - `results` 插入一条文本结果，`id = result.items[0].id`。
   - `activeResultId` 指向新结果。
   - `status = "succeeded"`。
 - 失败 / 取消：保留旧文本与上一次 active 结果，只写错误/状态。
@@ -1429,7 +1430,7 @@ server: {
 ```
 
 - 静态托管（如 GitHub Pages）无法反代时，使用 Cloudflare Worker / Netlify Function 做同源 BFF，或把画布部署到 API 同域。
-- WebSocket 失败必须自动降级轮询，不能阻塞生成。
+- WebSocket 失败时保持重连；不降级轮询，超过任务超时标记失败。
 
 ### 9.3 安全
 
@@ -1462,7 +1463,7 @@ server: {
 
 ### 阶段 2：文本生成（0.5 天）
 
-- [ ] `providers/text.ts` 同步请求。
+- [ ] `providers/taskProvider.ts` 文本/图片/视频统一提交任务。
 - [ ] TextNode 面板、生成中状态、取消等待、失败重试。
 - [ ] schema v5 与 `sanitizeGeneration`。
 - 验收：点击生成后等待并整体替换文本；失败保留旧文本；刷新后未完成状态变为失败。
@@ -1471,7 +1472,7 @@ server: {
 
 - [ ] `media.ts` 上传。
 - [ ] `providers/image.ts`。
-- [ ] `taskManager` 实时 + 轮询。
+- [ ] `taskManager` 实时 + 快照恢复。
 - [ ] ImageNode 多图、active 切换、错误重试。
 - 验收：文生图/图生图、多图切换、上游参考图可用。
 
@@ -1513,7 +1514,7 @@ server: {
 | `payload.ts` | 图片模式与引用；视频四种模式；参数越界；extra 合并 |
 | `providers/text.ts` | 成功整体替换；失败保留旧文本；取消 |
 | `controller.ts` | idle→queued/running→succeeded/failed/canceled；重复提交拦截；节点删除 |
-| `taskManager.ts` | WS 事件、轮询兜底、终态去重、超时、恢复 |
+| `taskManager.ts` | WS 事件、终态去重、超时、快照恢复 |
 | `taskCache.ts` | 写入/读取/过期/节点不存在清理 |
 | `refs.ts` | 上游文本/图片/视频收集、去重、空值忽略 |
 | `media.ts` | `idb:`/`data:`/`blob:`/`https:` 分支；上传失败 |
@@ -1522,7 +1523,7 @@ server: {
 
 ### 11.2 集成测试
 
-- 模拟 `fetch`：模型列表、上传、文本同步生成、图片/视频提交、任务查询。
+- 模拟 `fetch`：模型列表、上传、文本/图片/视频任务提交、任务查询。
 - 模拟 WebSocket：`task.updated`、断线重连、漏事件补偿。
 - 不新增 MSW 等依赖，使用 Vitest mock。
 
@@ -1595,10 +1596,10 @@ README.md / ROADMAP.md
 
 ## 13. 待确认
 
-1. **文本生成超时**：后端同步生成建议控制在 120s 内；若可能超过网关超时，需要改为异步 Task。当前方案按同步设计，客户端超时 300s。
-2. **文本幂等语义**：同一 `clientRequestId` 已完成返回旧结果、进行中返回 `20006`，是否接受？
+1. **文本生成**：已改为异步任务 + WebSocket；不再使用同步接口和 300s 客户端超时。
+2. **文本幂等语义**：同一 `clientRequestId` 返回已有任务，HTTP 200。
 3. **鉴权**：token 由宿主注入，还是画布独立持有 API Key？推荐前者。
-4. **实时通道**：是否实现 WebSocket + ticket？若后端第一版只提供轮询，`taskManager` 可只启用轮询。
+4. **实时通道**：WebSocket + ticket 为必需能力；不支持轮询降级。`subscribe` 必须立即回快照。
 5. **结果 URL 有效期**：是否需要图片镜像到 IndexedDB？视频建议只存 URL。
 6. **视频音频**：是否需要 `generateAudio`？需要则模型能力补 `supportsAudio`。
 7. **上传限制**：图片/视频大小、格式白名单由后端确认。
@@ -1607,10 +1608,11 @@ README.md / ROADMAP.md
 ---
 
 ## 14. 当前实现说明
+> **2026-10-29 变更**：文本 Provider 已改为异步任务；`taskManager` 不再轮询。
 
 - 默认无 `VITE_AI_API_BASE_URL` 时启用 Mock，可直接体验文本/图片/视频三种节点。
-- 文本节点走同步 `POST /v1/text/generations`，等待期间保留旧文本，成功后整体替换。
-- 图片/视频任务支持 WebSocket `task.updated` 与 4s 轮询双通道，刷新后从任务缓存恢复。
+- 文本节点走异步 `POST /v1/text/generations`，返回 `taskId` 后等待 WebSocket 推送；等待期间保留旧文本，成功后整体替换。
+- 文本/图片/视频任务统一使用 WebSocket `task.updated`，不轮询；刷新后从任务缓存恢复并重新订阅。
 - 点击文本/图片/视频生成节点，在节点上方或下方自动选择空间更充足的一侧弹出输入框浮窗；本地静态上传节点点击只选中，不弹窗。节点本身展示生成结果，生成中显示遮罩进度。
 - 浮窗只保留提示词输入框；模型选择位于左下角，配置项在「生成设置」弹窗中，模式根据上游引用自动识别。
 - 已实现：模型选择、自动模式、比例、分辨率、数量、时长、画质档、背景、负向提示词、结果历史、active 切换、取消等待、错误重试。

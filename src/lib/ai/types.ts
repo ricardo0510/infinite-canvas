@@ -67,30 +67,19 @@ export type TaskStatus = "queued" | "running" | "succeeded" | "failed" | "cancel
 
 export type ApiTask = {
   taskId: string;
-  kind: "image" | "video";
+  kind: GenerationKind;
   status: TaskStatus;
   progress?: number;
   modelId: string;
   mode: string;
   result: {
-    kind: "image" | "video";
+    kind: GenerationKind;
     items: GenerationResultItem[];
   } | null;
   error: { code: number; message: string } | null;
   createdAt: string;
   updatedAt: string;
   expiresAt?: string;
-};
-
-export type ApiTextResult = {
-  generationId: string;
-  status: string;
-  modelId: string;
-  text: string;
-  usage?: GenerationUsage;
-  finishReason?: string;
-  createdAt: string;
-  completedAt?: string;
 };
 
 export type ApiSubmitResult = {

@@ -9,9 +9,10 @@
 ## 0. 结论摘要
 
 - 推荐技术栈：**Node.js 22 + TypeScript + NestJS（Fastify adapter）+ PostgreSQL + Prisma + Redis + BullMQ + S3 兼容存储 + 原生 WebSocket**。
-- 文本生成保持**同步一次性返回**；图片/视频使用**异步任务 + WebSocket 推送 + 4 秒 HTTP 轮询兜底**。
+- 文本、图片、视频统一使用**异步任务 + WebSocket 推送**；不提供 HTTP 轮询兜底。
 - 所有 HTTP 响应统一 `{ code, message, data }`；`code === 0` 表示成功。
-- 先做「模型目录、上传、文本、图片任务、任务查询、取消、实时票据」，再做「视频任务、限流、积分、审核、可观测性」。
+- 先做「模型目录、上传、任务提交（文本/图片）、任务查询、取消、实时票据」，再做「视频任务、限流、积分、审核、可观测性」。
+- WebSocket 是任务结果的唯一推送通道；`GET /tasks/{id}` 仅用于手动刷新、调试和排障，客户端不轮询。
 - 有一批**前端契约细节**必须在实现时遵守，见 §11.12，尤其是任务结果项必须包含 `kind`、`modelId`、`createdAt`，且不要返回 `304`。
 
 ---
@@ -22,7 +23,7 @@
 
 - 模型目录：按 `text` / `image` / `video` 返回可用模型与参数能力。
 - 文件上传：图片上传并返回可被生成服务访问的 URL；视频上传接口预留。
-- 文本生成：同步返回完整文本，不做 SSE、不做逐字输出。
+- 文本生成：异步任务，返回 `taskId`，结果通过 WebSocket 推送；不做 SSE、不做逐字输出。
 - 图片生成：异步任务，返回 `taskId`，支持查询、取消、实时推送。
 - 视频生成：异步任务，支持文生视频、图生视频、首尾帧、参考视频。
 - 任务状态：`queued` / `running` / `succeeded` / `failed` / `canceled`。
@@ -161,31 +162,13 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 | expiresAt | timestamptz | 可空 |
 | createdAt | timestamptz | |
 
-### 4.5 text_generations
-
-| 字段 | 类型 | 说明 |
-| --- | --- | --- |
-| id | text | `gen_...` |
-| userId | uuid | |
-| modelId | text | |
-| prompt | text | |
-| systemPrompt | text | 可空 |
-| params | jsonb | temperature / maxOutputTokens |
-| clientRequestId | text | 幂等键 |
-| status | text | running / succeeded / failed |
-| text | text | 成功结果 |
-| usage | jsonb | 可空 |
-| finishReason | text | 可空 |
-| errorCode / errorMessage | int / text | 可空 |
-| createdAt / completedAt | timestamptz | |
-
-### 4.6 tasks
+### 4.5 tasks
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | id | text | `task_...` |
 | userId | uuid | |
-| kind | text | image / video |
+| kind | text | text / image / video |
 | modelId | text | |
 | mode | text | |
 | request | jsonb | 归一化后的请求，便于重放/审计 |
@@ -219,7 +202,7 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 | userId | uuid | |
 | scope | text | text / image / video |
 | key | text | clientRequestId 哈希 |
-| resourceType | text | text_generation / task |
+| resourceType | text | task |
 | resourceId | text | |
 | expiresAt | timestamptz | 建议 24h |
 
@@ -257,14 +240,31 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 5. 写入 `uploads`，返回 `uploadId/url/mimeType/size/width/height/assetId`。
 6. 本地图片上传后，前端会把 `url` 放进 `references`；后端必须保证该 URL 可被 Provider 访问。
 
-### 5.3 文本生成
+### 5.3 文本任务
 
 1. 校验 `modelId` 属于 `kind=text` 且用户有权使用。
 2. 校验 `prompt` 长度、`params.temperature`、`maxOutputTokens`。
-3. 幂等检查：同 `clientRequestId` 已完成则直接返回已有结果；进行中返回 `20006`。
-4. 调用文本 Provider；建议服务端超时 ≤ 120 秒，前端客户端超时为 300 秒。
-5. 写入 `text_generations`，返回 `generationId/status/text/usage/finishReason/createdAt/completedAt`。
-6. 失败返回业务错误码；不要把上游原始堆栈返回给前端。
+3. 幂等检查：同 `clientRequestId` 返回已有任务（HTTP 200）。
+4. 写入 `tasks`（`kind=text`、`queued`），写入幂等键，投递 BullMQ。
+5. 立即返回 `202` + `{ taskId, status, createdAt }`。
+6. Worker 调用文本 Provider，成功后写入 `result`：
+   ```json
+   {
+     "kind": "text",
+     "items": [
+       {
+         "id": "item_1",
+         "kind": "text",
+         "text": "生成结果",
+         "modelId": "gpt-4-1-mini",
+         "createdAt": "2026-10-29T08:00:12Z",
+         "usage": { "inputTokens": 120, "outputTokens": 80 },
+         "finishReason": "stop"
+       }
+     ]
+   }
+   ```
+7. 通过 WebSocket 推送终态；失败返回业务错误码，不返回上游堆栈。
 
 ### 5.4 图片/视频任务
 
@@ -273,7 +273,7 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 3. 写入 `tasks`（`queued`），写入幂等键，投递 BullMQ。
 4. 立即返回 `202` + `{ taskId, status, createdAt }`。
 5. Worker 取任务，设置 `running`，调用 Provider 提交，保存 `providerTaskId`。
-6. Worker 轮询或接收 Provider 回调，更新 `progress/status/result/error`。
+6. Worker 轮询上游或接收 Provider 回调，更新 `progress/status/result/error`；这里指上游 Provider，不是客户端。
 7. 每次状态/进度变化写 Redis Pub/Sub，Realtime Gateway 推送 `task.updated`。
 8. 终态写完整 `result` 或 `error`；发终态事件；按 TTL 清理。
 
@@ -284,19 +284,20 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 3. 标记 `cancelRequestedAt`，调用 Provider 取消；若 Provider 不支持，直接本地标记 `canceled`。
 4. 返回最新任务对象。
 
-### 5.6 实时与轮询
+### 5.6 实时推送
 
-- 前端在提交任务后立即启动 4 秒轮询，同时尝试订阅 WebSocket；WebSocket 是加速通道，不是唯一依赖。
-- WebSocket 断开后前端会重连并重新订阅；重连后前端会用 HTTP 查询补偿未终态任务。
-- 因此后端必须保证 `GET /tasks/{id}` 与 `task.updated.data.task` 完全一致。
-- 进度更新建议节流到 1 秒一次，避免刷爆 WS；终态必须立即推送。
+- WebSocket 是任务结果的唯一推送通道；客户端不轮询。
+- 客户端在提交任务后订阅 `taskId`；服务端在收到 `subscribe` 时**立即推送每个任务的当前快照**，然后推送后续变化。
+- 断线重连后客户端会重新订阅；服务端再次返回当前快照，因此不需要 HTTP 轮询补偿。
+- `GET /v1/tasks/{taskId}` 仅用于手动刷新、调试和排障，不作为高频兜底。
+- 进度更新建议节流到 1 秒一次；终态必须立即推送。
+- WebSocket 不可用时，任务会等待到超时并失败，不会降级为轮询。
 
 ### 5.7 幂等
 
 - `clientRequestId` 视为不透明字符串（前端格式是 `nodeId:uuid`，但后端不要解析）。
 - 作用域：`userId + kind + clientRequestId`。
-- 文本：已完成返回成功；进行中返回 `20006`。
-- 图片/视频：返回已有任务，HTTP 200。
+- 文本、图片、视频统一返回已有任务，HTTP 200。
 - 保留 24 小时；过期后允许重新创建。
 
 ### 5.8 结果过期与清理
@@ -345,7 +346,7 @@ type ProviderAdapter = {
 ### 6.3 重试策略
 
 - 提交失败：指数退避重试 3 次；幂等键保证不重复创建。
-- 轮询失败：连续 5 次失败标记任务失败（前端也是 5 次后放弃）。
+- Worker 轮询上游失败：连续 5 次失败标记任务失败；这是 Worker 对 Provider 的轮询，不是客户端轮询。
 - 上游明确返回不可重试错误（内容审核、参数错误）时不要重试。
 
 ### 6.4 内容审核
@@ -430,10 +431,10 @@ DEV_ALLOW_ANONYMOUS
 | --- | --- | --- |
 | M0 | OpenAPI/契约、Mock 数据、错误码、环境变量 | 1–2 天 |
 | M1 | 鉴权、模型列表、上传 | 2–3 天 |
-| M2 | 文本生成 + 幂等 | 1–2 天 |
+| M2 | 文本任务 + 幂等 + WebSocket 终态 | 1–2 天 |
 | M3 | 图片任务 + BullMQ + 查询 + 取消 | 3–5 天 |
 | M4 | 视频任务 + 首尾帧/参考视频校验 | 3–5 天 |
-| M5 | WebSocket ticket + 实时推送 + 轮询兜底 | 2–3 天 |
+| M5 | WebSocket ticket + 订阅快照 + 实时推送 | 2–3 天 |
 | M6 | 限流、审核、积分预留、监控、压测 | 2–3 天 |
 
 单人全职约 3–4 周；可与前端 Mock 并行，先交付 M0/M1 让联调跑起来。
@@ -443,11 +444,12 @@ DEV_ALLOW_ANONYMOUS
 ## 9. 测试计划
 
 - 契约测试：用前端 `payload.ts` 生成的请求体做 fixture，验证响应字段。
+- 文本任务测试：`POST /text/generations` 返回 202，终态结果项包含 `kind/modelId/createdAt/text`。
 - 状态机测试：queued → running → succeeded/failed/canceled，非法转换返回 20005。
 - 幂等测试：并发相同 `clientRequestId` 只创建一个任务；24 小时后可重建。
 - 上传测试：大小、MIME、伪装文件、损坏图片、重复哈希。
-- 实时测试：ticket 过期/复用、订阅越权、断线重连、漏事件补偿。
-- 故障注入：Provider 超时、429、5xx、返回空结果、取消后仍回调。
+- 实时测试：ticket 过期/复用、订阅越权、subscribe 立即回快照、断线重连后重新订阅、终态事件不丢。
+- 故障注入：Provider 超时、429、5xx、返回空结果、取消后仍回调、WS 断开。
 - 压测：任务提交 QPS、Worker 并发、WS 连接数、Redis 积压。
 
 ---
@@ -701,31 +703,57 @@ Content-Type: application/json
 | params.maxOutputTokens | 否 | 最大输出 token |
 | clientRequestId | 是 | 幂等键，20–128 字符 |
 
-响应：
+响应 `202`：
 
 ```json
 {
   "code": 0,
   "message": "ok",
   "data": {
-    "generationId": "gen_123",
-    "status": "succeeded",
-    "modelId": "gpt-4-1-mini",
-    "text": "第一点，明确目标。\n第二点，拆解路径。\n第三点，定义验收标准。",
-    "usage": { "inputTokens": 120, "outputTokens": 80 },
-    "finishReason": "stop",
-    "createdAt": "2026-10-29T08:00:00Z",
-    "completedAt": "2026-10-29T08:00:12Z"
+    "taskId": "task_text_123",
+    "status": "queued",
+    "createdAt": "2026-10-29T08:00:00Z"
   }
+}
+```
+
+文本结果通过 `GET /v1/tasks/{taskId}` 或 WebSocket `task.updated` 返回，任务结构：
+
+```json
+{
+  "taskId": "task_text_123",
+  "kind": "text",
+  "status": "succeeded",
+  "progress": 100,
+  "modelId": "gpt-4-1-mini",
+  "mode": "",
+  "result": {
+    "kind": "text",
+    "items": [
+      {
+        "id": "item_1",
+        "kind": "text",
+        "text": "第一点，明确目标。\n第二点，拆解路径。\n第三点，定义验收标准。",
+        "modelId": "gpt-4-1-mini",
+        "createdAt": "2026-10-29T08:00:12Z",
+        "usage": { "inputTokens": 120, "outputTokens": 80 },
+        "finishReason": "stop"
+      }
+    ]
+  },
+  "error": null,
+  "createdAt": "2026-10-29T08:00:00Z",
+  "updatedAt": "2026-10-29T08:00:12Z"
 }
 ```
 
 规则：
 
-- 同步返回，不使用 SSE。
-- 服务端建议控制在 120 秒内；前端超时 300 秒。
-- 相同 `clientRequestId` 已完成 → 返回已有结果；进行中 → `20006`。
-- 失败不返回部分文本；前端保留旧文本并显示错误。
+- 异步任务，不使用 SSE，不做逐字输出。
+- 提交后通过 WebSocket 推送；客户端不轮询。
+- 相同 `clientRequestId` 返回已有任务，HTTP `200`。
+- `result.items[]` 必须包含 `kind: "text"`、`modelId`、`createdAt`；`usage`、`finishReason` 可选。
+- 失败时 `result=null`，`error` 非空；前端保留旧文本并显示错误。
 
 ## 11.6 图片生成
 
@@ -884,6 +912,7 @@ Authorization: Bearer <token>
 规则：
 
 - `status`：`queued` / `running` / `succeeded` / `failed` / `canceled`。
+- `kind`：`text` / `image` / `video`。
 - `progress`：0–100，可省略。
 - `result` 在非成功状态为 `null`。
 - `result.kind` 与 `task.kind` 一致。
@@ -1015,7 +1044,7 @@ wss://{realtimeHost}/v1/realtime?ticket=rt_01J...
 - `data.task` 必须与 `GET /v1/tasks/{taskId}` 的 `data` 完全一致。
 - 终态事件带完整 `result` 或 `error`，客户端不再查询。
 - 客户端每 20 秒 `ping`；50 秒未收到 `pong` 视为断线。
-- 重连后客户端会重新订阅；服务端需允许重新订阅。
+- 重连后客户端会重新订阅；服务端需允许重新订阅，并在收到 `subscribe` 时立即推送每个任务的当前快照。
 - 进度事件可节流；终态事件不可丢。
 - 订阅前校验任务归属，越权返回 `error`。
 
@@ -1026,17 +1055,18 @@ wss://{realtimeHost}/v1/realtime?ticket=rt_01J...
 1. **`result.items[].kind` 必填**：前端按 `item.kind === node.kind` 过滤；缺失会报「任务成功但未返回结果」。
 2. **`result.items[].modelId` / `createdAt` 必填**：前端结果类型需要；缺失虽能运行，但结果历史字段不完整。
 3. **不要返回 304**：前端只处理 204 和 JSON；304 空响应会被判为格式异常。ETag 可以加，但仍返回 200 + JSON。
-4. **文本接口同步返回**：前端超时 300 秒；建议后端 120 秒内完成，否则改为错误返回或另立异步文本协议。
-5. **轮询从提交后立即开始，每 4 秒一次**：不要假设只有 WebSocket。
-6. **WebSocket base 只填 host**：客户端会拼 `/v1/realtime`。
-7. **接受 `watermark: true` 与 `generateAudio: false`**：前端默认参数可能包含它们，模型不支持音频时不要因为 `false` 拒绝。
-8. **`GET /models` 无 `kind` 时返回全部**：前端会自行过滤。
-9. **`clientRequestId` 当作不透明字符串**：不要解析 `nodeId:uuid`。
-10. **错误必须是 JSON envelope**：代理返回 HTML 错误页会导致前端显示「服务响应格式异常」。
-11. **CORS 允许 `Authorization`、`Content-Type`、`X-Request-Id`**。
-12. **HTTP 状态与业务码同时正确**：前端用 `code` 判断业务失败，用 401 触发重新登录。
-13. **任务结果 URL 必须可被浏览器访问**：生成结果不要只给内网地址。
-14. **终态不可重复操作**：取消已终态任务返回 `20005`；重复查询应保持幂等。
+4. **文本也走异步任务**：`POST /v1/text/generations` 返回 `202` + `taskId`，不要在响应里直接返回文本。
+5. **不要实现 HTTP 轮询兜底**：客户端只依赖 WebSocket；`GET /v1/tasks/{id}` 仅用于手动刷新、调试和排障。
+6. **subscribe 必须立即回快照**：客户端订阅后不再轮询；服务端要在 `subscribe` 后立刻推送每个任务的当前 `task.updated`，断线重连后同样。
+7. **WebSocket base 只填 host**：客户端会拼 `/v1/realtime`。
+8. **接受 `watermark: true` 与 `generateAudio: false`**：前端默认参数可能包含它们，模型不支持音频时不要因为 `false` 拒绝。
+9. **`GET /models` 无 `kind` 时返回全部**：前端会自行过滤。
+10. **`clientRequestId` 当作不透明字符串**：不要解析 `nodeId:uuid`。
+11. **错误必须是 JSON envelope**：代理返回 HTML 错误页会导致前端显示「服务响应格式异常」。
+12. **CORS 允许 `Authorization`、`Content-Type`、`X-Request-Id`**。
+13. **HTTP 状态与业务码同时正确**：前端用 `code` 判断业务失败，用 401 触发重新登录。
+14. **任务结果 URL 必须可被浏览器访问**：生成结果不要只给内网地址。
+15. **终态不可重复操作**：取消已终态任务返回 `20005`；重复查询应保持幂等。
 
 ---
 

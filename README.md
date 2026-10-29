@@ -43,7 +43,7 @@ VITE_AI_REALTIME_BASE_URL=wss://your-api.example.com
 VITE_AI_MOCK=0
 ```
 
-Open the `AI` button in the toolbar to set a session token. Click a Text, Image, or Video node to open its prompt editor next to the node; generated content stays on the node itself. The API contract is documented in [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
+Open the `AI` button in the toolbar to set a session token. Click a Text, Image, or Video node to open its prompt editor next to the node; generated content stays on the node itself. Text, image, and video generation all run as async tasks and require the realtime WebSocket channel; there is no HTTP polling fallback. API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
 
 ## Run
 
