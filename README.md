@@ -25,7 +25,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
-- AI generation: text, image and video nodes with model selection, prompts, references from upstream nodes, task recovery and local Mock mode
+- AI generation: text, image and video nodes with model selection, prompts, references from upstream nodes and task recovery
 - Right-click context menu: add nodes, duplicate, layer order, group, delete
 - One-click auto layout (Dagre, loaded on demand)
 - Undo/redo, copy/paste, duplicate
@@ -42,7 +42,6 @@ VITE_AI_API_BASE_URL=https://your-api.example.com/v1
 VITE_AI_REALTIME_BASE_URL=wss://your-api.example.com
 # 仅当服务端配置了 API_TOKEN 时填写同一个值
 VITE_AI_TOKEN=
-VITE_AI_MOCK=0
 ```
 
 工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
@@ -68,7 +67,7 @@ npm run dev        # http://localhost:8790/v1
 npm run dev:admin  # http://localhost:8791/admin
 ```
 
-前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。文本模型支持 DeepSeek 4.1 Flash（配置 `DEEPSEEK_API_KEY` 后自动出现在模型列表），图片/视频仍由 Mock Provider 产生。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)，后台管理方案见 [docs/admin-system-development-plan.md](./docs/admin-system-development-plan.md)，用户 API Key 托管方案见 [docs/byok-api-key-development-plan.md](./docs/byok-api-key-development-plan.md)。
+前端开发模式通过 Vite 代理访问 `/v1`，无需填写接口地址。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。文本模型支持 DeepSeek 4.1 Flash（配置 `DEEPSEEK_API_KEY` 后自动出现在模型列表），图片/视频生成待接入真实供应商。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)，后台管理方案见 [docs/admin-system-development-plan.md](./docs/admin-system-development-plan.md)，用户 API Key 托管方案见 [docs/byok-api-key-development-plan.md](./docs/byok-api-key-development-plan.md)。
 
 ## Quality
 
@@ -142,7 +141,7 @@ src/
     useCanvasShortcuts.ts
     useResolvedImageSrc.ts # IndexedDB ref → object URL
   lib/
-    ai/                   # API client, providers, task manager, mock
+    ai/                   # API client, providers, task manager
     storage.ts            # schema v5, validation, migration, import/export
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math

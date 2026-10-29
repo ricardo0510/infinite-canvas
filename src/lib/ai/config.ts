@@ -1,6 +1,5 @@
 const ENV_API_BASE = import.meta.env.VITE_AI_API_BASE_URL ?? "";
 const ENV_REALTIME_BASE = import.meta.env.VITE_AI_REALTIME_BASE_URL ?? "";
-const ENV_MOCK = import.meta.env.VITE_AI_MOCK === "1";
 
 function devDefaultApiBase(): string {
   if (!import.meta.env.DEV || import.meta.env.MODE === "test") return "";
@@ -51,10 +50,6 @@ export function getAiRealtimeBase(): string {
       sessionValue("ic:ai-realtime-base") ||
       deriveRealtimeBase(getAiApiBase()),
   );
-}
-
-export function isAiMock(): boolean {
-  return ENV_MOCK || !getAiApiBase();
 }
 
 export function setAiRuntimeConfig(input: {

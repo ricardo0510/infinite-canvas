@@ -1,43 +1,12 @@
 import { PrismaClient } from "@prisma/client";
-import { SEED_MODELS } from "../src/models/models.seed";
 
 const prisma = new PrismaClient();
-
-function modelData(model: (typeof SEED_MODELS)[number], sortOrder: number) {
-  return {
-    id: model.id,
-    name: model.name,
-    kind: model.kind,
-    modes: model.modes,
-    description: model.description ?? null,
-    logoUrl: model.logoUrl ?? null,
-    limits: model.limits,
-    output: model.output,
-    params: model.params ?? null,
-    pricing: model.pricing ?? null,
-    providerId: "mock",
-    providerModel: model.id,
-    enabled: true,
-    sortOrder,
-  };
-}
 
 async function main(): Promise<void> {
   await prisma.user.upsert({
     where: { id: "default-user" },
     update: {},
     create: { id: "default-user", name: "默认用户" },
-  });
-
-  await prisma.providerConfig.upsert({
-    where: { id: "mock" },
-    update: {},
-    create: {
-      id: "mock",
-      name: "Mock Provider",
-      type: "mock",
-      baseUrl: "local://mock",
-    },
   });
 
   const deepseekModel = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
@@ -107,14 +76,6 @@ async function main(): Promise<void> {
     });
   }
 
-  for (const [index, model] of SEED_MODELS.entries()) {
-    await prisma.modelConfig.upsert({
-      where: { id: model.id },
-      update: {},
-      create: modelData(model, index),
-    });
-  }
-
   await prisma.modelConfig.upsert({
     where: { id: deepseekModel },
     update: {},
@@ -133,7 +94,13 @@ async function main(): Promise<void> {
     },
   });
 
-  console.log("Seeded mock models and DeepSeek provider/model");
+  // 清理旧版本内置的模拟数据
+  await prisma.modelConfig.deleteMany({
+    where: { id: { in: ["mock-text", "mock-image", "mock-video"] } },
+  });
+  await prisma.providerConfig.deleteMany({ where: { id: "mock" } });
+
+  console.log("Seeded providers and DeepSeek model");
 }
 
 main()

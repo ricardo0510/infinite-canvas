@@ -3,29 +3,8 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaClient, type ModelConfig } from "@prisma/client";
 import { ApiException } from "../common/api-exception";
 import type { AiModel, ModelKind } from "./model.types";
-import { SEED_MODELS } from "./models.seed";
 
 const CACHE_MS = 10_000;
-
-function fallbackModels(config?: ConfigService): AiModel[] {
-  const models = [...SEED_MODELS];
-  const apiKey = config?.get<string>("DEEPSEEK_API_KEY")?.trim();
-  if (apiKey) {
-    const modelId = config?.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-flash";
-    if (!models.some((model) => model.id === modelId)) {
-      models.unshift({
-        id: modelId,
-        name: "DeepSeek 4.1 Flash",
-        kind: "text",
-        modes: [],
-        description: "DeepSeek 4.1 Flash（OpenAI 兼容接口）",
-        limits: { maxPromptLength: 60_000, maxImages: 0, maxVideos: 0 },
-        output: { image: null, video: null },
-      });
-    }
-  }
-  return models;
-}
 
 function fromRow(row: ModelConfig): AiModel {
   return {
@@ -45,7 +24,7 @@ function fromRow(row: ModelConfig): AiModel {
 @Injectable()
 export class ModelsService implements OnModuleDestroy {
   private readonly prisma: PrismaClient | null;
-  private readonly fallback: AiModel[];
+  private readonly fallback: AiModel[] = [];
   private readonly hasDeepseekKey: boolean;
   private cache: AiModel[] | null = null;
   private cachedAt = 0;
@@ -55,7 +34,6 @@ export class ModelsService implements OnModuleDestroy {
     this.prisma = databaseUrl
       ? new PrismaClient({ datasources: { db: { url: databaseUrl } } })
       : null;
-    this.fallback = fallbackModels(config);
     this.hasDeepseekKey = Boolean(config?.get<string>("DEEPSEEK_API_KEY")?.trim());
   }
 

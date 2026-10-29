@@ -78,6 +78,6 @@ describe("DeepSeekTextProvider", () => {
     const instance = provider();
     expect(instance.model()).toBe("deepseek-flash");
     expect(instance.isModel("deepseek-flash")).toBe(true);
-    expect(instance.isModel("mock-text")).toBe(false);
+    expect(instance.isModel("gpt-4o")).toBe(false);
   });
 });

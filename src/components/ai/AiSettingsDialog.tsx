@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { useToastStore } from "../../store/toastStore";
-import { getAiApiBase, getAiRealtimeBase, isAiMock, setAiRuntimeConfig } from "../../lib/ai/config";
+import { getAiApiBase, getAiRealtimeBase, setAiRuntimeConfig } from "../../lib/ai/config";
 import { getAiToken } from "../../lib/ai/auth";
 import {
   createCredential,
@@ -295,9 +295,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
       <DialogHeader id="ai-settings-title" title="AI 设置" onClose={onClose} />
       <div className="ai-settings-body">
         <p className="ai-settings-note">
-          {isAiMock()
-            ? "当前为模拟模式。填写接口地址后会使用真实接口。"
-            : "当前使用真实 AI 接口。"}
+          绑定供应商 Key 后即可使用真实模型。Key 加密保存在服务器，只显示掩码。
         </p>
         <div className="ai-connection-summary">
           <span>

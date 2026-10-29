@@ -1,16 +1,64 @@
 import "reflect-metadata";
 import { describe, expect, it } from "vitest";
 import { ApiException } from "../common/api-exception";
-import { ModelsService } from "../models/models.service";
+import type { AiModel } from "../models/model.types";
+import type { ModelsService } from "../models/models.service";
 import type { ProviderCatalogService } from "../byok/provider-catalog.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { InMemoryTaskRepository } from "./task.repository";
 import { TaskEvents } from "./task.events";
 import { TasksService } from "./tasks.service";
 
+const TEST_MODELS: AiModel[] = [
+  {
+    id: "test-text",
+    name: "测试文本",
+    kind: "text",
+    modes: [],
+    limits: { maxPromptLength: 8000, maxImages: 0, maxVideos: 0 },
+    output: { image: null, video: null },
+  },
+  {
+    id: "test-image",
+    name: "测试图片",
+    kind: "image",
+    modes: ["textToImage", "imageToImage"],
+    limits: { maxPromptLength: 2000, maxImages: 4, maxVideos: 0 },
+    output: {
+      image: { aspectRatios: ["1:1"], resolutions: ["1k"], maxCount: 4 },
+      video: null,
+    },
+  },
+  {
+    id: "test-video",
+    name: "测试视频",
+    kind: "video",
+    modes: ["textToVideo", "imageToVideo", "firstLastFrame", "referenceVideo"],
+    limits: { maxPromptLength: 2000, maxImages: 2, maxVideos: 1 },
+    output: {
+      image: null,
+      video: {
+        aspectRatios: ["16:9"],
+        resolutions: ["720p"],
+        minDuration: 4,
+        maxDuration: 12,
+        supportsAudio: true,
+      },
+    },
+  },
+];
+
+function fakeModels(): ModelsService {
+  return {
+    getById: async (id: string) => TEST_MODELS.find((model) => model.id === id),
+    list: async (kind?: string) =>
+      kind ? TEST_MODELS.filter((model) => model.kind === kind) : TEST_MODELS,
+  } as unknown as ModelsService;
+}
+
 function createService() {
   return new TasksService(
-    new ModelsService(),
+    fakeModels(),
     new TaskEvents(),
     new InMemoryTaskRepository(),
     {
@@ -23,7 +71,7 @@ function createService() {
 
 function textDto(overrides: Partial<CreateGenerationDto> = {}): CreateGenerationDto {
   return {
-    modelId: "mock-text",
+    modelId: "test-text",
     prompt: "写一句测试文案",
     clientRequestId: "node-1:req-12345678",
     ...overrides,
@@ -47,7 +95,7 @@ describe("TasksService", () => {
   it("clamps image count to the model limit", async () => {
     const tasks = createService();
     const { task } = await tasks.create("user-1", "image", {
-      modelId: "mock-image",
+      modelId: "test-image",
       mode: "textToImage",
       prompt: "雨夜霓虹",
       params: { count: 99 },
@@ -63,7 +111,7 @@ describe("TasksService", () => {
     let error: unknown;
     try {
       await tasks.create("user-1", "video", {
-        modelId: "mock-video",
+        modelId: "test-video",
         mode: "firstLastFrame",
         prompt: "推进",
         references: [{ type: "firstFrame", url: "https://example.com/a.png" }],
@@ -85,7 +133,7 @@ describe("TasksService", () => {
         id: "item_1",
         kind: "text",
         text: "完成",
-        modelId: "mock-text",
+        modelId: "test-text",
         createdAt: new Date().toISOString(),
       },
     ]);

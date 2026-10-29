@@ -5,7 +5,7 @@
 - NestJS + Fastify，统一 `{ code, message, data }` 响应。
 - 模型目录、图片上传、文本/图片/视频异步任务、任务查询/取消、WebSocket 实时推送。
 - 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘。
-- 文本模型支持 DeepSeek 4.1 Flash（OpenAI 兼容接口）；图片/视频仍由 Mock Provider 产生。
+- 文本模型支持 DeepSeek 4.1 Flash（OpenAI 兼容接口）；图片/视频生成待接入真实供应商。
 - Redis + BullMQ 负责任务队列；`npm run dev` 默认在 API 进程内启动 Worker，生产可拆成独立 Worker 进程。
 
 后续替换点：S3/OSS、图片/视频真实 Provider、生产鉴权与限流。
@@ -76,8 +76,7 @@ GET    /v1/user/models
 PUT    /v1/user/models
 ```
 
-第一版已打通 OpenAI 兼容文本模型（DeepSeek / OpenAI / SiliconFlow 等）；图片、视频
-仍使用平台 Key（当前为 Mock）。
+第一版已打通 OpenAI 兼容文本模型（DeepSeek / OpenAI / SiliconFlow 等）；图片、视频生成待接入真实供应商。
 
 ## 接口
 
