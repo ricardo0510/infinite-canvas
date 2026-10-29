@@ -65,7 +65,7 @@ npm run prisma:migrate
 npm run dev        # http://localhost:8790/v1
 ```
 
-前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。文本模型支持 DeepSeek 4.1 Flash（配置 `DEEPSEEK_API_KEY` 后自动出现在模型列表），图片/视频仍由 Mock Provider 产生。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)。
+前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。文本模型支持 DeepSeek 4.1 Flash（配置 `DEEPSEEK_API_KEY` 后自动出现在模型列表），图片/视频仍由 Mock Provider 产生。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)，后台管理方案见 [docs/admin-system-development-plan.md](./docs/admin-system-development-plan.md)。
 
 ## Quality
 

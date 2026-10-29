@@ -1,7 +1,7 @@
 # Infinite Canvas 后端方案与 API 文档
 
 > 对齐版本：前端 schema v5，代码位于 `src/lib/ai/*`  
-> 关联文档：`docs/ai-generation-development-plan.md`  
+> 关联文档：`docs/ai-generation-development-plan.md`、`docs/admin-system-development-plan.md`  
 > 本文同时包含「后端实现方案」和「接口文档」，以后端实现者视角编写。  
 > 当前仓库已有 `server/` 骨架：NestJS + Fastify + Prisma/PostgreSQL 任务持久化 + Redis/BullMQ 任务队列 + DeepSeek 4.1 Flash 文本 Provider + 本地磁盘上传；图片/视频仍为 Mock Provider，实时票据仍在内存，S3 尚未接入。
 
