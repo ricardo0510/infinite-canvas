@@ -9,7 +9,13 @@
     "start": "node dist/main.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "oxlint src",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "predev": "prisma generate",
+    "prebuild": "prisma generate",
+    "pretypecheck": "prisma generate",
+    "pretest": "prisma generate"
   },
   "dependencies": {
     "@fastify/multipart": "^9.0.3",
@@ -20,6 +26,7 @@
     "@nestjs/platform-fastify": "^11.1.6",
     "@nestjs/platform-ws": "^11.1.6",
     "@nestjs/websockets": "^11.1.6",
+    "@prisma/client": "^6.19.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "fastify": "5.11.3",
@@ -33,6 +40,7 @@
     "@types/node": "^24.7.2",
     "@types/ws": "^8.18.1",
     "oxlint": "^1.89.0",
+    "prisma": "^6.19.0",
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "vitest": "^3.2.4"

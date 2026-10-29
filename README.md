@@ -57,13 +57,15 @@ npm run preview
 ## Backend
 
 ```bash
+docker-compose -f server/docker-compose.yml up -d postgres redis
 cd server
 cp .env.example .env
 npm install
+npm run prisma:migrate
 npm run dev        # http://localhost:8790/v1
 ```
 
-前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。当前后端骨架使用内存任务、本地磁盘上传和 Mock Provider，完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)。
+前端在 AI 设置中填写 `http://localhost:8790/v1` 和 `ws://localhost:8790`。任务与幂等键持久化到 PostgreSQL，实时票据仍在内存，上传落本地磁盘，生成结果由 Mock Provider 产生。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)。
 
 ## Quality
 

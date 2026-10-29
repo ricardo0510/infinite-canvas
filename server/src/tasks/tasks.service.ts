@@ -1,11 +1,22 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
 import type { AiModel } from "../models/model.types";
 import { ModelsService } from "../models/models.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { TaskEvents } from "./task.events";
-import { toPublicTask, type ApiTask, type CreatedTask, type GenerationParams, type InternalTask, type ReferenceInput, type ResultItem, type TaskKind, type TaskStatus } from "./task.types";
+import { TASK_REPOSITORY, type TaskRepository } from "./task.repository";
+import {
+  toPublicTask,
+  type ApiTask,
+  type CreatedTask,
+  type GenerationParams,
+  type InternalTask,
+  type ReferenceInput,
+  type ResultItem,
+  type TaskKind,
+  type TaskStatus,
+} from "./task.types";
 
 const TERMINAL: TaskStatus[] = ["succeeded", "failed", "canceled"];
 const RESULT_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -20,21 +31,15 @@ function isTerminal(status: TaskStatus): boolean {
 
 @Injectable()
 export class TasksService {
-  private readonly tasks = new Map<string, InternalTask>();
-  private readonly idempotency = new Map<string, string>();
-
   constructor(
     private readonly models: ModelsService,
     private readonly events: TaskEvents,
+    @Inject(TASK_REPOSITORY) private readonly repo: TaskRepository,
   ) {}
 
-  create(userId: string, kind: TaskKind, dto: CreateGenerationDto): CreatedTask {
-    const idempotencyKey = `${userId}:${kind}:${dto.clientRequestId}`;
-    const existingId = this.idempotency.get(idempotencyKey);
-    if (existingId) {
-      const existing = this.tasks.get(existingId);
-      if (existing) return { task: existing, created: false };
-    }
+  async create(userId: string, kind: TaskKind, dto: CreateGenerationDto): Promise<CreatedTask> {
+    const existing = await this.repo.findByClientRequest(userId, kind, dto.clientRequestId);
+    if (existing) return { task: existing, created: false };
 
     const model = this.models.require(dto.modelId, kind);
     if (!dto.prompt.trim()) {
@@ -66,33 +71,45 @@ export class TasksService {
       updatedAt: createdAt,
       expiresAt: new Date(Date.now() + RESULT_TTL_MS).toISOString(),
       userId,
+      clientRequestId: dto.clientRequestId,
       request: { prompt: dto.prompt, params, references },
     };
 
-    this.tasks.set(task.taskId, task);
-    this.idempotency.set(idempotencyKey, task.taskId);
+    try {
+      await this.repo.create(task);
+    } catch (error) {
+      // 并发同 key 时唯一索引会冲突，返回已创建的任务。
+      const raced = await this.repo.findByClientRequest(userId, kind, dto.clientRequestId);
+      if (raced) return { task: raced, created: false };
+      throw error;
+    }
+
     this.events.emitCreated(task);
     return { task, created: true };
   }
 
-  find(userId: string, taskId: string): ApiTask | undefined {
-    const task = this.tasks.get(taskId);
+  async find(userId: string, taskId: string): Promise<ApiTask | undefined> {
+    const task = await this.repo.findById(taskId);
     if (!task || task.userId !== userId) return undefined;
     return toPublicTask(task);
   }
 
-  get(userId: string, taskId: string): ApiTask {
-    const task = this.find(userId, taskId);
+  async get(userId: string, taskId: string): Promise<ApiTask> {
+    const task = await this.find(userId, taskId);
     if (!task) throw new ApiException(10004, "任务不存在", 404);
     return task;
   }
 
-  getInternal(taskId: string): InternalTask | undefined {
-    return this.tasks.get(taskId);
+  async getInternal(taskId: string): Promise<InternalTask | undefined> {
+    return this.repo.findById(taskId);
   }
 
-  cancel(userId: string, taskId: string): ApiTask {
-    const task = this.tasks.get(taskId);
+  async listActive(): Promise<InternalTask[]> {
+    return this.repo.listActive();
+  }
+
+  async cancel(userId: string, taskId: string): Promise<ApiTask> {
+    const task = await this.repo.findById(taskId);
     if (!task || task.userId !== userId) {
       throw new ApiException(10004, "任务不存在", 404);
     }
@@ -104,43 +121,47 @@ export class TasksService {
     task.result = null;
     task.error = null;
     task.updatedAt = now();
+    await this.repo.update(task);
     this.events.emitUpdated(task);
     return toPublicTask(task);
   }
 
-  isActive(taskId: string): boolean {
-    const task = this.tasks.get(taskId);
+  async isActive(taskId: string): Promise<boolean> {
+    const task = await this.repo.findById(taskId);
     return Boolean(task && (task.status === "queued" || task.status === "running"));
   }
 
-  setProgress(taskId: string, progress: number): void {
-    const task = this.tasks.get(taskId);
+  async setProgress(taskId: string, progress: number): Promise<void> {
+    const task = await this.repo.findById(taskId);
     if (!task || isTerminal(task.status)) return;
     task.status = "running";
     task.progress = Math.max(0, Math.min(99, Math.round(progress)));
     task.updatedAt = now();
+    await this.repo.update(task);
     this.events.emitUpdated(task);
   }
 
-  complete(taskId: string, items: ResultItem[]): void {
-    const task = this.tasks.get(taskId);
+  async complete(taskId: string, items: ResultItem[]): Promise<void> {
+    const task = await this.repo.findById(taskId);
     if (!task || isTerminal(task.status)) return;
     task.status = "succeeded";
     task.progress = 100;
     task.result = { kind: task.kind, items };
     task.error = null;
     task.updatedAt = now();
+    await this.repo.update(task);
     this.events.emitUpdated(task);
   }
 
-  fail(taskId: string, code: number, message: string): void {
-    const task = this.tasks.get(taskId);
+  async fail(taskId: string, code: number, message: string): Promise<void> {
+    const task = await this.repo.findById(taskId);
     if (!task || isTerminal(task.status)) return;
     task.status = "failed";
     task.progress = 0;
     task.result = null;
     task.error = { code, message };
     task.updatedAt = now();
+    await this.repo.update(task);
     this.events.emitUpdated(task);
   }
 
@@ -284,7 +305,10 @@ export class TasksService {
       if (input.resolution && !output.resolutions.includes(input.resolution)) {
         throw new ApiException(20001, "resolution 不在模型能力范围内", 422);
       }
-      if (input.qualityTier && !model.params?.qualityTiers?.some((tier) => tier.key === input.qualityTier)) {
+      if (
+        input.qualityTier &&
+        !model.params?.qualityTiers?.some((tier) => tier.key === input.qualityTier)
+      ) {
         throw new ApiException(20001, "qualityTier 不可用", 422);
       }
       if (input.background && !model.params?.backgrounds?.includes(input.background)) {
@@ -319,7 +343,10 @@ export class TasksService {
     if (input.generateAudio === true && !output.supportsAudio) {
       throw new ApiException(20001, "当前模型不支持音频", 422);
     }
-    if (input.qualityTier && !model.params?.qualityTiers?.some((tier) => tier.key === input.qualityTier)) {
+    if (
+      input.qualityTier &&
+      !model.params?.qualityTiers?.some((tier) => tier.key === input.qualityTier)
+    ) {
       throw new ApiException(20001, "qualityTier 不可用", 422);
     }
     this.validateExtra(model, input.extra);
@@ -332,7 +359,10 @@ export class TasksService {
     return params;
   }
 
-  private validateExtra(model: AiModel, extra: Record<string, string | number | boolean> | undefined): void {
+  private validateExtra(
+    model: AiModel,
+    extra: Record<string, string | number | boolean> | undefined,
+  ): void {
     if (!extra) return;
     const allowed = new Set((model.params?.extra ?? []).map((item) => item.key));
     for (const key of Object.keys(extra)) {

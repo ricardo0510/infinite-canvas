@@ -76,7 +76,7 @@ export class RealtimeGateway implements OnModuleInit, OnModuleDestroy {
     this.clients.set(client, { userId, taskIds: new Set() });
 
     const onMessage = (raw: RawData) => {
-      this.handleMessage(client, userId, raw.toString());
+      void this.handleMessage(client, userId, raw.toString());
     };
     const onClose = () => {
       this.clients.delete(client);
@@ -92,7 +92,7 @@ export class RealtimeGateway implements OnModuleInit, OnModuleDestroy {
     });
   }
 
-  private handleMessage(client: WebSocket, userId: string, raw: string): void {
+  private async handleMessage(client: WebSocket, userId: string, raw: string): Promise<void> {
     let message: IncomingMessage;
     try {
       message = JSON.parse(raw) as IncomingMessage;
@@ -115,7 +115,7 @@ export class RealtimeGateway implements OnModuleInit, OnModuleDestroy {
         ? data.taskIds.filter((id): id is string => typeof id === "string")
         : [];
       for (const taskId of ids) {
-        const task = this.tasks.find(userId, taskId);
+        const task = await this.tasks.find(userId, taskId);
         if (!task) continue;
         state.taskIds.add(taskId);
         this.send(client, { type: "task.updated", data: { task } });

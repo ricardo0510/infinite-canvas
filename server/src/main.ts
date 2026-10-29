@@ -53,6 +53,7 @@ async function bootstrap(): Promise<void> {
   app.useGlobalFilters(new ApiExceptionFilter());
 
   const port = Number(config.get<string>("PORT") ?? 8790);
+  app.enableShutdownHooks();
   await app.listen({ port, host: "0.0.0.0" });
   console.log(`API ready at http://localhost:${port}/v1`);
 }

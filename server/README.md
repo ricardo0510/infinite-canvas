@@ -4,16 +4,20 @@
 
 - NestJS + Fastify，统一 `{ code, message, data }` 响应。
 - 模型目录、图片上传、文本/图片/视频异步任务、任务查询/取消、WebSocket 实时推送。
-- 任务与票据暂存在内存，上传文件落在本地磁盘，生成结果由 Mock Provider 产生。
+- 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘，生成结果由 Mock Provider 产生。
 
-后续替换点：PostgreSQL/Prisma、Redis/BullMQ、S3/OSS、真实模型 Provider、鉴权与限流。
+后续替换点：Redis/BullMQ、S3/OSS、真实模型 Provider、鉴权与限流。
 
 ## 运行
 
 ```bash
+# 在仓库根目录
+docker-compose -f server/docker-compose.yml up -d postgres redis
+
 cd server
 cp .env.example .env
 npm install
+npm run prisma:migrate
 npm run dev
 ```
 

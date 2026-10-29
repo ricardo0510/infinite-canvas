@@ -3,11 +3,16 @@ import { describe, expect, it } from "vitest";
 import { ApiException } from "../common/api-exception";
 import { ModelsService } from "../models/models.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
+import { InMemoryTaskRepository } from "./task.repository";
 import { TaskEvents } from "./task.events";
 import { TasksService } from "./tasks.service";
 
 function createService() {
-  return new TasksService(new ModelsService(), new TaskEvents());
+  return new TasksService(
+    new ModelsService(),
+    new TaskEvents(),
+    new InMemoryTaskRepository(),
+  );
 }
 
 function textDto(overrides: Partial<CreateGenerationDto> = {}): CreateGenerationDto {
@@ -20,10 +25,10 @@ function textDto(overrides: Partial<CreateGenerationDto> = {}): CreateGeneration
 }
 
 describe("TasksService", () => {
-  it("creates a text task and returns the same task for a repeated idempotency key", () => {
+  it("creates a text task and returns the same task for a repeated idempotency key", async () => {
     const tasks = createService();
-    const first = tasks.create("user-1", "text", textDto());
-    const second = tasks.create("user-1", "text", textDto());
+    const first = await tasks.create("user-1", "text", textDto());
+    const second = await tasks.create("user-1", "text", textDto());
 
     expect(first.created).toBe(true);
     expect(first.task.kind).toBe("text");
@@ -33,9 +38,9 @@ describe("TasksService", () => {
     expect(second.task.taskId).toBe(first.task.taskId);
   });
 
-  it("clamps image count to the model limit", () => {
+  it("clamps image count to the model limit", async () => {
     const tasks = createService();
-    const { task } = tasks.create("user-1", "image", {
+    const { task } = await tasks.create("user-1", "image", {
       modelId: "mock-image",
       mode: "textToImage",
       prompt: "雨夜霓虹",
@@ -44,14 +49,14 @@ describe("TasksService", () => {
     } as CreateGenerationDto);
 
     expect(task.status).toBe("queued");
-    expect(tasks.getInternal(task.taskId)?.request.params.count).toBe(4);
+    expect((await tasks.getInternal(task.taskId))?.request.params.count).toBe(4);
   });
 
-  it("rejects an invalid video reference combination", () => {
+  it("rejects an invalid video reference combination", async () => {
     const tasks = createService();
     let error: unknown;
     try {
-      tasks.create("user-1", "video", {
+      await tasks.create("user-1", "video", {
         modelId: "mock-video",
         mode: "firstLastFrame",
         prompt: "推进",
@@ -66,10 +71,10 @@ describe("TasksService", () => {
     expect((error as ApiException).code).toBe(20001);
   });
 
-  it("rejects cancelling a task after it reaches a terminal state", () => {
+  it("rejects cancelling a task after it reaches a terminal state", async () => {
     const tasks = createService();
-    const { task } = tasks.create("user-1", "text", textDto());
-    tasks.complete(task.taskId, [
+    const { task } = await tasks.create("user-1", "text", textDto());
+    await tasks.complete(task.taskId, [
       {
         id: "item_1",
         kind: "text",
@@ -79,10 +84,10 @@ describe("TasksService", () => {
       },
     ]);
 
-    expect(tasks.get("user-1", task.taskId).status).toBe("succeeded");
+    expect((await tasks.get("user-1", task.taskId)).status).toBe("succeeded");
     let error: unknown;
     try {
-      tasks.cancel("user-1", task.taskId);
+      await tasks.cancel("user-1", task.taskId);
     } catch (caught) {
       error = caught;
     }
@@ -90,10 +95,13 @@ describe("TasksService", () => {
     expect((error as ApiException).code).toBe(20005);
   });
 
-  it("does not expose internal request data in the public task view", () => {
+  it("does not expose internal request data in the public task view", async () => {
     const tasks = createService();
-    const { task } = tasks.create("user-1", "text", textDto());
-    const publicTask = tasks.get("user-1", task.taskId) as unknown as Record<string, unknown>;
+    const { task } = await tasks.create("user-1", "text", textDto());
+    const publicTask = (await tasks.get("user-1", task.taskId)) as unknown as Record<
+      string,
+      unknown
+    >;
 
     expect(publicTask.taskId).toBe(task.taskId);
     expect(publicTask.userId).toBeUndefined();

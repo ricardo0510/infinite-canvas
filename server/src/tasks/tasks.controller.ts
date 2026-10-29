@@ -19,7 +19,7 @@ export class TasksController {
   constructor(private readonly tasks: TasksService) {}
 
   @Post("text/generations")
-  createText(
+  async createText(
     @CurrentUser() user: AuthUser,
     @Body() dto: CreateGenerationDto,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -28,7 +28,7 @@ export class TasksController {
   }
 
   @Post("image/generations")
-  createImage(
+  async createImage(
     @CurrentUser() user: AuthUser,
     @Body() dto: CreateGenerationDto,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -37,7 +37,7 @@ export class TasksController {
   }
 
   @Post("video/generations")
-  createVideo(
+  async createVideo(
     @CurrentUser() user: AuthUser,
     @Body() dto: CreateGenerationDto,
     @Res({ passthrough: true }) reply: FastifyReply,
@@ -46,23 +46,23 @@ export class TasksController {
   }
 
   @Get("tasks/:taskId")
-  getTask(@CurrentUser() user: AuthUser, @Param("taskId") taskId: string) {
+  async getTask(@CurrentUser() user: AuthUser, @Param("taskId") taskId: string) {
     return this.tasks.get(user.id, taskId);
   }
 
   @Post("tasks/:taskId/cancel")
   @HttpCode(200)
-  cancel(@CurrentUser() user: AuthUser, @Param("taskId") taskId: string) {
+  async cancel(@CurrentUser() user: AuthUser, @Param("taskId") taskId: string) {
     return this.tasks.cancel(user.id, taskId);
   }
 
-  private create(
+  private async create(
     user: AuthUser,
     kind: TaskKind,
     dto: CreateGenerationDto,
     reply: FastifyReply,
   ) {
-    const { task, created } = this.tasks.create(user.id, kind, dto);
+    const { task, created } = await this.tasks.create(user.id, kind, dto);
     reply.code(created ? 202 : 200);
     return {
       taskId: task.taskId,

@@ -3,7 +3,7 @@
 > 对齐版本：前端 schema v5，代码位于 `src/lib/ai/*`  
 > 关联文档：`docs/ai-generation-development-plan.md`  
 > 本文同时包含「后端实现方案」和「接口文档」，以后端实现者视角编写。  
-> 当前仓库已有 `server/` 骨架：NestJS + Fastify + 内存任务 + Mock Provider + 本地磁盘上传；PostgreSQL/Redis/S3/真实 Provider 尚未接入。
+> 当前仓库已有 `server/` 骨架：NestJS + Fastify + Prisma/PostgreSQL 任务持久化 + Mock Provider + 本地磁盘上传；实时票据仍在内存，Redis/BullMQ/S3/真实 Provider 尚未接入。
 
 ---
 
@@ -192,11 +192,13 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 - `(status, updatedAt)` Worker 扫描/补偿。
 - `(provider, providerTaskId)` 上游回调/轮询映射。
 
-### 4.7 task_events（可选）
+### 4.6 task_events（可选）
 
 用于审计、重放和排查：`taskId`、`status`、`progress`、`payload`、`createdAt`。不是必须，但强烈建议保留终态与错误事件。
 
-### 4.8 idempotency_keys
+### 4.7 idempotency_keys
+
+> 当前骨架直接使用 `tasks` 的 `(userId, kind, clientRequestId)` 唯一约束承担幂等；以下独立表用于后续拆分。
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -207,7 +209,7 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 | resourceId | text | |
 | expiresAt | timestamptz | 建议 24h |
 
-### 4.9 realtime_tickets
+### 4.8 realtime_tickets
 
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
@@ -217,7 +219,7 @@ FastAPI（Python）或 Go 同样可行，接口契约不变。若要复用前端
 | usedAt | timestamptz | 一次性使用 |
 | createdAt | timestamptz | |
 
-### 4.10 credit_ledger（预留）
+### 4.9 credit_ledger（预留）
 
 `userId`、`delta`、`reason`、`refType`、`refId`、`balanceAfter`、`createdAt`。本期可以先不启用，但接口层保留扣费/退款位置。
 

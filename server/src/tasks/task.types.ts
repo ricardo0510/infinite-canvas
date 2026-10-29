@@ -86,6 +86,7 @@ export type ApiTask = {
 
 export type InternalTask = ApiTask & {
   userId: string;
+  clientRequestId: string;
   request: {
     prompt: string;
     params: GenerationParams;

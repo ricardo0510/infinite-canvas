@@ -22,20 +22,33 @@ export class TaskRunner implements OnModuleInit {
     private readonly events: TaskEvents,
   ) {}
 
+  private readonly activeRuns = new Set<string>();
+
   onModuleInit(): void {
     this.events.created$.subscribe((task) => {
       void this.run(task.taskId);
     });
+    void this.resume();
+  }
+
+  private async resume(): Promise<void> {
+    const tasks = await this.tasks.listActive();
+    for (const task of tasks) void this.run(task.taskId);
   }
 
   private async run(taskId: string): Promise<void> {
-    const task = this.tasks.getInternal(taskId);
-    if (!task) return;
+    if (this.activeRuns.has(taskId)) return;
+    this.activeRuns.add(taskId);
+    const task = await this.tasks.getInternal(taskId);
+    if (!task) {
+      this.activeRuns.delete(taskId);
+      return;
+    }
 
     try {
       await sleep(80);
-      if (!this.tasks.isActive(taskId)) return;
-      this.tasks.setProgress(taskId, 15);
+      if (!(await this.tasks.isActive(taskId))) return;
+      await this.tasks.setProgress(taskId, 15);
 
       if (task.kind === "text") {
         await this.runText(task);
@@ -47,26 +60,28 @@ export class TaskRunner implements OnModuleInit {
       }
       await this.runVideo(task);
     } catch (error) {
-      this.tasks.fail(
+      await this.tasks.fail(
         taskId,
         30001,
         error instanceof Error ? error.message : "上游模型失败",
       );
+    } finally {
+      this.activeRuns.delete(taskId);
     }
   }
 
   private async runText(task: InternalTask): Promise<void> {
     await sleep(600);
-    if (!this.tasks.isActive(task.taskId)) return;
-    this.tasks.setProgress(task.taskId, 60);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 60);
     await sleep(500);
-    if (!this.tasks.isActive(task.taskId)) return;
+    if (!(await this.tasks.isActive(task.taskId))) return;
 
     const prompt = task.request.prompt;
     const text = prompt.trim()
       ? `这是模拟生成的文本结果。\n\n提示词：${prompt.trim()}\n\n接入真实接口后，这里会返回模型生成的完整内容。`
       : "这是模拟生成的文本结果。";
-    this.tasks.complete(task.taskId, [
+    await this.tasks.complete(task.taskId, [
       {
         id: `item_${randomUUID()}`,
         kind: "text",
@@ -84,10 +99,10 @@ export class TaskRunner implements OnModuleInit {
 
   private async runImage(task: InternalTask): Promise<void> {
     await sleep(450);
-    if (!this.tasks.isActive(task.taskId)) return;
-    this.tasks.setProgress(task.taskId, 55);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 55);
     await sleep(650);
-    if (!this.tasks.isActive(task.taskId)) return;
+    if (!(await this.tasks.isActive(task.taskId))) return;
 
     const count = Math.min(4, Math.max(1, task.request.params.count ?? 1));
     const items: ImageResultItem[] = Array.from({ length: count }, (_, index) => ({
@@ -99,15 +114,15 @@ export class TaskRunner implements OnModuleInit {
       modelId: task.modelId,
       createdAt: new Date().toISOString(),
     }));
-    this.tasks.complete(task.taskId, items);
+    await this.tasks.complete(task.taskId, items);
   }
 
   private async runVideo(task: InternalTask): Promise<void> {
     await sleep(600);
-    if (!this.tasks.isActive(task.taskId)) return;
-    this.tasks.setProgress(task.taskId, 50);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 50);
     await sleep(800);
-    if (!this.tasks.isActive(task.taskId)) return;
+    if (!(await this.tasks.isActive(task.taskId))) return;
 
     const item: VideoResultItem = {
       id: `item_${randomUUID()}`,
@@ -120,6 +135,6 @@ export class TaskRunner implements OnModuleInit {
       modelId: task.modelId,
       createdAt: new Date().toISOString(),
     };
-    this.tasks.complete(task.taskId, [item]);
+    await this.tasks.complete(task.taskId, [item]);
   }
 }
