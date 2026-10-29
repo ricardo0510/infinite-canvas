@@ -4,9 +4,9 @@ import { useCanvasStore } from "../store/canvasStore";
 import type { NodeKind } from "../types";
 
 const ACTIONS: { kind: NodeKind; label: string; hint: string }[] = [
-  { kind: "note", label: "Note", hint: "A card for ideas" },
-  { kind: "text", label: "Text", hint: "Plain text on canvas" },
+  { kind: "text", label: "Text", hint: "Write or generate text" },
   { kind: "image", label: "Image", hint: "Upload or link" },
+  { kind: "video", label: "Video", hint: "Generate a clip" },
   { kind: "group", label: "Group", hint: "Container for nodes" },
 ];
 

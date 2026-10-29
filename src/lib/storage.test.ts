@@ -25,10 +25,10 @@ describe("migrateSnapshot", () => {
     const snapshot = migrateSnapshot(v1);
     expect(snapshot).not.toBeNull();
     expect(snapshot?.version).toBe(SCHEMA_VERSION);
-    expect(snapshot?.nodes[0].type).toBe("note");
+    expect(snapshot?.nodes[0].type).toBe("text");
     expect(snapshot?.nodes[0].data).toMatchObject({
       title: "Hello",
-      body: "World",
+      text: "World",
       color: "cyan",
     });
   });
@@ -79,7 +79,7 @@ describe("migrateSnapshot", () => {
       ],
       edges: [],
     });
-    expect(snapshot?.nodes[0].data).toEqual({ src: "", alt: "x" });
+    expect(snapshot?.nodes[0].data).toEqual({ title: "Image", src: "", alt: "x" });
     expect(snapshot?.nodes[0]).not.toHaveProperty("malicious");
   });
 
@@ -104,8 +104,8 @@ describe("migrateSnapshot", () => {
 
   it("gives nodes without a size the default for their kind", () => {
     const snapshot = migrateSnapshot(v1);
-    expect(snapshot?.nodes[0].width).toBe(260);
-    expect(snapshot?.nodes[0].height).toBe(190);
+    expect(snapshot?.nodes[0].width).toBe(280);
+    expect(snapshot?.nodes[0].height).toBe(160);
   });
 });
 
@@ -154,7 +154,7 @@ describe("viewport persistence", () => {
     expect(snapshot?.viewport).toBeUndefined();
   });
 
-  it("migrates the v2 localStorage key to v3", () => {
+  it("migrates the v2 localStorage key to the current schema", () => {
     localStorage.clear();
     localStorage.setItem(
       "infinite-canvas:v2",
@@ -165,9 +165,85 @@ describe("viewport persistence", () => {
       }),
     );
     expect(loadSnapshot()?.version).toBe(SCHEMA_VERSION);
-    expect(localStorage.getItem("infinite-canvas:v3")).not.toBeNull();
+    expect(localStorage.getItem("infinite-canvas:v5")).not.toBeNull();
     expect(localStorage.getItem("infinite-canvas:v2")).toBeNull();
     localStorage.clear();
+  });
+});
+
+describe("video nodes", () => {
+  it("keeps video sources and generation results through validation", () => {
+    const snapshot = migrateSnapshot({
+      version: 3,
+      nodes: [
+        {
+          id: "video-1",
+          type: "video",
+          position: { x: 0, y: 0 },
+          data: {
+            src: "https://cdn.example.com/a.mp4",
+            thumbnailUrl: "https://cdn.example.com/a.jpg",
+            alt: "clip",
+            generation: {
+              kind: "video",
+              prompt: "waves",
+              modelId: "m1",
+              status: "succeeded",
+              results: [
+                {
+                  id: "r1",
+                  kind: "video",
+                  url: "https://cdn.example.com/a.mp4",
+                  thumbnailUrl: "https://cdn.example.com/a.jpg",
+                  duration: 5,
+                  modelId: "m1",
+                  createdAt: "2026-10-29T08:00:00Z",
+                },
+              ],
+              activeResultId: "r1",
+            },
+          },
+        },
+      ],
+      edges: [],
+    });
+    expect(snapshot?.nodes[0].type).toBe("video");
+    expect(snapshot?.nodes[0].data).toMatchObject({
+      src: "https://cdn.example.com/a.mp4",
+      thumbnailUrl: "https://cdn.example.com/a.jpg",
+      alt: "clip",
+    });
+    const node = snapshot?.nodes[0];
+    const generation = (node?.data as { generation?: { results?: unknown[] } } | undefined)?.generation;
+    expect(generation?.results).toHaveLength(1);
+  });
+
+  it("drops unsafe generation urls and unknown statuses", () => {
+    const snapshot = migrateSnapshot({
+      version: 3,
+      nodes: [
+        {
+          id: "image-1",
+          type: "image",
+          position: { x: 0, y: 0 },
+          data: {
+            src: "",
+            alt: "",
+            generation: {
+              kind: "image",
+              prompt: "x",
+              modelId: "m1",
+              status: "nonsense",
+              results: [{ id: "r1", kind: "image", url: "javascript:alert(1)", modelId: "m1", createdAt: "" }],
+            },
+          },
+        },
+      ],
+      edges: [],
+    });
+    const node = snapshot?.nodes[0];
+    const generation = (node?.data as { generation?: unknown } | undefined)?.generation;
+    expect(generation).toBeUndefined();
   });
 });
 

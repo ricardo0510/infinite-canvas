@@ -1,17 +1,23 @@
-import { Handle, NodeResizer, Position, type NodeProps } from "@xyflow/react";
+import { Handle, Position, type NodeProps } from "@xyflow/react";
 import { memo, useRef, type CSSProperties } from "react";
-import { MIN_SIZE } from "../../lib/geometry";
 import { NOTE_COLORS, useCanvasStore } from "../../store/canvasStore";
+import { useUiStore } from "../../store/uiStore";
 import type { TextNodeModel } from "../../types";
 import { NodeColors } from "./NodeColors";
+import { NodeEmptyState } from "./NodeEmptyState";
+import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
+import { NodeTitleBar } from "./NodeTitleBar";
 import { nodePropsEqual } from "./nodePropsEqual";
 
 function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const commit = useCanvasStore((state) => state.commit);
+  const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const editing = useRef(false);
   const accent = NOTE_COLORS[data.color] ?? NOTE_COLORS.emerald;
   const fontSize = Math.min(64, Math.max(10, data.fontSize || 16));
+  const running = data.generation?.status === "running" || data.generation?.status === "queued";
+  const hasText = data.text.trim().length > 0;
 
   const handleEdit = (patch: { text?: string }) => {
     if (!editing.current) {
@@ -28,22 +34,43 @@ function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
 
   return (
     <div
-      className={`text-node${selected ? " is-selected" : ""}`}
-      style={{ "--note-accent": accent } as CSSProperties}
+      className={`ai-node ai-node-text${selected ? " is-selected" : ""}${running ? " is-running" : ""}`}
+      style={{ "--node-accent": accent } as CSSProperties}
     >
-      <NodeResizer
-        isVisible={selected}
-        minWidth={MIN_SIZE.text.width}
-        minHeight={MIN_SIZE.text.height}
-        onResizeStart={() => commit()}
-      />
-      <Handle type="target" position={Position.Left} className="note-handle" />
-      <div className="text-tools">
+      <NodeTitleBar id={id} title={data.title} defaultTitle="Text" />
+      <Handle type="target" position={Position.Left} className="node-handle" />
+      {running ? (
+        <NodeLoadingOverlay
+          label={data.generation?.status === "queued" ? "排队中…" : "生成中…"}
+          progress={data.generation?.status === "running" ? data.generation?.progress : undefined}
+        />
+      ) : null}
+      <div className="node-body nodrag nowheel">
+        {hasText ? (
+          <textarea
+            className="node-textarea"
+            value={data.text}
+            aria-label="Text content"
+            style={{ fontSize }}
+            onFocus={() => {
+              editing.current = false;
+            }}
+            onChange={(event) => handleEdit({ text: event.target.value })}
+          />
+        ) : (
+          <NodeEmptyState />
+        )}
+        {data.generation?.error ? <p className="node-error">{data.generation.error.message}</p> : null}
+      </div>
+      <div className="node-foot">
         <button type="button" className="nodrag text-tool" onClick={() => changeSize(-2)} aria-label="Decrease font size">
           A−
         </button>
         <button type="button" className="nodrag text-tool" onClick={() => changeSize(2)} aria-label="Increase font size">
           A+
+        </button>
+        <button type="button" className="nodrag text-tool" onClick={() => setAiPanelNode(id)} aria-label="Open AI panel">
+          AI
         </button>
         <NodeColors
           value={data.color}
@@ -53,21 +80,9 @@ function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
           }}
         />
       </div>
-      <textarea
-        className="nodrag nowheel text-body"
-        value={data.text}
-        placeholder="Text"
-        aria-label="Text content"
-        style={{ fontSize }}
-        onFocus={() => {
-          editing.current = false;
-        }}
-        onChange={(event) => handleEdit({ text: event.target.value })}
-      />
-      <Handle type="source" position={Position.Right} className="note-handle" />
+      <Handle type="source" position={Position.Right} className="node-handle" />
     </div>
   );
 }
-
 
 export const TextNode = memo(TextNodeImpl, nodePropsEqual);

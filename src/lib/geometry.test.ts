@@ -14,9 +14,9 @@ import {
 function note(id: string, x: number, y: number, extra: Partial<CanvasNode> = {}): CanvasNode {
   return {
     id,
-    type: "note",
+    type: "text",
     position: { x, y },
-    data: { title: id, body: "", color: "violet" },
+    data: { title: id, text: "", color: "violet", fontSize: 16 },
     width: 100,
     height: 50,
     ...extra,
@@ -34,8 +34,8 @@ describe("snapValue", () => {
 
 describe("clampSize", () => {
   it("enforces each node kind minimum", () => {
-    expect(clampSize("note", 10, 10)).toEqual({ width: 200, height: 120 });
-    expect(clampSize("image", 500, 10)).toEqual({ width: 500, height: 100 });
+    expect(clampSize("text", 10, 10)).toEqual({ width: 280, height: 160 });
+    expect(clampSize("image", 500, 10)).toEqual({ width: 500, height: 160 });
   });
 });
 
@@ -43,8 +43,8 @@ describe("nodeSize", () => {
   it("prefers explicit size, then measured, then defaults", () => {
     expect(nodeSize(note("a", 0, 0))).toEqual({ width: 100, height: 50 });
     expect(nodeSize(note("b", 0, 0, { width: undefined, height: undefined }))).toEqual({
-      width: 260,
-      height: 190,
+      width: 280,
+      height: 160,
     });
   });
 });

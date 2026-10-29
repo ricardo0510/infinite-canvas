@@ -15,7 +15,7 @@ function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
   return (
     <div
       className={`group-node${selected ? " is-selected" : ""}`}
-      style={{ "--note-accent": accent } as CSSProperties}
+      style={{ "--node-accent": accent } as CSSProperties}
     >
       <NodeResizer
         isVisible={selected}
@@ -24,7 +24,7 @@ function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
         onResizeStart={() => commit()}
       />
       <div className="group-head">
-        <span className="note-dot" />
+        <span className="node-dot" />
         <input
           className="nodrag group-label"
           value={data.label}

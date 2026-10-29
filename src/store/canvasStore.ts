@@ -12,10 +12,12 @@ import {
 import { create } from "zustand";
 import {
   absolutePosition,
+  AI_NODE_WIDTH,
   byId,
   DEFAULT_SIZE,
   descendantIds,
   hasAncestor,
+  mediaNodeHeight,
   nodeRect,
   nodeSize,
 } from "../lib/geometry";
@@ -41,28 +43,30 @@ const demo: CanvasSnapshot = {
   nodes: [
     {
       id: "welcome",
-      type: "note",
+      type: "text",
       position: { x: 80, y: 120 },
-      width: 260,
-      height: 190,
-      style: { width: 260, height: 190 },
+      width: DEFAULT_SIZE.text.width,
+      height: DEFAULT_SIZE.text.height,
+      style: { width: DEFAULT_SIZE.text.width, height: DEFAULT_SIZE.text.height },
       data: {
         title: "Infinite Canvas",
-        body: "双击空白处添加节点。\n右键打开菜单，拖拽右侧端口连线。\nCtrl/Cmd + Z 撤销，Ctrl/Cmd + S 保存。",
+        text: "双击空白处添加文本节点。\n右键打开菜单，拖拽右侧端口连线。\n单击节点打开生成输入框。",
         color: "violet",
+        fontSize: 14,
       },
     },
     {
       id: "idea",
-      type: "note",
+      type: "text",
       position: { x: 460, y: 260 },
-      width: 260,
-      height: 190,
-      style: { width: 260, height: 190 },
+      width: DEFAULT_SIZE.text.width,
+      height: DEFAULT_SIZE.text.height,
+      style: { width: DEFAULT_SIZE.text.width, height: DEFAULT_SIZE.text.height },
       data: {
         title: "A small idea",
-        body: "每个节点都是一张卡片，标题和正文可以直接编辑。\n选中后拖动四角可以调整大小。",
+        text: "节点顶部可以拖拽，双击标题可以重命名。\n图片和视频节点会根据内容比例调整高度。",
         color: "cyan",
+        fontSize: 14,
       },
     },
   ],
@@ -96,7 +100,7 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "text",
-        data: { text: "Text", color: "emerald", fontSize: 16 },
+        data: { title: "Text", text: "", color: "emerald", fontSize: 16 },
       };
       return node;
     }
@@ -104,24 +108,24 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "image",
-        data: { src: "", alt: "" },
+        data: { title: "Image", src: "", alt: "" },
       };
       return node;
     }
-    case "group": {
+    case "video": {
       const node: CanvasNode = {
         ...base,
-        type: "group",
-        data: { label: "Group", color: "amber" },
-        zIndex: -1,
+        type: "video",
+        data: { title: "Video", src: "", thumbnailUrl: "", alt: "" },
       };
       return node;
     }
     default: {
       const node: CanvasNode = {
         ...base,
-        type: "note",
-        data: { title: "Untitled note", body: "", color: "violet" },
+        type: "group",
+        data: { label: "Group", color: "amber" },
+        zIndex: -1,
       };
       return node;
     }
@@ -293,7 +297,6 @@ type CanvasState = {
   ) => string;
   commit: () => void;
   addNode: (kind: NodeKind, position: XYPosition) => string;
-  addNote: (position: XYPosition) => string;
   addImages: (
     images: {
       position: XYPosition;
@@ -430,19 +433,22 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     return node.id;
   },
 
-  addNote: (position) => get().addNode("note", position),
-
   addImages: (images) => {
     if (images.length === 0) return [];
     get().commit();
     const created = images.map((image) => {
       const base = createNode("image", image.position);
+      const height = mediaNodeHeight(AI_NODE_WIDTH, image.width, image.height);
       return {
         ...base,
-        width: image.width,
-        height: image.height,
-        style: { ...(base.style ?? {}), width: image.width, height: image.height },
-        data: { src: sanitizeImageSrc(image.src), alt: image.alt ?? "" },
+        width: AI_NODE_WIDTH,
+        height,
+        style: { ...(base.style ?? {}), width: AI_NODE_WIDTH, height },
+        data: {
+          title: image.alt || "Image",
+          src: sanitizeImageSrc(image.src),
+          alt: image.alt ?? "",
+        },
       } as CanvasNode;
     });
     set({

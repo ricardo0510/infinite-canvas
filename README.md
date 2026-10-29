@@ -9,7 +9,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 ## Features
 
 - Infinite pan/zoom, minimap, controls, fit view
-- Node types: **Note**, **Text**, **Image**, **Group** (sub-flows)
+- Node types: **Text**, **Image**, **Video**, **Group** (sub-flows)
 - Drag a node into a group to join it, drag it out to leave; groups expand to fit
 - Inline editing, accent colors, free resize with persisted sizes
 - Drag, connect, multi-select, box select, snap to grid (8 px)
@@ -23,12 +23,25 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
+- AI generation: text, image and video nodes with model selection, prompts, references from upstream nodes, task recovery and local Mock mode
 - Right-click context menu: add nodes, duplicate, layer order, group, delete
 - One-click auto layout (Dagre, loaded on demand)
 - Undo/redo, copy/paste, duplicate
 - Snapshot autosave to `localStorage`; image blobs in IndexedDB
 - Versioned JSON import/export with schema migration
 - Shortcut cheatsheet (`?`), empty-canvas onboarding
+
+## AI generation
+
+AI features run in Mock mode by default, so the canvas works without a backend. To use the real API, copy `.env.example` to `.env.local` and set:
+
+```bash
+VITE_AI_API_BASE_URL=https://your-api.example.com/v1
+VITE_AI_REALTIME_BASE_URL=wss://your-api.example.com
+VITE_AI_MOCK=0
+```
+
+Open the `AI` button in the toolbar to set a session token. Click a Text, Image, or Video node to open its prompt editor next to the node; generated content stays on the node itself. The API contract is documented in [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
 
 ## Run
 
@@ -84,7 +97,7 @@ Headless Chrome, 1440×900, production build.
 | `/` | Command palette |
 | `?` | Keyboard shortcuts |
 
-Double-click the canvas to add a note, right-click for the context menu, and drag the left/right handles to connect nodes.
+Double-click the canvas to add a text node, right-click for the context menu, and drag the left/right handles to connect nodes.
 
 ## Structure
 
@@ -103,14 +116,16 @@ src/
     ContextMenu.tsx       # right-click actions
     KeyboardHelp.tsx      # shortcut cheatsheet
     EmptyState.tsx        # onboarding for an empty canvas
-    nodes/                # Note, Text, Image, Group
+    ai/                   # AI panel, model select, settings
+    nodes/                # Text, Image, Video, Group
     edges/                # Smoothstep edge with hover delete
   hooks/
     useAutoSave.ts        # debounced localStorage writes
     useCanvasShortcuts.ts
     useResolvedImageSrc.ts # IndexedDB ref → object URL
   lib/
-    storage.ts            # schema v2, validation, migration, import/export
+    ai/                   # API client, providers, task manager, mock
+    storage.ts            # schema v5, validation, migration, import/export
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math
     templates.ts          # starter canvases
@@ -121,10 +136,10 @@ src/
     layout.ts             # Dagre (dynamic import)
   store/
     canvasStore.ts        # nodes/edges/history/clipboard
-    uiStore.ts            # snap toggle, help panel
+    uiStore.ts            # snap toggle, help panel, AI panel
 ```
 
-Data model: `{ version: 3, nodes, edges, viewport? }`. Older `v1`/`v2` snapshots are migrated on load; unknown fields and unsafe image URLs are dropped. Image sources are `idb:<id>` refs (blob stored in IndexedDB), `https:`, or legacy `data:image/` URLs.
+Data model: `{ version: 5, nodes, edges, viewport? }`. Older `v1` through `v4` snapshots are migrated on load; unknown fields and unsafe image URLs are dropped. Image sources are `idb:<id>` refs (blob stored in IndexedDB), `https:`, or legacy `data:image/` URLs. Video nodes store `https:` sources and optional posters.
 
 ## Notes
 

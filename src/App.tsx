@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { ReactFlowProvider } from "@xyflow/react";
 import { FlowCanvas } from "./components/FlowCanvas";
 import { ensureInlineImagesMigrated, pruneOrphanImages } from "./lib/imageMigration";
@@ -7,10 +7,21 @@ import { ToastHost } from "./components/ToastHost";
 import { Toolbar } from "./components/Toolbar";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useCanvasShortcuts } from "./hooks/useCanvasShortcuts";
+import { useUiStore } from "./store/uiStore";
+
+const AiSettingsDialog = lazy(async () => {
+  const module = await import("./components/ai/AiSettingsDialog");
+  return { default: module.AiSettingsDialog };
+});
 
 function App() {
+  const aiSettingsOpen = useUiStore((state) => state.aiSettingsOpen);
   useAutoSave();
   useCanvasShortcuts();
+
+  useEffect(() => {
+    void import("./lib/ai/controller").then((module) => module.initAiController());
+  }, []);
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).has("bench")) return;
@@ -37,6 +48,11 @@ function App() {
           <Toolbar />
         </header>
         <FlowCanvas />
+        {aiSettingsOpen ? (
+          <Suspense fallback={null}>
+            <AiSettingsDialog />
+          </Suspense>
+        ) : null}
         <KeyboardHelp />
         <ToastHost />
       </div>

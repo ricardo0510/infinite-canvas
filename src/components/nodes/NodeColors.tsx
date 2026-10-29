@@ -8,7 +8,7 @@ type NodeColorsProps = {
 
 export function NodeColors({ value, onChange }: NodeColorsProps) {
   return (
-    <div className="note-colors">
+    <div className="node-colors">
       {(Object.keys(NOTE_COLORS) as NoteColor[]).map((color) => (
         <button
           key={color}

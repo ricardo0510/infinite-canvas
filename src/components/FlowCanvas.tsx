@@ -14,10 +14,10 @@ import {
   type OnConnectEnd,
   type OnNodeDrag,
 } from "@xyflow/react";
-import { useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
-import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
+import { AI_NODE_WIDTH, byId, GRID_SIZE, mediaNodeHeight, nodeRect } from "../lib/geometry";
 import { storeImage } from "../lib/imageStore";
-import { fitImageSize, readImageFile, type LoadedImage } from "../lib/images";
+import { readImageFile, type LoadedImage } from "../lib/images";
 import { buildStressSnapshot } from "../lib/stress";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
 import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
@@ -34,13 +34,18 @@ import { SelectionToolbar } from "./SelectionToolbar";
 import { StatusBar } from "./StatusBar";
 import { GroupNode } from "./nodes/GroupNode";
 import { ImageNode } from "./nodes/ImageNode";
-import { NoteNode } from "./nodes/NoteNode";
 import { TextNode } from "./nodes/TextNode";
+import { VideoNode } from "./nodes/VideoNode";
+
+const AiPanel = lazy(async () => {
+  const module = await import("./ai/AiPanel");
+  return { default: module.AiPanel };
+});
 
 const nodeTypes = {
-  note: NoteNode,
   text: TextNode,
   image: ImageNode,
+  video: VideoNode,
   group: GroupNode,
 } satisfies NodeTypes;
 
@@ -80,7 +85,7 @@ export function FlowCanvas() {
   const onConnect = useCanvasStore((state) => state.onConnect);
   const isValidConnection = useCanvasStore((state) => state.isValidConnection);
   const commit = useCanvasStore((state) => state.commit);
-  const addNote = useCanvasStore((state) => state.addNote);
+  const addNode = useCanvasStore((state) => state.addNode);
   const raiseNode = useCanvasStore((state) => state.raiseNode);
   const setViewport = useCanvasStore((state) => state.setViewport);
   const [initialViewport] = useState(() => useCanvasStore.getState().viewport);
@@ -91,6 +96,8 @@ export function FlowCanvas() {
   const snapToGrid = useUiStore((state) => state.snapToGrid);
   const showMiniMap = useUiStore((state) => state.showMiniMap);
   const setMiniMap = useUiStore((state) => state.setMiniMap);
+  const aiPanelNodeId = useUiStore((state) => state.aiPanelNodeId);
+  const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const flowStore = useStoreApi();
   const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
@@ -142,16 +149,21 @@ export function FlowCanvas() {
       const origin = screenToFlowPosition(point);
       const refs = await Promise.all(loaded.map((image) => storeImage(image.blob)));
       const specs = loaded.map((image, index) => {
-        const size = fitImageSize(image.width, image.height);
+        const size = {
+          width: AI_NODE_WIDTH,
+          height: mediaNodeHeight(AI_NODE_WIDTH, image.width, image.height),
+        };
         const single = loaded.length === 1;
+        const stepX = AI_NODE_WIDTH + 64;
+        const stepY = 240;
         return {
           position: {
-            x: single ? origin.x - size.width / 2 : origin.x + (index % 3) * 344,
-            y: single ? origin.y - size.height / 2 : origin.y + Math.floor(index / 3) * 344,
+            x: single ? origin.x - size.width / 2 : origin.x + (index % 3) * stepX,
+            y: single ? origin.y - size.height / 2 : origin.y + Math.floor(index / 3) * stepY,
           },
           src: refs[index],
-          width: size.width,
-          height: size.height,
+          width: image.width,
+          height: image.height,
           alt: image.name,
         };
       });
@@ -313,8 +325,20 @@ export function FlowCanvas() {
     ) {
       return;
     }
-    addNote(screenToFlowPosition({ x: event.clientX, y: event.clientY }));
+    addNode("text", screenToFlowPosition({ x: event.clientX, y: event.clientY }));
   };
+
+  const handleNodeClick = useCallback(
+    (_event: MouseEvent, node: CanvasNode) => {
+      raiseNode(node.id);
+      if (node.type !== "text" && node.type !== "image" && node.type !== "video") {
+        setAiPanelNode(null);
+        return;
+      }
+      setAiPanelNode(node.id);
+    },
+    [raiseNode, setAiPanelNode],
+  );
 
   const openMenu = (event: MouseEvent, targetIds: string[]) => {
     event.preventDefault();
@@ -462,13 +486,16 @@ export function FlowCanvas() {
         onConnect={onConnect}
         onConnectEnd={handleConnectEnd}
         isValidConnection={isValidConnection}
-        onNodeClick={(_event, node) => raiseNode(node.id)}
+        onNodeClick={handleNodeClick}
         onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
         onPaneContextMenu={handlePaneContextMenu}
         onNodeContextMenu={handleNodeContextMenu}
-        onPaneClick={() => setGuides([])}
+        onPaneClick={() => {
+          setGuides([]);
+          setAiPanelNode(null);
+        }}
         onMoveEnd={(_event, viewport) => setViewport(viewport)}
         deleteKeyCode={null}
         colorMode="dark"
@@ -500,6 +527,7 @@ export function FlowCanvas() {
             nodeStrokeWidth={2}
             nodeColor={(node) => {
               if (node.type === "group") return "#2c2518";
+              if (node.type === "video") return "#f59e0b";
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
               return color ? NOTE_COLORS[color] : "#5b6478";
             }}
@@ -529,6 +557,11 @@ export function FlowCanvas() {
             <span>PNG, JPG, GIF or WebP · up to 4 MB each</span>
           </div>
         </div>
+      ) : null}
+      {aiPanelNodeId ? (
+        <Suspense fallback={null}>
+          <AiPanel />
+        </Suspense>
       ) : null}
       <CanvasControls />
       <EmptyState />

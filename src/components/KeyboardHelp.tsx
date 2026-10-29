@@ -28,7 +28,7 @@ const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] =
   {
     title: "Canvas",
     items: [
-      { keys: ["Double-click"], action: "Add a note" },
+      { keys: ["Double-click"], action: "Add a text node" },
       { keys: ["Right-click"], action: "Context menu" },
       { keys: ["Handle → blank"], action: "Create a connected node" },
       { keys: ["Drop image file"], action: "Create image nodes" },

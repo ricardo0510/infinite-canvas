@@ -8,9 +8,9 @@ import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 
 const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
-  { kind: "note", label: "Note", glyph: "+", title: "Add a note" },
   { kind: "text", label: "Text", glyph: "T", title: "Add text" },
   { kind: "image", label: "Image", glyph: "▣", title: "Add an image" },
+  { kind: "video", label: "Video", glyph: "▶", title: "Add a video" },
   { kind: "group", label: "Group", glyph: "▢", title: "Add a group" },
 ];
 
@@ -28,6 +28,7 @@ export function Toolbar() {
   const toggleSnap = useUiStore((state) => state.toggleSnap);
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
+  const setAiSettingsOpen = useUiStore((state) => state.setAiSettingsOpen);
   const pushToast = useToastStore((state) => state.push);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
@@ -86,7 +87,7 @@ export function Toolbar() {
           <button
             key={item.kind}
             type="button"
-            className={`tool-button${item.kind === "note" ? " tool-primary" : ""}`}
+            className={`tool-button${item.kind === "text" ? " tool-primary" : ""}`}
             onClick={() => handleAdd(item.kind)}
             title={item.title}
           >
@@ -140,6 +141,10 @@ export function Toolbar() {
       <button type="button" className="tool-button" onClick={() => setCommandOpen(true)} title="Command palette (/)">
         <span aria-hidden="true">/</span>
         <span className="tool-label">Commands</span>
+      </button>
+      <button type="button" className="tool-button" onClick={() => setAiSettingsOpen(true)} title="AI settings">
+        <span aria-hidden="true">⚙</span>
+        <span className="tool-label">AI</span>
       </button>
       <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="Keyboard shortcuts (?)">
         <span aria-hidden="true">?</span>

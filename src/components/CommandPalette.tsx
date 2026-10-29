@@ -60,9 +60,9 @@ function CommandPaletteSession() {
     };
 
     return [
-      { id: "note", label: "New note", group: "Add", keywords: "card idea", run: add("note") },
       { id: "text", label: "New text", group: "Add", keywords: "label", run: add("text") },
       { id: "image", label: "New image", group: "Add", keywords: "picture upload", run: add("image") },
+      { id: "video", label: "New video", group: "Add", keywords: "movie clip generate", run: add("video") },
       { id: "group", label: "New group", group: "Add", keywords: "container", run: add("group") },
       ...TEMPLATES.map((item) => ({
         id: `template-${item.id}`,

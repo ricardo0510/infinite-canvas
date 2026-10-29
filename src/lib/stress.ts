@@ -1,5 +1,6 @@
 import { MarkerType } from "@xyflow/react";
 import type { CanvasEdge, CanvasNode, CanvasSnapshot, NoteColor } from "../types";
+import { AI_NODE_WIDTH, EMPTY_NODE_HEIGHT } from "./geometry";
 import { SCHEMA_VERSION } from "./storage";
 
 const COLORS: NoteColor[] = ["violet", "cyan", "amber", "emerald"];
@@ -18,18 +19,19 @@ export function buildStressSnapshot(count: number): CanvasSnapshot {
     const id = `stress-node-${index}`;
     nodes.push({
       id,
-      type: "note",
+      type: "text",
       position: {
         x: (index % columns) * 300,
         y: Math.floor(index / columns) * 240,
       },
-      width: 260,
-      height: 190,
-      style: { width: 260, height: 190 },
+      width: AI_NODE_WIDTH,
+      height: EMPTY_NODE_HEIGHT,
+      style: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
       data: {
         title: `Node ${index + 1}`,
-        body: "",
+        text: "",
         color: COLORS[index % COLORS.length],
+        fontSize: 14,
       },
     });
 

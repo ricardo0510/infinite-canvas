@@ -22,9 +22,9 @@ type ContextMenuProps = {
 };
 
 const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
-  { kind: "note", label: "Note" },
   { kind: "text", label: "Text" },
   { kind: "image", label: "Image" },
+  { kind: "video", label: "Video" },
   { kind: "group", label: "Group" },
 ];
 

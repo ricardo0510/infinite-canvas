@@ -1,19 +1,30 @@
 import type { XYPosition } from "@xyflow/react";
 import type { CanvasNode, NodeKind } from "../types";
 
+export const AI_NODE_WIDTH = 280;
+export const NODE_HEADER_HEIGHT = 34;
+export const NODE_FOOTER_HEIGHT = 34;
+export const EMPTY_NODE_HEIGHT = 160;
+
 export const MIN_SIZE: Record<NodeKind, { width: number; height: number }> = {
-  note: { width: 200, height: 120 },
-  text: { width: 120, height: 60 },
-  image: { width: 140, height: 100 },
+  text: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  image: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  video: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   group: { width: 220, height: 140 },
 };
 
 export const DEFAULT_SIZE: Record<NodeKind, { width: number; height: number }> = {
-  note: { width: 260, height: 190 },
-  text: { width: 240, height: 110 },
-  image: { width: 280, height: 220 },
+  text: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  image: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  video: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   group: { width: 320, height: 200 },
 };
+
+export function mediaNodeHeight(width: number, contentWidth: number, contentHeight: number): number {
+  if (!(contentWidth > 0) || !(contentHeight > 0)) return EMPTY_NODE_HEIGHT;
+  const bodyHeight = (width * contentHeight) / contentWidth;
+  return Math.round(NODE_HEADER_HEIGHT + bodyHeight + NODE_FOOTER_HEIGHT);
+}
 
 export const GRID_SIZE = 8;
 
@@ -24,8 +35,8 @@ function styleSize(value: unknown): number | undefined {
 }
 
 export function nodeSize(node: CanvasNode): { width: number; height: number } {
-  const type: NodeKind = (node.type as NodeKind) ?? "note";
-  const fallback = DEFAULT_SIZE[type] ?? DEFAULT_SIZE.note;
+  const type: NodeKind = (node.type as NodeKind) ?? "text";
+  const fallback = DEFAULT_SIZE[type] ?? DEFAULT_SIZE.text;
   return {
     width: node.width ?? node.measured?.width ?? styleSize(node.style?.width) ?? fallback.width,
     height: node.height ?? node.measured?.height ?? styleSize(node.style?.height) ?? fallback.height,
@@ -108,6 +119,6 @@ export function snapValue(value: number, grid = GRID_SIZE): number {
 }
 
 export function clampSize(kind: NodeKind, width: number, height: number): { width: number; height: number } {
-  const min = MIN_SIZE[kind] ?? MIN_SIZE.note;
+  const min = MIN_SIZE[kind] ?? MIN_SIZE.text;
   return { width: Math.max(min.width, width), height: Math.max(min.height, height) };
 }
