@@ -5,7 +5,7 @@ import { ModelsModule } from "../models/models.module";
 import { PrismaTaskRepository } from "./prisma-task.repository";
 import { TASK_REPOSITORY, InMemoryTaskRepository } from "./task.repository";
 import { TaskEvents } from "./task.events";
-import { TaskRunner } from "./task-runner.service";
+import { TaskProcessorService } from "./task-processor.service";
 import { TasksController } from "./tasks.controller";
 import { TasksService } from "./tasks.service";
 
@@ -15,7 +15,7 @@ import { TasksService } from "./tasks.service";
   providers: [
     TasksService,
     TaskEvents,
-    TaskRunner,
+    TaskProcessorService,
     {
       provide: TASK_REPOSITORY,
       inject: [ConfigService],
@@ -31,6 +31,6 @@ import { TasksService } from "./tasks.service";
       },
     },
   ],
-  exports: [TasksService, TaskEvents],
+  exports: [TasksService, TaskEvents, TaskProcessorService],
 })
 export class TasksModule {}

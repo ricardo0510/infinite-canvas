@@ -1,6 +1,5 @@
-import { Injectable, OnModuleInit } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
-import { TaskEvents } from "./task.events";
 import { TasksService } from "./tasks.service";
 import type { ImageResultItem, InternalTask, VideoResultItem } from "./task.types";
 
@@ -16,27 +15,12 @@ function mockSvg(prompt: string, index: number): string {
 }
 
 @Injectable()
-export class TaskRunner implements OnModuleInit {
-  constructor(
-    private readonly tasks: TasksService,
-    private readonly events: TaskEvents,
-  ) {}
-
+export class TaskProcessorService {
   private readonly activeRuns = new Set<string>();
 
-  onModuleInit(): void {
-    this.events.created$.subscribe((task) => {
-      void this.run(task.taskId);
-    });
-    void this.resume();
-  }
+  constructor(private readonly tasks: TasksService) {}
 
-  private async resume(): Promise<void> {
-    const tasks = await this.tasks.listActive();
-    for (const task of tasks) void this.run(task.taskId);
-  }
-
-  private async run(taskId: string): Promise<void> {
+  async execute(taskId: string): Promise<void> {
     if (this.activeRuns.has(taskId)) return;
     this.activeRuns.add(taskId);
     const task = await this.tasks.getInternal(taskId);

@@ -12,10 +12,9 @@
     "test": "vitest run",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "predev": "prisma generate",
-    "prebuild": "prisma generate",
-    "pretypecheck": "prisma generate",
-    "pretest": "prisma generate"
+    "dev:worker": "tsx watch src/worker.ts",
+    "start:worker": "node dist/worker.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@fastify/multipart": "^9.0.3",
@@ -27,11 +26,13 @@
     "@nestjs/platform-ws": "^11.1.6",
     "@nestjs/websockets": "^11.1.6",
     "@prisma/client": "^6.19.0",
+    "bullmq": "^6.5.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "fastify": "5.11.3",
     "image-size": "^2.0.2",
     "infinite-canvas": "file:..",
+    "ioredis": "^6.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "ws": "^8.18.3"

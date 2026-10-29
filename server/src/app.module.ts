@@ -4,6 +4,7 @@ import { APP_GUARD } from "@nestjs/core";
 import { AuthGuard } from "./common/auth.guard";
 import { HealthController } from "./health/health.controller";
 import { ModelsModule } from "./models/models.module";
+import { TaskQueueModule } from "./queue/task-queue.module";
 import { RealtimeModule } from "./realtime/realtime.module";
 import { TasksModule } from "./tasks/tasks.module";
 import { UploadsModule } from "./uploads/uploads.module";
@@ -19,6 +20,7 @@ import { UploadsModule } from "./uploads/uploads.module";
     UploadsModule,
     TasksModule,
     RealtimeModule,
+    TaskQueueModule,
   ],
   controllers: [HealthController],
   providers: [
