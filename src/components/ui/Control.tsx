@@ -61,6 +61,7 @@ type SelectProps = {
   controlSize?: ControlSize;
   disabled?: boolean;
   className?: string;
+  menuClassName?: string;
   placeholder?: string;
   ariaLabel?: string;
 };
@@ -74,6 +75,7 @@ export function Select({
   controlSize = "md",
   disabled = false,
   className,
+  menuClassName,
   placeholder = "请选择",
   ariaLabel,
 }: SelectProps) {
@@ -110,7 +112,7 @@ export function Select({
       width,
       maxHeight,
     });
-    setActive(Math.max(0, selectedIndex));
+    setActive(selectedIndex);
     setOpen(true);
   };
 
@@ -123,6 +125,16 @@ export function Select({
 
   const move = (delta: number) => {
     if (options.length === 0) return;
+    if (active < 0) {
+      const start = delta > 0 ? 0 : options.length - 1;
+      const order =
+        delta > 0
+          ? options.map((_, index) => index)
+          : options.map((_, index) => index).reverse();
+      const target = order.slice(order.indexOf(start)).find((index) => !options[index].disabled);
+      if (target !== undefined) setActive(target);
+      return;
+    }
     let next = active;
     for (let step = 0; step < options.length; step += 1) {
       next = (next + delta + options.length) % options.length;
@@ -258,7 +270,7 @@ export function Select({
         ? createPortal(
             <div
               ref={menuRef}
-              className="select-menu"
+              className={["select-menu", menuClassName].filter(Boolean).join(" ")}
               role="listbox"
               tabIndex={-1}
               aria-label={ariaLabel}

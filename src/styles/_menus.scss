@@ -46,6 +46,22 @@
   font-size: var(--font-2xs);
 }
 
+.context-menu .select-option {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: var(--font-xs);
+}
+
+.context-menu .select-option.is-active {
+  background: rgb(139 92 246 / 12%);
+  color: var(--text-strong);
+}
+
+.context-menu .select-option .select-check {
+  display: none;
+}
+
 .context-menu .context-danger {
   color: var(--danger-soft);
 }

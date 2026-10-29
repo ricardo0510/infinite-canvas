@@ -85,6 +85,7 @@ export function Toolbar() {
     <div className="toolbar">
       <Select
         className="new-node-select"
+        menuClassName="context-menu"
         controlSize="lg"
         value=""
         options={ADD_ITEMS.map((item) => ({ value: item.kind, label: item.label }))}
