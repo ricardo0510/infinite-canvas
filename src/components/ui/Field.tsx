@@ -28,18 +28,17 @@ type SelectFieldProps = {
 
 export function SelectField({ label, value, options, disabled, onChange }: SelectFieldProps) {
   return (
-    <Field label={label}>
-      <Select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
-        {options.map((option) => {
-          const optionValue = typeof option === "string" ? option : option.value;
-          const optionLabel = typeof option === "string" ? option : option.label;
-          return (
-            <option key={optionValue} value={optionValue}>
-              {optionLabel}
-            </option>
-          );
-        })}
-      </Select>
-    </Field>
+    <div className="field">
+      <span>{label}</span>
+      <Select
+        value={value}
+        options={options.map((option) =>
+          typeof option === "string" ? { value: option, label: option } : option,
+        )}
+        disabled={disabled}
+        onChange={onChange}
+        ariaLabel={label}
+      />
+    </div>
   );
 }

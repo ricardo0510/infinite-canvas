@@ -112,19 +112,12 @@ export function AiPanel() {
             <Select
               className="ai-model-select"
               value={model?.id ?? ""}
-              aria-label="Model"
+              options={models.map((item) => ({ value: item.id, label: item.name }))}
+              placeholder={modelsState.loading ? "加载中…" : "无可用模型"}
+              ariaLabel="Model"
               disabled={modelsState.loading || running}
-              onChange={(event) => changeModel(event.target.value)}
-            >
-              {models.length === 0 ? (
-                <option value="">{modelsState.loading ? "加载中…" : "无可用模型"}</option>
-              ) : null}
-              {models.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </Select>
+              onChange={changeModel}
+            />
             <Button
               size="md"
               disabled={running || !model}
