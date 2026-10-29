@@ -147,34 +147,9 @@
   padding-top: 2px;
 }
 
-.ai-result {
-  position: relative;
-  display: grid;
-  place-items: center;
-  height: 56px;
-  padding: 0;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--bg);
-  cursor: pointer;
-}
 
-.ai-result.is-active {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent);
-}
 
-.ai-result:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 
-.ai-result img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
 
 .ai-result-text {
   display: -webkit-box;

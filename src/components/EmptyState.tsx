@@ -2,6 +2,7 @@ import { useReactFlow } from "@xyflow/react";
 import { TEMPLATES } from "../lib/templates";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NodeKind } from "../types";
+import { Button } from "./ui/Button";
 
 const ACTIONS: { kind: NodeKind; label: string; hint: string }[] = [
   { kind: "text", label: "文本", hint: "编写或生成文本" },
@@ -49,25 +50,29 @@ export function EmptyState() {
         <p>双击任意位置、右键查看更多，或在下方选择节点类型。</p>
         <div className="empty-actions">
           {ACTIONS.map((action) => (
-            <button key={action.kind} type="button" className="empty-action" onClick={() => add(action.kind)}>
+            <Button
+              key={action.kind}
+              variant="card"
+              onClick={() => add(action.kind)}
+            >
               <strong>{action.label}</strong>
               <span>{action.hint}</span>
-            </button>
+            </Button>
           ))}
         </div>
         <div className="empty-divider" />
         <p className="empty-templates-title">或从模板开始</p>
         <div className="empty-actions">
           {TEMPLATES.map((template) => (
-            <button
+            <Button
               key={template.id}
-              type="button"
-              className="empty-action empty-template"
+              variant="card"
+              className="empty-template"
               onClick={() => applyTemplate(template.id)}
             >
               <strong>{template.label}</strong>
               <span>{template.description}</span>
-            </button>
+            </Button>
           ))}
         </div>
         <p className="empty-footnote">

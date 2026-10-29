@@ -172,3 +172,85 @@
 .btn--menu kbd {
   margin-left: auto;
 }
+
+.btn--card {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 3px;
+  height: auto;
+  padding: 10px var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--panel-2);
+  color: var(--text);
+  text-align: left;
+  white-space: normal;
+}
+
+.btn--card:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: rgb(139 92 246 / 10%);
+}
+
+.btn--card strong {
+  font-size: var(--font-sm);
+  font-weight: 650;
+}
+
+.btn--card span {
+  color: var(--muted);
+  font-size: var(--font-2xs);
+}
+
+.btn--tile {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 56px;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--bg);
+}
+
+.btn--tile:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+.btn--tile.is-active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.btn--tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.btn--swatch {
+  width: 9px;
+  height: 9px;
+  min-width: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  opacity: 0.5;
+}
+
+.btn--swatch:hover:not(:disabled) {
+  background: transparent;
+  transform: scale(1.2);
+}
+
+.btn--swatch:active:not(:disabled) {
+  transform: scale(1.1);
+}
+
+.btn--swatch.is-active {
+  border-color: var(--text-strong);
+  opacity: 1;
+}

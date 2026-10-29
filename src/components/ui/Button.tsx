@@ -1,6 +1,15 @@
 import type { ButtonHTMLAttributes } from "react";
 
-type ButtonVariant = "secondary" | "ghost" | "accent" | "primary" | "danger" | "menu";
+type ButtonVariant =
+  | "secondary"
+  | "ghost"
+  | "accent"
+  | "primary"
+  | "danger"
+  | "menu"
+  | "card"
+  | "tile"
+  | "swatch";
 type ButtonSize = "xs" | "sm" | "md" | "lg";
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {

@@ -208,16 +208,16 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
             <span>结果历史</span>
             <div className="ai-results">
               {generation.results.map((item) => (
-                <button
+                <Button
                   key={item.id}
-                  type="button"
-                  className={`ai-result${generation.activeResultId === item.id ? " is-active" : ""}`}
+                  variant="tile"
+                  active={generation.activeResultId === item.id}
                   aria-pressed={generation.activeResultId === item.id}
                   onClick={() => activateResult(nodeId, item.id)}
                   title={resultLabel(item)}
                 >
                   <ResultThumb item={item} />
-                </button>
+                </Button>
               ))}
             </div>
           </div>
