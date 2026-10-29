@@ -4,7 +4,8 @@
 > 目标仓库：`D:\Desktop\code\infinite-canvas`（Vite + React 19 + React Flow + Zustand，local-first）  
 > 接口策略：重新设计一套 camelCase API；HTTP 响应统一 `{ code, message, data }`；文本生成不流式，后端生成完成后一次性返回  
 > 文档状态：已进入开发，核心链路已落地  
-> 实现进度：Mock 默认开启；文本同步、图片/视频任务、任务恢复、AI 面板、Video 节点已实现；真实接口需按本文契约联调
+> 实现进度：Mock 默认开启；文本同步、图片/视频任务、任务恢复、AI 面板、Video 节点已实现；真实接口需按本文契约联调  
+> 后端实现方案与完整 API 文档：`docs/backend-api-plan.md`（联调以该文档 §11.12 兼容性清单为准）
 
 ---
 
@@ -257,7 +258,7 @@ GET /v1/models                 # 不传 kind 返回全部
 
 - `params.qualityTiers` / `params.backgrounds` / `params.extra` 可为空或省略。
 - `pricing` 可选；前端只用于展示预估，不参与提交。
-- 模型列表缓存 60s；支持 `ETag` / `If-None-Match` 更佳。
+- 模型列表缓存 60s；可加 `ETag`，但前端不处理 304，仍需返回 200 + JSON。
 
 ### 3.3 文件上传
 
@@ -556,12 +557,15 @@ GET /v1/tasks/{taskId}
       "items": [
         {
           "id": "item_1",
+          "kind": "video",
           "url": "https://cdn.example.com/out/video.mp4",
           "thumbnailUrl": "https://cdn.example.com/out/poster.jpg",
           "duration": 5,
           "width": 1280,
           "height": 720,
-          "assetId": "asset_456"
+          "assetId": "asset_456",
+          "modelId": "seedance-1-0-pro",
+          "createdAt": "2026-10-29T08:00:40Z"
         }
       ]
     },
@@ -591,11 +595,14 @@ GET /v1/tasks/{taskId}
       "items": [
         {
           "id": "item_1",
+          "kind": "image",
           "url": "https://cdn.example.com/out/a.png",
           "thumbnailUrl": "https://cdn.example.com/out/a_thumb.png",
           "width": 1024,
           "height": 1024,
-          "assetId": "asset_789"
+          "assetId": "asset_789",
+          "modelId": "flux-1-1-pro",
+          "createdAt": "2026-10-29T08:00:20Z"
         }
       ]
     },
