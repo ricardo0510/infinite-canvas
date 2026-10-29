@@ -29,6 +29,7 @@ function CommandPaletteSession() {
   const setOpen = useUiStore((state) => state.setCommandOpen);
   const snapToGrid = useUiStore((state) => state.snapToGrid);
   const showMiniMap = useUiStore((state) => state.showMiniMap);
+  const selectedCount = useCanvasStore((state) => state.nodes.filter((node) => node.selected).length);
   const { screenToFlowPosition, fitView } = useReactFlow();
   const [query, setQuery] = useState("");
   const [active, setActive] = useState(0);
@@ -65,7 +66,6 @@ function CommandPaletteSession() {
       { id: "text", label: "新建文本", group: "添加", keywords: "文字", run: add("text") },
       { id: "image", label: "新建图片", group: "添加", keywords: "图片 上传", run: add("image") },
       { id: "video", label: "新建视频", group: "添加", keywords: "视频 生成", run: add("video") },
-      { id: "group", label: "新建分组", group: "添加", keywords: "容器", run: add("group") },
       ...TEMPLATES.map((item) => ({
         id: `template-${item.id}`,
         label: `模板：${item.label}`,
@@ -102,13 +102,17 @@ function CommandPaletteSession() {
         hint: "Del",
         run: () => state().removeSelected(),
       },
-      {
-        id: "group-selection",
-        label: "合并分组",
-        group: "排列",
-        hint: "Ctrl/Cmd G",
-        run: () => state().groupSelected(),
-      },
+      ...(selectedCount >= 2
+        ? [
+            {
+              id: "group-selection",
+              label: "合并分组",
+              group: "排列",
+              hint: "Ctrl/Cmd G",
+              run: () => state().groupSelected(),
+            },
+          ]
+        : []),
       {
         id: "ungroup-selection",
         label: "取消分组",
@@ -156,7 +160,7 @@ function CommandPaletteSession() {
         },
       },
     ];
-  }, [fitView, screenToFlowPosition, snapToGrid, showMiniMap]);
+  }, [fitView, screenToFlowPosition, selectedCount, snapToGrid, showMiniMap]);
 
   const filtered = useMemo(() => {
     const value = query.trim().toLowerCase();

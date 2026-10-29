@@ -8,7 +8,6 @@ const ACTIONS: { kind: NodeKind; label: string; hint: string }[] = [
   { kind: "text", label: "文本", hint: "编写或生成文本" },
   { kind: "image", label: "图片", hint: "展示或生成图片" },
   { kind: "video", label: "视频", hint: "生成或播放视频" },
-  { kind: "group", label: "分组", hint: "组织节点" },
 ];
 
 export function EmptyState() {

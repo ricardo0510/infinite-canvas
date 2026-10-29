@@ -13,7 +13,6 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "text", label: "文本节点" },
   { kind: "image", label: "图片节点" },
   { kind: "video", label: "视频节点" },
-  { kind: "group", label: "分组" },
 ];
 
 export function Toolbar() {

@@ -29,7 +29,6 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "text", label: "文本" },
   { kind: "image", label: "图片" },
   { kind: "video", label: "视频" },
-  { kind: "group", label: "分组" },
 ];
 
 export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
@@ -71,9 +70,6 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
   };
 
   const selectTargets = () => selectNodes(menu.targetIds);
-  const addItems = menu.connection
-    ? ADD_ITEMS.filter((item) => item.kind !== "group")
-    : ADD_ITEMS;
 
   const handleAdd = (kind: NodeKind) => {
     if (menu.connection) addConnectedNode(kind, menu.flow, menu.connection);
@@ -112,7 +108,7 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
           <div className="context-label">
             {menu.connection.fromHandleType === "source" ? "添加下游节点" : "添加上游节点"}
           </div>
-          {addItems.map((item) => (
+          {ADD_ITEMS.map((item) => (
             <Button
               key={item.kind}
               variant="menu"
@@ -216,7 +212,7 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
           ) : null}
 
           <div className="context-label">添加</div>
-          {addItems.map((item) => (
+          {ADD_ITEMS.map((item) => (
             <Button
               key={item.kind}
               variant="menu"
