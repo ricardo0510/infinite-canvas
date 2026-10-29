@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useUiStore } from "../../store/uiStore";
 import { getAiApiBase, getAiRealtimeBase, isAiMock, setAiRuntimeConfig } from "../../lib/ai/config";
 import { getAiToken } from "../../lib/ai/auth";
+import { Button } from "../ui/Button";
 import { Field } from "../ui/Field";
 import { Modal } from "../ui/Modal";
 
@@ -46,12 +47,12 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
         />
       </Field>
       <div className="ai-settings-actions">
-        <button type="button" className="ai-secondary" onClick={onClose}>
+        <Button size="md" onClick={onClose}>
           取消
-        </button>
-        <button type="button" className="ai-primary" onClick={save}>
+        </Button>
+        <Button variant="primary" size="md" onClick={save}>
           保存
-        </button>
+        </Button>
       </div>
     </Modal>
   );

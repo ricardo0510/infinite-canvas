@@ -7,6 +7,7 @@ import {
 } from "@xyflow/react";
 import { useCallback, useState, type CSSProperties, type MouseEvent } from "react";
 import { useCanvasStore } from "../../store/canvasStore";
+import { Button } from "../ui/Button";
 
 type Point = { x: number; y: number };
 
@@ -125,8 +126,10 @@ export function CanvasEdge({
             onMouseEnter={() => setButtonHovered(true)}
             onMouseLeave={() => setButtonHovered(false)}
           >
-            <button
-              type="button"
+            <Button
+              variant="danger"
+              size="xs"
+              icon
               className="edge-delete"
               aria-label="删除连线"
               title="删除连线"
@@ -136,7 +139,7 @@ export function CanvasEdge({
               }}
             >
               ×
-            </button>
+            </Button>
           </div>
         </EdgeLabelRenderer>
       ) : null}

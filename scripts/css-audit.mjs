@@ -48,6 +48,7 @@ const unused = [...classes]
       !source.includes(name) &&
       !DYNAMIC.has(name) &&
       !name.startsWith("react-flow__") &&
+      !name.startsWith("btn--") &&
       name !== "selectable",
   )
   .sort();

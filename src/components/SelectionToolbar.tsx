@@ -1,5 +1,6 @@
 ﻿import { useCanvasStore } from "../store/canvasStore";
 import type { AlignKind } from "../types";
+import { Button } from "./ui/Button";
 
 const ALIGN: { kind: AlignKind; label: string; icon: string }[] = [
   { kind: "left", label: "左对齐", icon: "⇤" },
@@ -30,71 +31,77 @@ export function SelectionToolbar() {
         <>
           <span className="selection-divider" />
           {ALIGN.map((item) => (
-            <button
+            <Button
               key={item.kind}
-              type="button"
-              className="selection-button"
+              variant="ghost"
+              size="sm"
+              icon
               title={item.label}
               aria-label={item.label}
               onClick={() => alignSelected(item.kind)}
             >
               {item.icon}
-            </button>
+            </Button>
           ))}
           <span className="selection-divider" />
-          <button
-            type="button"
-            className="selection-button"
+          <Button
+            variant="ghost"
+            size="sm"
+            icon
             title="水平分布"
             aria-label="水平分布"
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("x")}
           >
             ≡
-          </button>
-          <button
-            type="button"
-            className="selection-button"
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            icon
             title="垂直分布"
             aria-label="垂直分布"
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("y")}
           >
             ⋮
-          </button>
+          </Button>
           <span className="selection-divider" />
-          <button
-            type="button"
-            className="selection-button"
+          <Button
+            variant="ghost"
+            size="sm"
+            icon
             title="合并分组（Ctrl/Cmd + G）"
             aria-label="合并分组"
             onClick={() => groupSelected()}
           >
             ▣
-          </button>
+          </Button>
         </>
       ) : null}
       {hasGroup ? (
-        <button
-          type="button"
-          className="selection-button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
           title="取消分组（Ctrl/Cmd + Shift + G）"
           aria-label="取消分组"
           onClick={ungroupSelected}
         >
           ▢
-        </button>
+        </Button>
       ) : null}
       <span className="selection-divider" />
-      <button
-        type="button"
-        className="selection-button selection-danger"
+      <Button
+        variant="danger"
+        size="sm"
+        icon
         title="删除选中节点（Delete）"
         aria-label="删除选中节点"
         onClick={removeSelected}
       >
         ×
-      </button>
+      </Button>
     </div>
   );
 }

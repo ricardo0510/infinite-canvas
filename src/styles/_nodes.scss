@@ -378,27 +378,5 @@
   backdrop-filter: blur(10px);
 }
 
-.node-toolbar-button {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--muted);
-  font-size: var(--font-md);
-  cursor: pointer;
-}
 
-.node-toolbar-button:hover {
-  border-color: var(--border);
-  background: var(--panel-2);
-  color: var(--text-strong);
-}
 
-.node-toolbar-button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}

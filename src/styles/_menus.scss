@@ -11,41 +11,6 @@
   box-shadow: var(--shadow-lg);
 }
 
-.context-menu button {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  height: 28px;
-  padding: 0 var(--space-2);
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-2);
-  font-size: var(--font-sm);
-  text-align: left;
-  cursor: pointer;
-}
-
-.context-menu button:hover:not(:disabled) {
-  background: var(--panel-4);
-  color: var(--text-strong);
-}
-
-.context-menu button:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.context-menu button:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.context-menu button kbd {
-  margin-left: auto;
-}
-
 .context-label {
   padding: 6px var(--space-2) var(--space-1);
   color: var(--muted);
@@ -115,35 +80,8 @@
   text-transform: uppercase;
 }
 
-.command-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-4);
-  width: 100%;
-  height: 32px;
-  padding: 0 10px;
-  border: 0;
-  border-radius: var(--radius-md);
-  background: transparent;
-  color: var(--text-2);
-  font-size: var(--font-sm);
-  text-align: left;
-  cursor: pointer;
-}
-
-.command-item.is-active {
-  background: var(--panel-4);
-  color: var(--text-strong);
-}
-
-.command-item:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: -2px;
-}
-
-.command-item kbd {
-  flex: 0 0 auto;
+.command-list .btn {
+  margin-bottom: 1px;
 }
 
 .command-empty {
@@ -159,5 +97,5 @@
   padding: var(--space-2) 14px;
   border-top: 1px solid var(--border);
   color: var(--muted);
-  font-size: var(--font-xs);
+  font-size: var(--font-2xs);
 }

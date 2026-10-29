@@ -6,6 +6,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
+import { Button } from "./ui/Button";
 
 const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
   { kind: "text", label: "文本", glyph: "T", title: "添加文本" },
@@ -84,76 +85,75 @@ export function Toolbar() {
     <div className="toolbar">
       <div className="tool-cluster">
         {ADD_ITEMS.map((item) => (
-          <button
+          <Button
             key={item.kind}
-            type="button"
-            className={`tool-button${item.kind === "text" ? " tool-primary" : ""}`}
+            variant={item.kind === "text" ? "accent" : "secondary"}
+            size="lg"
             onClick={() => handleAdd(item.kind)}
             title={item.title}
           >
             <span aria-hidden="true">{item.glyph}</span>
             <span className="tool-label">{item.label}</span>
-          </button>
+          </Button>
         ))}
       </div>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
+      <Button size="lg" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
         <span aria-hidden="true">↶</span>
         <span className="tool-label">撤销</span>
-      </button>
-      <button type="button" className="tool-button" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
+      </Button>
+      <Button size="lg" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
         <span aria-hidden="true">↷</span>
         <span className="tool-label">重做</span>
-      </button>
+      </Button>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={handleLayout} disabled={!hasNodes} title="自动布局（Ctrl/Cmd + L）">
+      <Button size="lg" onClick={handleLayout} disabled={!hasNodes} title="自动布局（Ctrl/Cmd + L）">
         <span aria-hidden="true">⤢</span>
         <span className="tool-label">布局</span>
-      </button>
-      <button
-        type="button"
-        className={`tool-button${snapToGrid ? " is-on" : ""}`}
+      </Button>
+      <Button
+        size="lg"
+        className={snapToGrid ? "is-on" : undefined}
         onClick={toggleSnap}
         aria-pressed={snapToGrid}
         title={`网格吸附：${snapToGrid ? "开" : "关"}`}
       >
         <span aria-hidden="true">⌗</span>
         <span className="tool-label">吸附</span>
-      </button>
-      <button
-        type="button"
-        className="tool-button"
+      </Button>
+      <Button
+        size="lg"
         onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
         title="适应视图"
       >
         <span aria-hidden="true">⛶</span>
         <span className="tool-label">适配</span>
-      </button>
+      </Button>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={() => void exportSnapshot(getSnapshot())} title="导出 JSON">
+      <Button size="lg" onClick={() => void exportSnapshot(getSnapshot())} title="导出 JSON">
         <span aria-hidden="true">↓</span>
         <span className="tool-label">导出</span>
-      </button>
-      <button type="button" className="tool-button" onClick={() => fileInput.current?.click()} title="导入 JSON">
+      </Button>
+      <Button size="lg" onClick={() => fileInput.current?.click()} title="导入 JSON">
         <span aria-hidden="true">↑</span>
         <span className="tool-label">导入</span>
-      </button>
-      <button type="button" className="tool-button" onClick={() => setCommandOpen(true)} title="命令面板（/）">
+      </Button>
+      <Button size="lg" onClick={() => setCommandOpen(true)} title="命令面板（/）">
         <span aria-hidden="true">/</span>
         <span className="tool-label">命令</span>
-      </button>
-      <button type="button" className="tool-button" onClick={() => setAiSettingsOpen(true)} title="AI 设置">
+      </Button>
+      <Button size="lg" onClick={() => setAiSettingsOpen(true)} title="AI 设置">
         <span aria-hidden="true">⚙</span>
         <span className="tool-label">AI 设置</span>
-      </button>
-      <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
+      </Button>
+      <Button size="lg" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
         <span aria-hidden="true">?</span>
         <span className="tool-label">快捷键</span>
-      </button>
-      <button type="button" className="tool-button tool-danger" onClick={handleClear} disabled={!hasNodes} title="清空画布">
+      </Button>
+      <Button variant="danger" size="lg" onClick={handleClear} disabled={!hasNodes} title="清空画布">
         <span aria-hidden="true">×</span>
         <span className="tool-label">清空</span>
-      </button>
+      </Button>
       <input
         ref={fileInput}
         type="file"

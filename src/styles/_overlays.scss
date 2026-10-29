@@ -93,24 +93,8 @@
   flex: 1 1 auto;
 }
 
-.toast-close {
-  padding: 0 2px;
-  border: 0;
-  background: transparent;
-  color: var(--faint);
-  font-size: var(--font-lg);
-  line-height: 1;
-  cursor: pointer;
-}
 
-.toast-close:hover {
-  color: var(--text-strong);
-}
 
-.toast-close:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
-}
 
 @keyframes toast-in {
   from {
@@ -167,16 +151,4 @@
   text-align: left;
 }
 
-.crash-card button {
-  height: 32px;
-  padding: 0 14px;
-  border: 1px solid rgb(139 92 246 / 55%);
-  border-radius: var(--radius-md);
-  background: rgb(139 92 246 / 14%);
-  color: var(--accent-soft);
-  cursor: pointer;
-}
 
-.crash-card button:hover {
-  background: rgb(139 92 246 / 22%);
-}

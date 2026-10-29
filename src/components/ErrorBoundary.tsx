@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { Button } from "./ui/Button";
 
 type Props = { children: ReactNode };
 type State = { error: Error | null };
@@ -23,9 +24,9 @@ export class ErrorBoundary extends Component<Props, State> {
           <h1>出了点问题</h1>
           <p>画布遇到意外错误。已保存的快照仍然保留在本地存储中。</p>
           <code>{this.state.error.message}</code>
-          <button type="button" onClick={() => window.location.reload()}>
+          <Button variant="primary" size="lg" onClick={() => window.location.reload()}>
             重新加载
-          </button>
+          </Button>
         </div>
       </div>
     );

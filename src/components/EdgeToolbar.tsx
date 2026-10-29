@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { NOTE_COLORS, DEFAULT_EDGE_STROKE } from "../lib/theme";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NoteColor } from "../types";
+import { Button } from "./ui/Button";
 
 const DEFAULT_STROKE = DEFAULT_EDGE_STROKE;
 
@@ -80,12 +81,12 @@ export function EdgeToolbar() {
   };
 
   return (
-    <div className="selection-toolbar edge-toolbar" role="toolbar" aria-label="杩炵嚎鏍峰紡">
+    <div className="selection-toolbar edge-toolbar" role="toolbar" aria-label="连线样式">
       <input
         className="edge-label-input"
         value={typeof edge.label === "string" ? edge.label : ""}
-        placeholder="杩炵嚎鏍囩"
-        aria-label="杩炵嚎鏍囩"
+        placeholder="连线标签"
+        aria-label="连线标签"
         maxLength={80}
         onFocus={() => {
           editing.current = false;
@@ -100,48 +101,56 @@ export function EdgeToolbar() {
       />
       <span className="selection-divider" />
       {COLORS.map((color) => (
-        <button
+        <Button
           key={color.value}
-          type="button"
-          className={`selection-button edge-color-button${stroke === color.value ? " is-active" : ""}`}
-          title={`杩炵嚎棰滆壊锛?{color.label}`}
-          aria-label={`杩炵嚎棰滆壊锛?{color.label}`}
+          variant="ghost"
+          size="sm"
+          icon
+          className={`edge-color-button${stroke === color.value ? " is-active" : ""}`}
+          title={`连线颜色：${color.label}`}
+          aria-label={`连线颜色：${color.label}`}
           onClick={() => setColor(color.value)}
         >
           <span className="edge-color-dot" style={{ background: color.value }} />
-        </button>
+        </Button>
       ))}
       <span className="selection-divider" />
       {DASHES.map((item) => (
-        <button
+        <Button
           key={item.label}
-          type="button"
-          className={`selection-button${dash === item.value ? " is-active" : ""}`}
-          title={`绾挎潯鏍峰紡锛?{item.label}`}
-          aria-label={`绾挎潯鏍峰紡锛?{item.label}`}
+          variant="ghost"
+          size="sm"
+          icon
+          className={dash === item.value ? "is-active" : undefined}
+          title={`线条样式：${item.label}`}
+          aria-label={`线条样式：${item.label}`}
           onClick={() => setStyle({ strokeDasharray: item.value })}
         >
           {item.glyph}
-        </button>
+        </Button>
       ))}
       <span className="selection-divider" />
-      <button
-        type="button"
-        className={`selection-button${hasArrow ? " is-active" : ""}`}
-        title={hasArrow ? "绉婚櫎绠ご" : "娣诲姞绠ご"}
-        aria-label={hasArrow ? "绉婚櫎绠ご" : "娣诲姞绠ご"}
+      <Button
+        variant="ghost"
+        size="sm"
+        icon
+        className={hasArrow ? "is-active" : undefined}
+        title={hasArrow ? "移除箭头" : "添加箭头"}
+        aria-label={hasArrow ? "移除箭头" : "添加箭头"}
         onClick={toggleArrow}
       >
-        鈫?      </button>
-      <button
-        type="button"
-        className="selection-button selection-danger"
-        title="鍒犻櫎杩炵嚎"
-        aria-label="鍒犻櫎杩炵嚎"
+        →
+      </Button>
+      <Button
+        variant="danger"
+        size="sm"
+        icon
+        title="删除连线"
+        aria-label="删除连线"
         onClick={() => removeEdge(edge.id)}
       >
-        脳
-      </button>
+        ×
+      </Button>
     </div>
   );
 }

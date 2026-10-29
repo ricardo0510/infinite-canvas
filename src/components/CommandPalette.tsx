@@ -5,6 +5,7 @@ import { TEMPLATES } from "../lib/templates";
 import { useCanvasStore } from "../store/canvasStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
+import { Button } from "./ui/Button";
 
 type Command = {
   id: string;
@@ -234,9 +235,11 @@ function CommandPaletteSession() {
               return (
                 <div key={command.id}>
                   {showGroup ? <div className="command-group-label">{command.group}</div> : null}
-                  <button
-                    type="button"
-                    className={`command-item${isActive ? " is-active" : ""}`}
+                  <Button
+                    variant="menu"
+                    size="lg"
+                    block
+                    active={isActive}
                     data-active={isActive ? "true" : "false"}
                     onMouseEnter={() => setActive(index)}
                     onClick={() => {
@@ -244,9 +247,9 @@ function CommandPaletteSession() {
                       command.run();
                     }}
                   >
-                    <span className="command-item-label">{command.label}</span>
+                    <span>{command.label}</span>
                     {command.hint ? <kbd>{command.hint}</kbd> : null}
-                  </button>
+                  </Button>
                 </div>
               );
             })

@@ -2,6 +2,7 @@ import { NodeToolbar, Position } from "@xyflow/react";
 import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import { useUiStore } from "../../store/uiStore";
 import type { CanvasNode } from "../../types";
+import { Button } from "../ui/Button";
 
 type NodeSelectionToolbarProps = {
   node: CanvasNode;
@@ -17,9 +18,10 @@ export function NodeSelectionToolbar({ node }: NodeSelectionToolbarProps) {
   return (
     <NodeToolbar nodeId={node.id} position={Position.Top} align="center" offset={10} isVisible>
       <div className="node-selection-toolbar">
-        <button
-          type="button"
-          className="node-toolbar-button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
           title="全屏预览"
           aria-label="打开全屏预览"
           onClick={() =>
@@ -31,7 +33,7 @@ export function NodeSelectionToolbar({ node }: NodeSelectionToolbarProps) {
           }
         >
           <span aria-hidden="true">⛶</span>
-        </button>
+        </Button>
       </div>
     </NodeToolbar>
   );

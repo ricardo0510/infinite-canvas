@@ -71,25 +71,8 @@
   opacity: 0.55;
 }
 
-.ai-config-button {
-  height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--border-strong);
-  border-radius: 7px;
-  background: var(--panel-2);
-  color: var(--muted);
-  font-size: var(--font-xs);
-  cursor: pointer;
-}
 
-.ai-config-button:hover:not(:disabled) {
-  color: var(--text-strong);
-}
 
-.ai-config-button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 
 .ai-generate-button {
   margin-left: auto;
@@ -222,46 +205,12 @@
 
 /* ---------- Buttons ---------- */
 
-.ai-primary,
-.ai-secondary {
-  height: 30px;
-  padding: 0 var(--space-3);
-  border-radius: 7px;
-  font-size: var(--font-sm);
-  font-weight: 650;
-  cursor: pointer;
-}
 
-.ai-primary {
-  border: 1px solid rgb(139 92 246 / 65%);
-  background: linear-gradient(180deg, var(--accent), #6d3fe0);
-  color: var(--text-strong);
-}
 
-.ai-primary:hover:not(:disabled) {
-  filter: brightness(1.08);
-}
 
-.ai-primary:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 
-.ai-primary:focus-visible,
-.ai-secondary:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
-}
 
-.ai-secondary {
-  border: 1px solid var(--border-strong);
-  background: var(--panel-2);
-  color: var(--muted);
-}
 
-.ai-secondary:hover {
-  color: var(--text-strong);
-}
 
 /* ---------- AI settings ---------- */
 

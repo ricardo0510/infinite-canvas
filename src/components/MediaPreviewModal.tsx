@@ -1,5 +1,6 @@
 import { useResolvedImageSrc } from "../hooks/useResolvedImageSrc";
 import { useUiStore } from "../store/uiStore";
+import { Button } from "./ui/Button";
 import { Modal } from "./ui/Modal";
 
 export function MediaPreviewModal() {
@@ -18,9 +19,9 @@ export function MediaPreviewModal() {
     >
       <div className="media-preview-head">
         <strong>{preview.title || (preview.kind === "image" ? "图片" : "视频")}</strong>
-        <button type="button" className="media-preview-close" onClick={() => setPreview(null)} aria-label="关闭预览">
+        <Button size="md" icon className="media-preview-close" onClick={() => setPreview(null)} aria-label="关闭预览">
           ×
-        </button>
+        </Button>
       </div>
       <div className="media-preview-body">
         {preview.kind === "image" ? (

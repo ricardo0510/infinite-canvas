@@ -1,4 +1,5 @@
 import { useToastStore } from "../store/toastStore";
+import { Button } from "./ui/Button";
 
 export function ToastHost() {
   const toasts = useToastStore((state) => state.toasts);
@@ -11,14 +12,15 @@ export function ToastHost() {
       {toasts.map((toast) => (
         <div key={toast.id} className={`toast toast-${toast.tone}`}>
           <span className="toast-message">{toast.message}</span>
-          <button
-            type="button"
-            className="toast-close"
+          <Button
+            variant="ghost"
+            size="xs"
+            icon
             aria-label="关闭通知"
             onClick={() => dismiss(toast.id)}
           >
             ×
-          </button>
+          </Button>
         </div>
       ))}
     </div>

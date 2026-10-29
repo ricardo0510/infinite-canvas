@@ -8,6 +8,7 @@ import type { GenerationMeta } from "../../types";
 import { cancelGeneration, defaultGeneration, generateNode, kindOfNode, patchGeneration } from "../../lib/ai/controller";
 import { defaultParams } from "../../lib/ai/models";
 import { useAiModels } from "../../lib/ai/useModels";
+import { Button } from "../ui/Button";
 import { NodeSettingsDialog } from "./NodeSettingsDialog";
 
 function isRunning(generation: GenerationMeta): boolean {
@@ -122,23 +123,23 @@ export function AiPanel() {
                 </option>
               ))}
             </select>
-            <button
-              type="button"
-              className="ai-config-button"
+            <Button
+              size="md"
               disabled={running || !model}
               onClick={() => setSettingsNodeId(nodeId)}
             >
               配置
-            </button>
-            <button
-              type="button"
-              className="ai-primary ai-generate-button"
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              className="ai-generate-button"
               onClick={running ? () => void cancelGeneration(nodeId) : onGenerate}
               disabled={!running && (!model || !generation.prompt.trim())}
               title={running ? "取消等待" : "生成（Ctrl/Cmd + Enter）"}
             >
               {running ? "取消等待" : "生成"}
-            </button>
+            </Button>
           </div>
 
           {generation.error ? (

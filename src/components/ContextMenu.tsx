@@ -5,6 +5,7 @@ import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import type { NodeKind } from "../types";
+import { Button } from "./ui/Button";
 
 export type ContextMenuState = {
   x: number;
@@ -112,14 +113,16 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
             {menu.connection.fromHandleType === "source" ? "添加下游节点" : "添加上游节点"}
           </div>
           {addItems.map((item) => (
-            <button
+            <Button
               key={item.kind}
-              type="button"
+              variant="menu"
+              size="sm"
+              block
               role="menuitem"
               onClick={() => run(() => handleAdd(item.kind))}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
         </>
       ) : (
@@ -129,65 +132,119 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
               <div className="context-label">
                 {menu.targetIds.length === 1 ? "1 个节点已选中" : `${menu.targetIds.length} 个节点已选中`}
               </div>
-              <button type="button" role="menuitem" onClick={() => run(() => {
-                selectTargets();
-                duplicateSelected();
-              })}>
+              <Button
+                variant="menu"
+                size="sm"
+                block
+                role="menuitem"
+                onClick={() =>
+                  run(() => {
+                    selectTargets();
+                    duplicateSelected();
+                  })
+                }
+              >
                 复制 <kbd>Ctrl D</kbd>
-              </button>
-              <button type="button" role="menuitem" onClick={() => run(() => bringToFront(menu.targetIds))}>
+              </Button>
+              <Button
+                variant="menu"
+                size="sm"
+                block
+                role="menuitem"
+                onClick={() => run(() => bringToFront(menu.targetIds))}
+              >
                 置于顶层
-              </button>
-              <button type="button" role="menuitem" onClick={() => run(() => sendToBack(menu.targetIds))}>
+              </Button>
+              <Button
+                variant="menu"
+                size="sm"
+                block
+                role="menuitem"
+                onClick={() => run(() => sendToBack(menu.targetIds))}
+              >
                 置于底层
-              </button>
+              </Button>
               {menu.targetIds.length >= 2 ? (
-                <button type="button" role="menuitem" onClick={() => run(() => {
-                  selectTargets();
-                  groupSelected();
-                })}>
+                <Button
+                  variant="menu"
+                  size="sm"
+                  block
+                  role="menuitem"
+                  onClick={() =>
+                    run(() => {
+                      selectTargets();
+                      groupSelected();
+                    })
+                  }
+                >
                   合并分组
-                </button>
+                </Button>
               ) : null}
               {menu.hasGroup ? (
-                <button type="button" role="menuitem" onClick={() => run(() => {
-                  selectTargets();
-                  ungroupSelected();
-                })}>
+                <Button
+                  variant="menu"
+                  size="sm"
+                  block
+                  role="menuitem"
+                  onClick={() =>
+                    run(() => {
+                      selectTargets();
+                      ungroupSelected();
+                    })
+                  }
+                >
                   取消分组
-                </button>
+                </Button>
               ) : null}
-              <button type="button" role="menuitem" className="context-danger" onClick={() => run(() => {
-                selectTargets();
-                removeSelected();
-              })}>
+              <Button
+                variant="menu"
+                size="sm"
+                block
+                role="menuitem"
+                className="context-danger"
+                onClick={() =>
+                  run(() => {
+                    selectTargets();
+                    removeSelected();
+                  })
+                }
+              >
                 删除 <kbd>Del</kbd>
-              </button>
+              </Button>
               <div className="context-divider" />
             </>
           ) : null}
 
           <div className="context-label">添加</div>
           {addItems.map((item) => (
-            <button
+            <Button
               key={item.kind}
-              type="button"
+              variant="menu"
+              size="sm"
+              block
               role="menuitem"
               onClick={() => run(() => handleAdd(item.kind))}
             >
               {item.label}
-            </button>
+            </Button>
           ))}
-          <button type="button" role="menuitem" onClick={() => run(handleUpload)}>
+          <Button variant="menu" size="sm" block role="menuitem" onClick={() => run(handleUpload)}>
             上传文件
-          </button>
+          </Button>
           <div className="context-divider" />
-          <button type="button" role="menuitem" onClick={() => run(paste)} disabled={!hasClipboard}>
+          <Button
+            variant="menu"
+            size="sm"
+            block
+            role="menuitem"
+            onClick={() => run(paste)}
+            disabled={!hasClipboard}
+          >
             粘贴 <kbd>Ctrl V</kbd>
-          </button>
-          <button type="button" role="menuitem" onClick={() => run(onFitView)}>
+          </Button>
+          <Button variant="menu" size="sm" block role="menuitem" onClick={() => run(onFitView)}>
             适应视图
-          </button>
+          </Button>
         </>
       )}
     </div>

@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { useReactFlow, useStore } from "@xyflow/react";
 import { useUiStore } from "../store/uiStore";
+import { Button } from "./ui/Button";
 
 const ZOOM_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -37,11 +38,13 @@ export function CanvasControls() {
           {ZOOM_PRESETS.map((preset) => {
             const active = Math.abs(zoom - preset) < 0.01;
             return (
-              <button
+              <Button
                 key={preset}
-                type="button"
+                variant="menu"
+                size="sm"
+                block
                 role="menuitem"
-                className={`zoom-menu-item${active ? " is-current" : ""}`}
+                className={active ? "is-current" : undefined}
                 onClick={() => {
                   zoomTo(preset, { duration: 200 });
                   setOpen(false);
@@ -49,13 +52,14 @@ export function CanvasControls() {
               >
                 <span>{Math.round(preset * 100)}%</span>
                 {active ? <span aria-hidden="true">✓</span> : null}
-              </button>
+              </Button>
             );
           })}
-          <button
-            type="button"
+          <Button
+            variant="menu"
+            size="sm"
+            block
             role="menuitem"
-            className="zoom-menu-item"
             onClick={() => {
               fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 });
               setOpen(false);
@@ -63,46 +67,50 @@ export function CanvasControls() {
           >
             <span>适应视图</span>
             <span aria-hidden="true">⛶</span>
-          </button>
+          </Button>
         </div>
       ) : null}
       <div className="canvas-control-group">
-        <button type="button" className="canvas-button" onClick={() => zoomOut({ duration: 200 })} title="缩小" aria-label="缩小">
+        <Button variant="ghost" size="sm" icon onClick={() => zoomOut({ duration: 200 })} title="缩小" aria-label="缩小">
           −
-        </button>
-        <button
-          type="button"
-          className="canvas-button canvas-zoom-value"
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="canvas-zoom-value"
           onClick={() => setOpen((value) => !value)}
           title="缩放比例"
           aria-haspopup="menu"
           aria-expanded={open}
         >
           {percent}%
-        </button>
-        <button type="button" className="canvas-button" onClick={() => zoomIn({ duration: 200 })} title="放大" aria-label="放大">
+        </Button>
+        <Button variant="ghost" size="sm" icon onClick={() => zoomIn({ duration: 200 })} title="放大" aria-label="放大">
           +
-        </button>
+        </Button>
         <span className="canvas-divider" />
-        <button
-          type="button"
-          className="canvas-button"
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
           onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
           title="适应视图"
           aria-label="适应视图"
         >
           ⛶
-        </button>
-        <button
-          type="button"
-          className={`canvas-button${showMiniMap ? " is-on" : ""}`}
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
+          className={showMiniMap ? "is-on" : undefined}
           onClick={toggleMiniMap}
           title={showMiniMap ? "隐藏小地图" : "显示小地图"}
           aria-label={showMiniMap ? "隐藏小地图" : "显示小地图"}
           aria-pressed={showMiniMap}
         >
           ▦
-        </button>
+        </Button>
       </div>
     </div>
   );
