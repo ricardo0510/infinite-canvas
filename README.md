@@ -35,7 +35,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 
 ## AI generation
 
-开发模式会自动连接 `http://localhost:8790/v1`（实时通道自动推导为 `ws://localhost:8790`），不需要手动填接口地址。跨机器或部署时再复制 `.env.example` 到 `.env.local`：
+开发模式通过 Vite 代理同源访问 `/v1`（含 WebSocket），不需要手填接口地址，也不会有跨域问题；代理目标默认 `http://localhost:8790`，可用 `VITE_AI_PROXY_TARGET` 覆盖。跨机器或部署时再复制 `.env.example` 到 `.env.local`：
 
 ```bash
 VITE_AI_API_BASE_URL=https://your-api.example.com/v1

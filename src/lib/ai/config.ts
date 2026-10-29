@@ -2,19 +2,17 @@ const ENV_API_BASE = import.meta.env.VITE_AI_API_BASE_URL ?? "";
 const ENV_REALTIME_BASE = import.meta.env.VITE_AI_REALTIME_BASE_URL ?? "";
 const ENV_MOCK = import.meta.env.VITE_AI_MOCK === "1";
 
-const DEV_API_PORT = 8790;
-
 function devDefaultApiBase(): string {
   if (!import.meta.env.DEV || import.meta.env.MODE === "test") return "";
-  try {
-    return `${window.location.protocol}//${window.location.hostname}:${DEV_API_PORT}/v1`;
-  } catch {
-    return `http://localhost:${DEV_API_PORT}/v1`;
-  }
+  return "/v1";
 }
 
 function deriveRealtimeBase(apiBase: string): string {
   if (!apiBase) return "";
+  if (apiBase.startsWith("/")) {
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}`;
+  }
   try {
     const url = new URL(apiBase);
     const protocol = url.protocol === "https:" ? "wss:" : "ws:";
