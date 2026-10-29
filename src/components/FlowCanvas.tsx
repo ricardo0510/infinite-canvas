@@ -14,13 +14,13 @@ import {
   type OnConnectEnd,
   type OnNodeDrag,
 } from "@xyflow/react";
-import { lazy, Suspense, useCallback, useEffect, useRef, useState, type MouseEvent } from "react";
-import { AI_NODE_WIDTH, byId, GRID_SIZE, mediaNodeHeight, nodeRect } from "../lib/geometry";
-import { storeImage } from "../lib/imageStore";
-import { readImageFile, type LoadedImage } from "../lib/images";
+import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from "react";
+import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
+import { isEditableTarget } from "../lib/dom";
 import { buildStressSnapshot } from "../lib/stress";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
 import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
+import { useImageDrop } from "../hooks/useImageDrop";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
@@ -65,11 +65,6 @@ const MINIMAP_AUTO_HIDE = 60;
 /** Above this node count only nodes inside the viewport are mounted. */
 const VIRTUALIZE_THRESHOLD = 80;
 
-function isEditableTarget(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
-}
-
 function eventPoint(
   event: globalThis.MouseEvent | globalThis.TouchEvent,
 ): { x: number; y: number } | null {
@@ -103,13 +98,9 @@ export function FlowCanvas() {
   const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const flowStore = useStoreApi();
   const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
+  const { dragOver, handleDragOver, handleDragLeave, handleDrop } = useImageDrop();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
   const [guides, setGuides] = useState<Guide[]>([]);
-  const [dragOver, setDragOver] = useState(false);
-  const mouseRef = useRef({
-    x: window.innerWidth / 2,
-    y: window.innerHeight / 2,
-  });
 
   useEffect(() => {
     if (nodes.length >= MINIMAP_AUTO_HIDE) setMiniMap(false);
@@ -125,105 +116,6 @@ export function FlowCanvas() {
       useToastStore.getState().push(`基准模式：${benchCount} 个节点`, "info");
     }, 0);
   }, [benchCount, setFlowViewport]);
-
-  const importImages = useCallback(
-    async (files: File[], point: { x: number; y: number }) => {
-      if (files.length === 0) return;
-      const selected = files.slice(0, 12);
-      const results = await Promise.allSettled(selected.map(readImageFile));
-      const loaded = results
-        .filter((result): result is PromiseFulfilledResult<LoadedImage> => result.status === "fulfilled")
-        .map((result) => result.value);
-      const rejected = results.find(
-        (result): result is PromiseRejectedResult => result.status === "rejected",
-      );
-      const toast = useToastStore.getState().push;
-
-      if (loaded.length === 0) {
-        toast(
-          rejected?.reason instanceof Error
-            ? rejected.reason.message
-            : "没有可读取的图片。",
-          "error",
-        );
-        return;
-      }
-
-      const origin = screenToFlowPosition(point);
-      const refs = await Promise.all(loaded.map((image) => storeImage(image.blob)));
-      const specs = loaded.map((image, index) => {
-        const size = {
-          width: AI_NODE_WIDTH,
-          height: mediaNodeHeight(AI_NODE_WIDTH, image.width, image.height),
-        };
-        const single = loaded.length === 1;
-        const stepX = AI_NODE_WIDTH + 64;
-        const stepY = 240;
-        return {
-          position: {
-            x: single ? origin.x - size.width / 2 : origin.x + (index % 3) * stepX,
-            y: single ? origin.y - size.height / 2 : origin.y + Math.floor(index / 3) * stepY,
-          },
-          src: refs[index],
-          width: image.width,
-          height: image.height,
-          alt: image.name,
-        };
-      });
-
-      useCanvasStore.getState().addImages(specs);
-      if (loaded.length > 1) toast(`已添加 ${loaded.length} 张图片。`, "success");
-      if (rejected) {
-        toast(
-          rejected.reason instanceof Error ? rejected.reason.message : "部分文件已跳过。",
-          "error",
-        );
-      }
-      if (files.length > selected.length) {
-        toast(`只添加了前 ${selected.length} 张图片。`, "info");
-      }
-    },
-    [screenToFlowPosition],
-  );
-
-  useEffect(() => {
-    const onMove = (event: globalThis.MouseEvent) => {
-      mouseRef.current = { x: event.clientX, y: event.clientY };
-    };
-    const onPaste = (event: ClipboardEvent) => {
-      if (isEditableTarget(event.target)) return;
-      const files: File[] = [];
-      const items = event.clipboardData?.items;
-      if (items) {
-        for (const item of Array.from(items)) {
-          if (item.kind === "file" && item.type.startsWith("image/")) {
-            const file = item.getAsFile();
-            if (file) files.push(file);
-          }
-        }
-      }
-      if (files.length === 0 && event.clipboardData?.files?.length) {
-        for (const file of Array.from(event.clipboardData.files)) {
-          if (file.type.startsWith("image/")) files.push(file);
-        }
-      }
-      if (files.length === 0) return;
-      event.preventDefault();
-      void importImages(files, mouseRef.current);
-    };
-    const clearDragOver = () => setDragOver(false);
-
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("paste", onPaste);
-    window.addEventListener("drop", clearDragOver);
-    window.addEventListener("dragend", clearDragOver);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("paste", onPaste);
-      window.removeEventListener("drop", clearDragOver);
-      window.removeEventListener("dragend", clearDragOver);
-    };
-  }, [importImages]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -276,48 +168,6 @@ export function FlowCanvas() {
     },
     [flowStore, storeOnNodesChange],
   );
-
-  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
-    if (!Array.from(event.dataTransfer.types).includes("Files")) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
-    const target = event.target as HTMLElement | null;
-    if (
-      target?.closest(
-        ".canvas-controls, .statusbar, .selection-toolbar, .edge-toolbar, .context-menu, .command-backdrop, .modal-backdrop, .react-flow__panel",
-      )
-    ) {
-      setDragOver(false);
-      return;
-    }
-    setDragOver(true);
-  };
-
-  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
-    if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
-    setDragOver(false);
-  };
-
-  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
-    event.preventDefault();
-    setDragOver(false);
-    const target = event.target as HTMLElement | null;
-    if (
-      target?.closest(
-        ".canvas-controls, .statusbar, .selection-toolbar, .edge-toolbar, .context-menu, .command-backdrop, .modal-backdrop, .react-flow__panel",
-      )
-    ) {
-      return;
-    }
-    const files = Array.from(event.dataTransfer.files);
-    if (files.length === 0) return;
-    const images = files.filter((file) => file.type.startsWith("image/"));
-    if (images.length === 0) {
-      useToastStore.getState().push("拖入图片文件即可添加到画布。", "error");
-      return;
-    }
-    void importImages(images, { x: event.clientX, y: event.clientY });
-  };
 
   const handleDoubleClick = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
