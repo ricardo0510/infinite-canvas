@@ -1,5 +1,6 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { useReactFlow, useStore } from "@xyflow/react";
+import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useUiStore } from "../store/uiStore";
 import { Button } from "./ui/Button";
 
@@ -12,6 +13,8 @@ export function CanvasControls() {
   const toggleMiniMap = useUiStore((state) => state.toggleMiniMap);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useMenuKeyboard(menuRef, open);
 
   useEffect(() => {
     if (!open) return;
@@ -34,7 +37,7 @@ export function CanvasControls() {
   return (
     <div ref={rootRef} className="canvas-controls">
       {open ? (
-        <div className="zoom-menu" role="menu" aria-label="缩放比例">
+        <div ref={menuRef} id="zoom-menu" className="zoom-menu" role="menu" aria-label="缩放比例">
           {ZOOM_PRESETS.map((preset) => {
             const active = Math.abs(zoom - preset) < 0.01;
             return (
@@ -82,6 +85,7 @@ export function CanvasControls() {
           title="缩放比例"
           aria-haspopup="menu"
           aria-expanded={open}
+          aria-controls="zoom-menu"
         >
           {percent}%
         </Button>
