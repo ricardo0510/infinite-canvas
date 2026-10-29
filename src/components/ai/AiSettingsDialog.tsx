@@ -59,6 +59,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
   const [apiBase, setApiBase] = useState(() => getAiApiBase());
   const [realtimeBase, setRealtimeBase] = useState(() => getAiRealtimeBase());
   const [token, setToken] = useState(() => getAiToken() ?? "");
+  const [showConnection, setShowConnection] = useState(() => !getAiApiBase());
 
   const [providers, setProviders] = useState<ProviderInfo[]>([]);
   const [credentials, setCredentials] = useState<Record<string, CredentialInfo[]>>({});
@@ -298,28 +299,43 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
             ? "当前为模拟模式。填写接口地址后会使用真实接口。"
             : "当前使用真实 AI 接口。"}
         </p>
-        <Field label="接口地址">
-          <Input
-            value={apiBase}
-            placeholder="https://api.example.com/v1"
-            onChange={(event) => setApiBase(event.target.value)}
-          />
-        </Field>
-        <Field label="实时通道地址（必填）">
-          <Input
-            value={realtimeBase}
-            placeholder="wss://api.example.com"
-            onChange={(event) => setRealtimeBase(event.target.value)}
-          />
-        </Field>
-        <Field label="访问令牌">
-          <Input
-            type="password"
-            value={token}
-            placeholder="访问令牌"
-            onChange={(event) => setToken(event.target.value)}
-          />
-        </Field>
+        <div className="ai-connection-summary">
+          <span>
+            服务地址：<code>{apiBase || "未配置"}</code>
+          </span>
+          <Button size="xs" variant="ghost" onClick={() => setShowConnection((value) => !value)}>
+            {showConnection ? "收起" : "修改"}
+          </Button>
+        </div>
+        {showConnection ? (
+          <div className="ai-connection-form">
+            <Field label="接口地址">
+              <Input
+                value={apiBase}
+                placeholder="https://api.example.com/v1"
+                onChange={(event) => setApiBase(event.target.value)}
+              />
+            </Field>
+            <Field label="实时通道地址（留空自动推导）">
+              <Input
+                value={realtimeBase}
+                placeholder="wss://api.example.com"
+                onChange={(event) => setRealtimeBase(event.target.value)}
+              />
+            </Field>
+            <Field label="访问令牌">
+              <Input
+                type="password"
+                value={token}
+                placeholder="本地开发未配置 API_TOKEN 时留空"
+                onChange={(event) => setToken(event.target.value)}
+              />
+            </Field>
+            <p className="ai-settings-hint">
+              访问令牌就是服务端 `server/.env` 里的 `API_TOKEN`；没配置时留空即可。
+            </p>
+          </div>
+        ) : null}
 
         <div className="ai-settings-divider" />
         <h3 className="ai-settings-title">我的供应商</h3>

@@ -2,6 +2,29 @@ const ENV_API_BASE = import.meta.env.VITE_AI_API_BASE_URL ?? "";
 const ENV_REALTIME_BASE = import.meta.env.VITE_AI_REALTIME_BASE_URL ?? "";
 const ENV_MOCK = import.meta.env.VITE_AI_MOCK === "1";
 
+const DEV_API_PORT = 8790;
+
+function devDefaultApiBase(): string {
+  if (!import.meta.env.DEV || import.meta.env.MODE === "test") return "";
+  try {
+    return `${window.location.protocol}//${window.location.hostname}:${DEV_API_PORT}/v1`;
+  } catch {
+    return `http://localhost:${DEV_API_PORT}/v1`;
+  }
+}
+
+function deriveRealtimeBase(apiBase: string): string {
+  if (!apiBase) return "";
+  try {
+    const url = new URL(apiBase);
+    const protocol = url.protocol === "https:" ? "wss:" : "ws:";
+    const path = url.pathname.replace(/\/v1\/?$/, "");
+    return `${protocol}//${url.host}${path}`;
+  } catch {
+    return "";
+  }
+}
+
 export const AI_TIMEOUTS = {
   request: 30_000,
   upload: 300_000,
@@ -21,11 +44,15 @@ function trimBase(value: string): string {
 }
 
 export function getAiApiBase(): string {
-  return trimBase(ENV_API_BASE || sessionValue("ic:ai-api-base"));
+  return trimBase(ENV_API_BASE || sessionValue("ic:ai-api-base") || devDefaultApiBase());
 }
 
 export function getAiRealtimeBase(): string {
-  return trimBase(ENV_REALTIME_BASE || sessionValue("ic:ai-realtime-base"));
+  return trimBase(
+    ENV_REALTIME_BASE ||
+      sessionValue("ic:ai-realtime-base") ||
+      deriveRealtimeBase(getAiApiBase()),
+  );
 }
 
 export function isAiMock(): boolean {

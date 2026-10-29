@@ -146,6 +146,29 @@
   background: var(--border);
 }
 
+.ai-connection-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 6px var(--space-2);
+  border-radius: var(--radius-md);
+  background: var(--inset-2);
+  color: var(--muted);
+  font-size: var(--font-xs);
+}
+
+.ai-connection-summary code {
+  color: var(--text-2);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+}
+
+.ai-connection-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .ai-settings-title {
   margin: 0;
   color: var(--text-strong);

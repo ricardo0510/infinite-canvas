@@ -35,15 +35,17 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 
 ## AI generation
 
-AI features run in Mock mode by default, so the canvas works without a backend. To use the real API, copy `.env.example` to `.env.local` and set:
+开发模式会自动连接 `http://localhost:8790/v1`（实时通道自动推导为 `ws://localhost:8790`），不需要手动填接口地址。跨机器或部署时再复制 `.env.example` 到 `.env.local`：
 
 ```bash
 VITE_AI_API_BASE_URL=https://your-api.example.com/v1
 VITE_AI_REALTIME_BASE_URL=wss://your-api.example.com
+# 仅当服务端配置了 API_TOKEN 时填写同一个值
+VITE_AI_TOKEN=
 VITE_AI_MOCK=0
 ```
 
-Open the `AI` button in the toolbar to set a session token. Click a Text, Image, or Video node to open its prompt editor next to the node; generated content stays on the node itself. Text, image, and video generation all run as async tasks and require the realtime WebSocket channel; there is no HTTP polling fallback. API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
+工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
 
 ## Run
 

@@ -1,10 +1,12 @@
 type TokenGetter = () => string | null;
 
+const ENV_TOKEN = import.meta.env.VITE_AI_TOKEN ?? "";
+
 let getter: TokenGetter = () => {
   try {
-    return sessionStorage.getItem("ic:ai-token");
+    return sessionStorage.getItem("ic:ai-token") ?? (ENV_TOKEN || null);
   } catch {
-    return null;
+    return ENV_TOKEN || null;
   }
 };
 
