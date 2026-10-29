@@ -7,13 +7,13 @@ import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 import { Button } from "./ui/Button";
-import { Input } from "./ui/Control";
+import { Input, Select } from "./ui/Control";
 
-const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
-  { kind: "text", label: "文本", glyph: "T", title: "添加文本" },
-  { kind: "image", label: "图片", glyph: "▣", title: "添加图片" },
-  { kind: "video", label: "视频", glyph: "▶", title: "添加视频" },
-  { kind: "group", label: "分组", glyph: "▢", title: "添加分组" },
+const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
+  { kind: "text", label: "文本节点" },
+  { kind: "image", label: "图片节点" },
+  { kind: "video", label: "视频节点" },
+  { kind: "group", label: "分组" },
 ];
 
 export function Toolbar() {
@@ -84,20 +84,15 @@ export function Toolbar() {
 
   return (
     <div className="toolbar">
-      <div className="tool-cluster">
-        {ADD_ITEMS.map((item) => (
-          <Button
-            key={item.kind}
-            variant={item.kind === "text" ? "accent" : "secondary"}
-            size="lg"
-            onClick={() => handleAdd(item.kind)}
-            title={item.title}
-          >
-            <span aria-hidden="true">{item.glyph}</span>
-            <span className="tool-label">{item.label}</span>
-          </Button>
-        ))}
-      </div>
+      <Select
+        className="new-node-select"
+        controlSize="lg"
+        value=""
+        options={ADD_ITEMS.map((item) => ({ value: item.kind, label: item.label }))}
+        placeholder="＋ 新建节点"
+        ariaLabel="新建节点"
+        onChange={(kind) => handleAdd(kind as NodeKind)}
+      />
       <span className="tool-divider" />
       <Button size="lg" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
         <span aria-hidden="true">↶</span>
