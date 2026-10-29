@@ -1,9 +1,9 @@
 type NodeLoadingOverlayProps = {
-  label: string;
+  label?: string;
   progress?: number;
 };
 
-export function NodeLoadingOverlay({ label, progress }: NodeLoadingOverlayProps) {
+export function NodeLoadingOverlay({ label = "生成中", progress }: NodeLoadingOverlayProps) {
   return (
     <div className="node-loading" aria-live="polite">
       <span className="node-loading-spinner" aria-hidden="true" />

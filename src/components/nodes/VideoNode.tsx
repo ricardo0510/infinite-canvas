@@ -1,13 +1,13 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { memo, useRef, type CSSProperties } from "react";
+import type { NodeProps } from "@xyflow/react";
+import { memo, useRef } from "react";
 import { AI_NODE_WIDTH, mediaNodeHeight } from "../../lib/geometry";
 import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
+import { NOTE_COLORS } from "../../lib/theme";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { VideoNodeModel } from "../../types";
 import { NodeEmptyState } from "./NodeEmptyState";
-import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
-import { NodeTitleBar } from "./NodeTitleBar";
+import { NodeFrame } from "./NodeFrame";
 import { nodePropsEqual } from "./nodePropsEqual";
 
 function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
@@ -28,51 +28,47 @@ function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
   };
 
   return (
-    <div
-      className={`ai-node ai-node-video${selected ? " is-selected" : ""}${running ? " is-running" : ""}`}
-      style={{ "--node-accent": "#f59e0b" } as CSSProperties}
+    <NodeFrame
+      id={id}
+      title={data.title}
+      defaultTitle="视频"
+      accent={NOTE_COLORS.amber}
+      kind="video"
+      selected={selected}
+      running={running}
+      loadingLabel={generation?.status === "queued" ? "排队中…" : "生成中"}
+      progress={generation?.status === "running" ? generation.progress : undefined}
+      error={generation?.error?.message}
     >
-      <NodeTitleBar id={id} title={data.title} defaultTitle="视频" />
-      <Handle type="target" position={Position.Left} className="node-handle" />
-      {running ? (
-        <NodeLoadingOverlay
-          label={generation?.status === "queued" ? "排队中…" : "生成中"}
-          progress={generation?.status === "running" ? generation?.progress : undefined}
+      {src ? (
+        <video
+          className="node-video nodrag"
+          src={src}
+          poster={poster || undefined}
+          controls
+          preload="metadata"
+          onLoadedMetadata={(event) => {
+            videoSized.current = true;
+            applyMediaHeight(event.currentTarget.videoWidth, event.currentTarget.videoHeight);
+          }}
+        />
+      ) : (
+        <NodeEmptyState />
+      )}
+      {poster ? (
+        <img
+          className="node-measure"
+          src={poster}
+          alt=""
+          aria-hidden="true"
+          onLoad={(event) => {
+            if (!videoSized.current) {
+              applyMediaHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight);
+            }
+          }}
         />
       ) : null}
-      <div className="node-body nowheel">
-        {src ? (
-          <video
-            className="node-video nodrag"
-            src={src}
-            poster={poster || undefined}
-            controls
-            preload="metadata"
-            onLoadedMetadata={(event) => {
-              videoSized.current = true;
-              applyMediaHeight(event.currentTarget.videoWidth, event.currentTarget.videoHeight);
-            }}
-          />
-        ) : (
-          <NodeEmptyState />
-        )}
-        {poster ? (
-          <img
-            className="node-measure"
-            src={poster}
-            alt=""
-            aria-hidden="true"
-            onLoad={(event) => {
-              if (!videoSized.current) {
-                applyMediaHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight);
-              }
-            }}
-          />
-        ) : null}
-        {generation?.error ? <p className="node-error">{generation.error.message}</p> : null}
-      </div>
-      <Handle type="source" position={Position.Right} className="node-handle" />
-    </div>
+    </NodeFrame>
   );
 }
 

@@ -1,7 +1,8 @@
-import { useEffect } from "react";
 import type { GenerationMeta, GenerationParams, GenerationResultItem } from "../../types";
 import { activateResult, patchGeneration } from "../../lib/ai/controller";
 import type { AiModel } from "../../lib/ai/types";
+import { Field, SelectField } from "../ui/Field";
+import { Modal } from "../ui/Modal";
 
 type NodeSettingsDialogProps = {
   nodeId: string;
@@ -31,14 +32,6 @@ function ResultThumb({ item }: { item: GenerationResultItem }) {
 }
 
 export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeSettingsDialogProps) {
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
-
   const imageOutput = model?.output.image ?? null;
   const videoOutput = model?.output.video ?? null;
   const qualityTiers = model?.params?.qualityTiers ?? [];
@@ -51,245 +44,184 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
   };
 
   return (
-    <div className="modal-backdrop" onPointerDown={onClose}>
-      <div
-        className="modal node-settings"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="node-settings-title"
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <header className="node-settings-head">
-          <h2 id="node-settings-title">生成设置</h2>
-          <button type="button" className="node-settings-close" onClick={onClose} aria-label="关闭设置">
-            ×
-          </button>
-        </header>
-        <div className="node-settings-body">
-          {imageOutput ? (
-            <>
-              <label className="ai-field">
-                <span>比例</span>
-                <select
-                  value={generation.params?.aspectRatio ?? imageOutput.aspectRatios[0] ?? ""}
-                  disabled={running}
-                  onChange={(event) => updateParams({ aspectRatio: event.target.value })}
-                >
-                  {imageOutput.aspectRatios.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="ai-field">
-                <span>分辨率</span>
-                <select
-                  value={generation.params?.resolution ?? imageOutput.resolutions[0] ?? ""}
-                  disabled={running}
-                  onChange={(event) => updateParams({ resolution: event.target.value })}
-                >
-                  {imageOutput.resolutions.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="ai-field">
-                <span>数量</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={imageOutput.maxCount}
-                  value={generation.params?.count ?? 1}
-                  disabled={running}
-                  onChange={(event) => updateParams({ count: Number(event.target.value) || 1 })}
-                />
-              </label>
-            </>
-          ) : null}
-
-          {videoOutput ? (
-            <>
-              <label className="ai-field">
-                <span>比例</span>
-                <select
-                  value={generation.params?.aspectRatio ?? videoOutput.aspectRatios[0] ?? ""}
-                  disabled={running}
-                  onChange={(event) => updateParams({ aspectRatio: event.target.value })}
-                >
-                  {videoOutput.aspectRatios.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="ai-field">
-                <span>分辨率</span>
-                <select
-                  value={generation.params?.resolution ?? videoOutput.resolutions[0] ?? ""}
-                  disabled={running}
-                  onChange={(event) => updateParams({ resolution: event.target.value })}
-                >
-                  {videoOutput.resolutions.map((value) => (
-                    <option key={value} value={value}>
-                      {value}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="ai-field">
-                <span>时长（秒）</span>
-                <input
-                  type="number"
-                  min={videoOutput.minDuration}
-                  max={videoOutput.maxDuration}
-                  value={generation.params?.duration ?? videoOutput.minDuration}
-                  disabled={running}
-                  onChange={(event) =>
-                    updateParams({ duration: Number(event.target.value) || videoOutput.minDuration })
-                  }
-                />
-              </label>
-            </>
-          ) : null}
-
-          {qualityTiers.length > 0 ? (
-            <label className="ai-field">
-              <span>画质档</span>
-              <select
-                value={generation.params?.qualityTier ?? qualityTiers[0].key}
-                disabled={running}
-                onChange={(event) => updateParams({ qualityTier: event.target.value })}
-              >
-                {qualityTiers.map((tier) => (
-                  <option key={tier.key} value={tier.key}>
-                    {tier.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          {backgrounds.length > 0 ? (
-            <label className="ai-field">
-              <span>背景</span>
-              <select
-                value={generation.params?.background ?? backgrounds[0]}
-                disabled={running}
-                onChange={(event) => updateParams({ background: event.target.value })}
-              >
-                {backgrounds.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-
-          {generation.kind === "text" ? (
-            <>
-              <label className="ai-field">
-                <span>系统提示词</span>
-                <textarea
-                  rows={3}
-                  value={generation.params?.systemPrompt ?? ""}
-                  disabled={running}
-                  onChange={(event) => updateParams({ systemPrompt: event.target.value })}
-                />
-              </label>
-              <label className="ai-field">
-                <span>温度</span>
-                <input
-                  type="number"
-                  min={0}
-                  max={2}
-                  step={0.1}
-                  value={generation.params?.temperature ?? 0.7}
-                  disabled={running}
-                  onChange={(event) => updateParams({ temperature: Number(event.target.value) })}
-                />
-              </label>
-              <label className="ai-field">
-                <span>最大输出长度</span>
-                <input
-                  type="number"
-                  min={1}
-                  max={32768}
-                  value={generation.params?.maxOutputTokens ?? 2000}
-                  disabled={running}
-                  onChange={(event) => updateParams({ maxOutputTokens: Number(event.target.value) || 1 })}
-                />
-              </label>
-            </>
-          ) : null}
-
-          {imageOutput || videoOutput ? (
-            <label className="ai-field">
-              <span>负向提示词</span>
-              <textarea
-                rows={2}
-                value={generation.params?.negativePrompt ?? ""}
-                disabled={running}
-                onChange={(event) => updateParams({ negativePrompt: event.target.value })}
-              />
-            </label>
-          ) : null}
-
-          {videoOutput?.supportsAudio ? (
-            <label className="ai-check">
+    <Modal onClose={onClose} className="modal node-settings" labelledBy="node-settings-title">
+      <header className="node-settings-head">
+        <h2 id="node-settings-title">生成设置</h2>
+        <button type="button" className="node-settings-close" onClick={onClose} aria-label="关闭设置">
+          ×
+        </button>
+      </header>
+      <div className="node-settings-body">
+        {imageOutput ? (
+          <>
+            <SelectField
+              label="比例"
+              value={generation.params?.aspectRatio ?? imageOutput.aspectRatios[0] ?? ""}
+              options={imageOutput.aspectRatios}
+              disabled={running}
+              onChange={(value) => updateParams({ aspectRatio: value })}
+            />
+            <SelectField
+              label="分辨率"
+              value={generation.params?.resolution ?? imageOutput.resolutions[0] ?? ""}
+              options={imageOutput.resolutions}
+              disabled={running}
+              onChange={(value) => updateParams({ resolution: value })}
+            />
+            <Field label="数量">
               <input
-                type="checkbox"
-                checked={generation.params?.generateAudio === true}
+                type="number"
+                min={1}
+                max={imageOutput.maxCount}
+                value={generation.params?.count ?? 1}
                 disabled={running}
-                onChange={(event) => updateParams({ generateAudio: event.target.checked })}
+                onChange={(event) => updateParams({ count: Number(event.target.value) || 1 })}
               />
-              <span>生成音频</span>
-            </label>
-          ) : null}
+            </Field>
+          </>
+        ) : null}
 
-          {extraParams.map((param) => (
-            <label key={param.key} className="ai-field">
-              <span>{param.label}</span>
-              <select
-                value={String(generation.params?.extra?.[param.key] ?? param.defaultValue)}
+        {videoOutput ? (
+          <>
+            <SelectField
+              label="比例"
+              value={generation.params?.aspectRatio ?? videoOutput.aspectRatios[0] ?? ""}
+              options={videoOutput.aspectRatios}
+              disabled={running}
+              onChange={(value) => updateParams({ aspectRatio: value })}
+            />
+            <SelectField
+              label="分辨率"
+              value={generation.params?.resolution ?? videoOutput.resolutions[0] ?? ""}
+              options={videoOutput.resolutions}
+              disabled={running}
+              onChange={(value) => updateParams({ resolution: value })}
+            />
+            <Field label="时长（秒）">
+              <input
+                type="number"
+                min={videoOutput.minDuration}
+                max={videoOutput.maxDuration}
+                value={generation.params?.duration ?? videoOutput.minDuration}
                 disabled={running}
                 onChange={(event) =>
-                  updateParams({ extra: { ...(generation.params?.extra ?? {}), [param.key]: event.target.value } })
+                  updateParams({ duration: Number(event.target.value) || videoOutput.minDuration })
                 }
-              >
-                {param.options.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ))}
+              />
+            </Field>
+          </>
+        ) : null}
 
-          {generation.results.length > 0 ? (
-            <div className="node-settings-results">
-              <span>结果历史</span>
-              <div className="ai-results">
-                {generation.results.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    className={`ai-result${generation.activeResultId === item.id ? " is-active" : ""}`}
-                    onClick={() => activateResult(nodeId, item.id)}
-                    title={resultLabel(item)}
-                  >
-                    <ResultThumb item={item} />
-                  </button>
-                ))}
-              </div>
+        {qualityTiers.length > 0 ? (
+          <SelectField
+            label="画质档"
+            value={generation.params?.qualityTier ?? qualityTiers[0].key}
+            options={qualityTiers.map((tier) => ({ value: tier.key, label: tier.label }))}
+            disabled={running}
+            onChange={(value) => updateParams({ qualityTier: value })}
+          />
+        ) : null}
+
+        {backgrounds.length > 0 ? (
+          <SelectField
+            label="背景"
+            value={generation.params?.background ?? backgrounds[0]}
+            options={backgrounds}
+            disabled={running}
+            onChange={(value) => updateParams({ background: value })}
+          />
+        ) : null}
+
+        {generation.kind === "text" ? (
+          <>
+            <Field label="系统提示词">
+              <textarea
+                rows={3}
+                value={generation.params?.systemPrompt ?? ""}
+                disabled={running}
+                onChange={(event) => updateParams({ systemPrompt: event.target.value })}
+              />
+            </Field>
+            <Field label="温度">
+              <input
+                type="number"
+                min={0}
+                max={2}
+                step={0.1}
+                value={generation.params?.temperature ?? 0.7}
+                disabled={running}
+                onChange={(event) => updateParams({ temperature: Number(event.target.value) })}
+              />
+            </Field>
+            <Field label="最大输出长度">
+              <input
+                type="number"
+                min={1}
+                max={32768}
+                value={generation.params?.maxOutputTokens ?? 2000}
+                disabled={running}
+                onChange={(event) => updateParams({ maxOutputTokens: Number(event.target.value) || 1 })}
+              />
+            </Field>
+          </>
+        ) : null}
+
+        {imageOutput || videoOutput ? (
+          <Field label="负向提示词">
+            <textarea
+              rows={2}
+              value={generation.params?.negativePrompt ?? ""}
+              disabled={running}
+              onChange={(event) => updateParams({ negativePrompt: event.target.value })}
+            />
+          </Field>
+        ) : null}
+
+        {videoOutput?.supportsAudio ? (
+          <label className="ai-check">
+            <input
+              type="checkbox"
+              checked={generation.params?.generateAudio === true}
+              disabled={running}
+              onChange={(event) => updateParams({ generateAudio: event.target.checked })}
+            />
+            <span>生成音频</span>
+          </label>
+        ) : null}
+
+        {extraParams.map((param) => (
+          <SelectField
+            key={param.key}
+            label={param.label}
+            value={String(generation.params?.extra?.[param.key] ?? param.defaultValue)}
+            options={param.options}
+            disabled={running}
+            onChange={(value) =>
+              updateParams({ extra: { ...(generation.params?.extra ?? {}), [param.key]: value } })
+            }
+          />
+        ))}
+
+        {generation.results.length > 0 ? (
+          <div className="node-settings-results">
+            <span>结果历史</span>
+            <div className="ai-results">
+              {generation.results.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`ai-result${generation.activeResultId === item.id ? " is-active" : ""}`}
+                  aria-pressed={generation.activeResultId === item.id}
+                  onClick={() => activateResult(nodeId, item.id)}
+                  title={resultLabel(item)}
+                >
+                  <ResultThumb item={item} />
+                </button>
+              ))}
             </div>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
-    </div>
+    </Modal>
   );
 }

@@ -1,13 +1,13 @@
-import { Handle, Position, type NodeProps } from "@xyflow/react";
-import { memo, type CSSProperties } from "react";
+import type { NodeProps } from "@xyflow/react";
+import { memo } from "react";
 import { AI_NODE_WIDTH, mediaNodeHeight } from "../../lib/geometry";
 import { sanitizeImageSrc } from "../../lib/storage";
 import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
+import { NOTE_COLORS } from "../../lib/theme";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { ImageNodeModel } from "../../types";
 import { NodeEmptyState } from "./NodeEmptyState";
-import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
-import { NodeTitleBar } from "./NodeTitleBar";
+import { NodeFrame } from "./NodeFrame";
 import { nodePropsEqual } from "./nodePropsEqual";
 
 function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
@@ -25,34 +25,30 @@ function ImageNodeImpl({ id, data, selected }: NodeProps<ImageNodeModel>) {
   };
 
   return (
-    <div
-      className={`ai-node ai-node-image${selected ? " is-selected" : ""}${running ? " is-running" : ""}`}
-      style={{ "--node-accent": "#22d3ee" } as CSSProperties}
+    <NodeFrame
+      id={id}
+      title={data.title}
+      defaultTitle="图片"
+      accent={NOTE_COLORS.cyan}
+      kind="image"
+      selected={selected}
+      running={running}
+      loadingLabel={generation?.status === "queued" ? "排队中…" : "生成中"}
+      progress={generation?.status === "running" ? generation.progress : undefined}
+      error={generation?.error?.message}
     >
-      <NodeTitleBar id={id} title={data.title} defaultTitle="图片" />
-      <Handle type="target" position={Position.Left} className="node-handle" />
-      {running ? (
-        <NodeLoadingOverlay
-          label={generation?.status === "queued" ? "排队中…" : "生成中"}
-          progress={generation?.status === "running" ? generation?.progress : undefined}
+      {src ? (
+        <img
+          className="node-image"
+          src={src}
+          alt={data.alt || data.title || "画布图片"}
+          draggable={false}
+          onLoad={(event) => applyMediaHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)}
         />
-      ) : null}
-      <div className="node-body nowheel">
-        {src ? (
-          <img
-            className="node-image"
-            src={src}
-            alt={data.alt || data.title || "画布图片"}
-            draggable={false}
-            onLoad={(event) => applyMediaHeight(event.currentTarget.naturalWidth, event.currentTarget.naturalHeight)}
-          />
-        ) : (
-          <NodeEmptyState />
-        )}
-        {generation?.error ? <p className="node-error">{generation.error.message}</p> : null}
-      </div>
-      <Handle type="source" position={Position.Right} className="node-handle" />
-    </div>
+      ) : (
+        <NodeEmptyState />
+      )}
+    </NodeFrame>
   );
 }
 

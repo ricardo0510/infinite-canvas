@@ -1,7 +1,8 @@
 import { NodeResizer, type NodeProps } from "@xyflow/react";
 import { memo, useRef, type CSSProperties } from "react";
 import { MIN_SIZE } from "../../lib/geometry";
-import { NOTE_COLORS, useCanvasStore } from "../../store/canvasStore";
+import { NOTE_COLORS } from "../../lib/theme";
+import { useCanvasStore } from "../../store/canvasStore";
 import type { GroupNodeModel } from "../../types";
 import { NodeColors } from "./NodeColors";
 import { nodePropsEqual } from "./nodePropsEqual";

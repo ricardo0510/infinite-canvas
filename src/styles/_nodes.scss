@@ -1,0 +1,404 @@
+.react-flow__handle {
+  z-index: var(--z-handle);
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--inset);
+  background: var(--node-accent, var(--accent));
+  cursor: crosshair;
+  transition: transform 0.15s;
+}
+
+.react-flow__handle::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  pointer-events: all;
+}
+
+.react-flow__handle:hover {
+  transform: scale(1.25);
+}
+
+/* ---------- Shared node frame ---------- */
+
+.ai-node {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  overflow: visible;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--gradient-node);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 32%);
+  color: var(--text);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ai-node.is-selected {
+  border-color: var(--node-accent);
+  box-shadow: 0 0 0 1px var(--node-accent), 0 14px 34px rgb(0 0 0 / 42%);
+}
+
+.ai-node.is-running {
+  border-color: color-mix(in srgb, var(--node-accent) 75%, transparent);
+  animation: ai-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes ai-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 1px rgb(139 92 246 / 20%);
+  }
+  50% {
+    box-shadow: 0 0 0 2px rgb(139 92 246 / 48%);
+  }
+}
+
+.node-head {
+  display: flex;
+  flex: 0 0 34px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  border-radius: 11px 11px 0 0;
+  background: rgb(255 255 255 / 2%);
+  cursor: grab;
+  user-select: none;
+}
+
+.node-head:active {
+  cursor: grabbing;
+}
+
+.node-dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--node-accent);
+  box-shadow: 0 0 9px var(--node-accent);
+}
+
+.node-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  line-height: 34px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-title-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 22px;
+  padding: 0 5px;
+  border: 1px solid color-mix(in srgb, var(--node-accent) 60%, transparent);
+  border-radius: 5px;
+  outline: none;
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--font-sm);
+}
+
+.node-body {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0 0 11px 11px;
+}
+
+.node-head-actions {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+}
+
+.node-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: var(--space-2) 10px;
+  overflow-y: auto;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--text);
+  line-height: 1.5;
+  resize: none;
+}
+
+.node-image,
+.node-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  background: #06080c;
+  object-fit: contain;
+}
+
+.node-measure {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.node-empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  min-height: 0;
+  background: radial-gradient(circle at 50% 40%, color-mix(in srgb, var(--node-accent) 10%, transparent), transparent 62%);
+  color: var(--muted);
+  font-size: var(--font-xs);
+  cursor: pointer;
+}
+
+.node-empty-icon {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid color-mix(in srgb, var(--node-accent) 42%, transparent);
+  border-radius: 50%;
+  color: var(--node-accent);
+  font-size: var(--font-2xl);
+  line-height: 1;
+}
+
+.node-error {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  left: 6px;
+  margin: 0;
+  padding: var(--space-1) 6px;
+  border-radius: var(--radius-sm);
+  background: rgb(248 113 113 / 16%);
+  color: var(--danger-soft);
+  font-size: var(--font-2xs);
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.node-colors {
+  display: flex;
+  gap: var(--space-1);
+  opacity: 1;
+  transition: opacity 0.15s;
+}
+
+.color-dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  opacity: 0.5;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.15s;
+}
+
+.color-dot:hover {
+  transform: scale(1.2);
+}
+
+.color-dot:focus-visible {
+  outline: 2px solid var(--text-strong);
+  outline-offset: 2px;
+}
+
+.color-dot.is-active {
+  border-color: var(--text-strong);
+  opacity: 1;
+}
+
+/* ---------- Group node ---------- */
+
+.react-flow__node-group {
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-2xl);
+  background: transparent;
+  box-shadow: none;
+}
+
+.react-flow__node-group.selectable:hover,
+.react-flow__node-group.selectable.selected,
+.react-flow__node-group.selectable:focus {
+  box-shadow: none;
+}
+
+.group-node {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  border: 1.5px dashed color-mix(in srgb, var(--node-accent) 62%, transparent);
+  border-radius: var(--radius-2xl);
+  background: color-mix(in srgb, var(--node-accent) 7%, transparent);
+}
+
+.group-node.is-selected {
+  border-style: solid;
+  border-color: var(--node-accent);
+  background: color-mix(in srgb, var(--node-accent) 11%, transparent);
+}
+
+.group-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+}
+
+.group-label {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--node-accent);
+  font-size: var(--font-xs);
+  font-weight: 650;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.group-label::placeholder {
+  color: var(--muted);
+}
+
+.group-body {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.react-flow__resize-control.line {
+  border-color: color-mix(in srgb, var(--node-accent, var(--node-violet)) 70%, transparent);
+}
+
+.react-flow__resize-control.handle {
+  width: 7px;
+  height: 7px;
+  border: 1px solid var(--inset);
+  border-radius: 2px;
+  background: var(--node-accent, var(--node-violet));
+}
+
+/* ---------- Node loading overlay ---------- */
+
+.node-loading {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-status);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  overflow: hidden;
+  border-radius: inherit;
+  background: rgb(6 8 12 / 76%);
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+.node-loading-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgb(255 255 255 / 18%);
+  border-top-color: var(--accent-soft-2);
+  border-radius: 50%;
+  animation: node-loading-spin 0.8s linear infinite;
+}
+
+.node-loading strong {
+  max-width: 90%;
+  color: var(--accent-soft-3);
+  font-size: var(--font-xs);
+  font-weight: 600;
+  text-align: center;
+}
+
+.node-loading-track {
+  width: 62%;
+  height: 3px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 14%);
+}
+
+.node-loading-track > span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--gradient-progress);
+  transition: width 0.3s;
+}
+
+@keyframes node-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Node selection toolbar ---------- */
+
+.node-selection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: rgb(15 18 24 / 96%);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
+  backdrop-filter: blur(10px);
+}
+
+.node-toolbar-button {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--font-md);
+  cursor: pointer;
+}
+
+.node-toolbar-button:hover {
+  border-color: var(--border);
+  background: var(--panel-2);
+  color: var(--text-strong);
+}
+
+.node-toolbar-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}

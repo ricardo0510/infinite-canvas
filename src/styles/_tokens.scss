@@ -1,0 +1,98 @@
+:root {
+  /* 基础色板 */
+  --bg: #0b0d12;
+  --panel: #11141b;
+  --panel-2: #151922;
+  --panel-3: #1b2130;
+  --panel-4: #1e2534;
+  --panel-raised: #141821;
+  --panel-dialog: #12161f;
+  --inset: #0f1218;
+  --inset-2: #0d1017;
+  --inset-3: #0a0d13;
+  --border: #232838;
+  --border-strong: #2f3647;
+  --text: #e5e7eb;
+  --text-strong: #fff;
+  --text-2: #cbd2e1;
+  --text-3: #9aa3b7;
+  --muted: #8b93a7;
+  --faint: #5b6478;
+  --faint-2: #4b5563;
+  --faint-3: #3b4254;
+
+  /* 强调色 */
+  --accent: #8b5cf6;
+  --accent-2: #22d3ee;
+  --accent-deep: #4f46e5;
+  --accent-soft: #ddd6fe;
+  --accent-soft-2: #c4b5fd;
+  --accent-soft-3: #e9d5ff;
+  --cyan-soft: #a5f3fc;
+  --danger: #f87171;
+  --danger-soft: #fca5a5;
+  --danger-soft-2: #fecaca;
+  --success: #34d399;
+  --success-soft: #6ee7b7;
+
+  /* 节点强调色，与 src/lib/theme.ts 保持一致 */
+  --node-violet: #8b5cf6;
+  --node-cyan: #22d3ee;
+  --node-amber: #f59e0b;
+  --node-emerald: #34d399;
+
+  /* 间距 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+
+  /* 圆角 */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-full: 999px;
+
+  /* 字号 */
+  --font-2xs: 10px;
+  --font-xs: 11px;
+  --font-sm: 12px;
+  --font-md: 13px;
+  --font-lg: 15px;
+  --font-xl: 17px;
+  --font-2xl: 18px;
+  --font-3xl: 24px;
+
+  /* 层级 */
+  --z-guide: 4;
+  --z-status: 5;
+  --z-float: 6;
+  --z-drop: 8;
+  --z-toolbar: 10;
+  --z-handle: 20;
+  --z-menu: 60;
+  --z-modal: 100;
+  --z-preview: 120;
+  --z-toast: 130;
+  --z-crash: 200;
+
+  /* 阴影 */
+  --shadow-sm: 0 6px 18px rgb(0 0 0 / 30%);
+  --shadow-md: 0 10px 30px rgb(0 0 0 / 35%);
+  --shadow-lg: 0 18px 50px rgb(0 0 0 / 55%);
+  --shadow-xl: 0 28px 90px rgb(0 0 0 / 60%);
+
+  /* 渐变 */
+  --gradient-brand: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  --gradient-progress: linear-gradient(90deg, var(--accent), var(--accent-2));
+  --gradient-node: linear-gradient(180deg, var(--panel-raised) 0%, var(--inset) 100%);
+
+  font-family: Inter, "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color-scheme: dark;
+}

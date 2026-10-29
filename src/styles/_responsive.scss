@@ -1,0 +1,64 @@
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: 56px;
+    padding: var(--space-2) 10px;
+  }
+
+  .brand-copy p,
+  .statusbar-hint {
+    display: none;
+  }
+
+  .toolbar {
+    flex: 1 1 100%;
+    width: auto;
+    justify-content: flex-start;
+    gap: var(--space-1);
+  }
+
+  .statusbar {
+    bottom: 52px;
+    left: var(--space-3);
+    max-width: calc(100vw - 24px);
+    transform: none;
+  }
+
+  /* 小屏缩小第三方小地图，避免遮挡画布与控制条 */
+  .react-flow__minimap {
+    width: 132px !important;
+    height: 88px !important;
+  }
+
+  .tool-button {
+    height: 30px;
+    padding: 0 var(--space-2);
+  }
+
+  .tool-label {
+    display: none;
+  }
+
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .selection-count {
+    display: none;
+  }
+
+  .ai-panel {
+    width: calc(100vw - 20px);
+    max-height: 60vh;
+  }
+
+  .modal {
+    max-width: calc(100vw - 20px);
+  }
+
+  .modal-backdrop,
+  .command-backdrop {
+    padding: var(--space-3);
+  }
+}

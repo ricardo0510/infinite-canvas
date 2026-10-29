@@ -1,0 +1,172 @@
+.canvas-controls {
+  position: absolute;
+  bottom: var(--space-3);
+  left: var(--space-3);
+  z-index: var(--z-float);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.canvas-control-group {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(17 20 27 / 90%);
+  box-shadow: var(--shadow-md);
+  backdrop-filter: blur(12px);
+}
+
+.canvas-button {
+  display: grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.canvas-button:hover {
+  background: var(--panel-4);
+  color: var(--text-strong);
+}
+
+.canvas-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.canvas-button.is-on {
+  background: rgb(34 211 238 / 12%);
+  color: var(--cyan-soft);
+}
+
+.canvas-zoom-value {
+  min-width: 48px;
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.canvas-divider {
+  width: 1px;
+  height: var(--space-4);
+  margin: 0 3px;
+  background: var(--border);
+}
+
+.zoom-menu {
+  position: absolute;
+  bottom: 40px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 122px;
+  padding: var(--space-1);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--panel-raised);
+  box-shadow: var(--shadow-lg);
+}
+
+.zoom-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  height: 26px;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--font-xs);
+  cursor: pointer;
+}
+
+.zoom-menu-item:hover {
+  background: var(--panel-4);
+  color: var(--text-strong);
+}
+
+.zoom-menu-item.is-current {
+  color: var(--accent-2);
+}
+
+.selection-toolbar {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  z-index: var(--z-float);
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-1) 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: rgb(17 20 27 / 92%);
+  box-shadow: 0 12px 34px rgb(0 0 0 / 45%);
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+.selection-count {
+  padding: 0 var(--space-1);
+  color: var(--muted);
+  font-size: var(--font-xs);
+  white-space: nowrap;
+}
+
+.selection-divider {
+  width: 1px;
+  height: var(--space-4);
+  margin: 0 2px;
+  background: var(--border);
+}
+
+.selection-button {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-2);
+  font-size: var(--font-md);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.selection-button:hover:not(:disabled) {
+  background: var(--panel-4);
+  color: var(--text-strong);
+}
+
+.selection-button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.selection-button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.selection-button.is-active {
+  background: rgb(139 92 246 / 16%);
+  color: var(--accent-soft);
+}
+
+.selection-danger:hover:not(:disabled) {
+  background: rgb(248 113 113 / 14%);
+  color: var(--danger-soft);
+}

@@ -1,9 +1,10 @@
 ﻿import { MarkerType } from "@xyflow/react";
 import { useEffect, useRef } from "react";
-import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
+import { NOTE_COLORS, DEFAULT_EDGE_STROKE } from "../lib/theme";
+import { useCanvasStore } from "../store/canvasStore";
 import type { NoteColor } from "../types";
 
-const DEFAULT_STROKE = "#5b6478";
+const DEFAULT_STROKE = DEFAULT_EDGE_STROKE;
 
 const COLOR_LABELS: Record<NoteColor, string> = {
   violet: "紫罗兰",

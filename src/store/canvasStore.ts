@@ -22,6 +22,7 @@ import {
   nodeSize,
 } from "../lib/geometry";
 import { loadSnapshot, sanitizeImageSrc, SCHEMA_VERSION } from "../lib/storage";
+import { DEFAULT_EDGE_STROKE } from "../lib/theme";
 import { TEMPLATE_MAP } from "../lib/templates";
 import type {
   AlignKind,
@@ -31,7 +32,6 @@ import type {
   DistributeAxis,
   GroupData,
   NodeKind,
-  NoteColor,
 } from "../types";
 
 const HISTORY_LIMIT = 50;
@@ -77,7 +77,7 @@ const demo: CanvasSnapshot = {
       target: "idea",
       type: "bezier",
       markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-      style: { stroke: "#5b6478", strokeWidth: 1.5 },
+      style: { stroke: DEFAULT_EDGE_STROKE, strokeWidth: 1.5 },
     },
   ],
 };
@@ -182,7 +182,7 @@ function defaultEdge(connection: Connection): CanvasEdge {
     id: newId("edge"),
     type: "bezier",
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-    style: { stroke: "#5b6478", strokeWidth: 1.5 },
+    style: { stroke: DEFAULT_EDGE_STROKE, strokeWidth: 1.5 },
   };
 }
 
@@ -962,10 +962,3 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     set({ nodes: layoutNodes(nodes, edges) });
   },
 }));
-
-export const NOTE_COLORS: Record<NoteColor, string> = {
-  violet: "#8b5cf6",
-  cyan: "#22d3ee",
-  amber: "#f59e0b",
-  emerald: "#34d399",
-};

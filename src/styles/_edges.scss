@@ -1,0 +1,117 @@
+.edge-label {
+  position: absolute;
+  max-width: 200px;
+  padding: 2px 7px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: rgb(17 20 27 / 88%);
+  color: var(--text-2);
+  font-size: var(--font-xs);
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  pointer-events: none;
+  backdrop-filter: blur(6px);
+}
+
+.edge-toolbar {
+  flex-wrap: wrap;
+  max-width: calc(100vw - 24px);
+}
+
+.edge-label-input {
+  width: 128px;
+  height: 26px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--inset);
+  color: var(--text);
+  font-size: var(--font-xs);
+}
+
+.edge-label-input:focus {
+  border-color: var(--accent);
+}
+
+.edge-label-input::placeholder {
+  color: var(--muted);
+}
+
+.edge-color-button {
+  padding: 0;
+}
+
+.edge-color-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 35%);
+}
+
+.edge-color-button.is-active {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.react-flow__edge.selected .react-flow__edge-path {
+  filter: drop-shadow(0 0 3px rgb(255 255 255 / 30%));
+}
+
+/* ---------- Edge actions ---------- */
+
+.edge-delete-wrap {
+  position: absolute;
+  pointer-events: all;
+}
+
+.edge-delete {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 1px solid rgb(248 113 113 / 45%);
+  border-radius: 50%;
+  background: #1b1418;
+  color: var(--danger-soft);
+  font-size: var(--font-md);
+  line-height: 1;
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, transform 0.15s;
+}
+
+.edge-delete:hover {
+  background: rgb(248 113 113 / 22%);
+  color: var(--text-strong);
+  transform: scale(1.08);
+}
+
+/* ---------- Alignment guides ---------- */
+
+.align-guide {
+  position: absolute;
+  z-index: var(--z-guide);
+  background: none;
+  pointer-events: none;
+}
+
+.align-guide-vertical {
+  width: 1px;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgb(244 114 182 / 85%) 0 4px,
+    transparent 4px 8px
+  );
+}
+
+.align-guide-horizontal {
+  height: 1px;
+  background: repeating-linear-gradient(
+    to right,
+    rgb(244 114 182 / 85%) 0 4px,
+    transparent 4px 8px
+  );
+}

@@ -1,0 +1,141 @@
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.topbar {
+  z-index: var(--z-toolbar);
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  height: 60px;
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--border);
+  background: rgb(17 20 27 / 92%);
+  backdrop-filter: blur(12px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-brand);
+  box-shadow: 0 0 0 1px rgb(139 92 246 / 35%), 0 6px 18px rgb(139 92 246 / 25%);
+  font-size: var(--font-lg);
+}
+
+.brand-copy {
+  min-width: 0;
+}
+
+.brand-copy h1 {
+  margin: 0;
+  font-size: var(--font-md);
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+
+.brand-copy p {
+  margin: 2px 0 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: var(--font-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.canvas {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  background:
+    radial-gradient(circle at 50% 0%, rgb(139 92 246 / 6%), transparent 55%),
+    var(--bg);
+}
+
+.canvas .react-flow {
+  background: transparent;
+}
+
+.statusbar {
+  position: absolute;
+  bottom: var(--space-3);
+  left: 50%;
+  z-index: var(--z-status);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: rgb(17 20 27 / 78%);
+  color: var(--muted);
+  font-size: var(--font-xs);
+  pointer-events: none;
+  backdrop-filter: blur(10px);
+}
+
+.statusbar-sep {
+  color: var(--faint-3);
+}
+
+.statusbar-hint {
+  margin-left: var(--space-1);
+  color: var(--muted);
+}
+
+.react-flow__controls {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.react-flow__controls-button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-2);
+  fill: var(--muted);
+}
+
+.react-flow__controls-button:last-child {
+  border-bottom: 0;
+}
+
+.react-flow__controls-button:hover {
+  background: var(--panel-3);
+  fill: var(--text-strong);
+}
+
+.react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--inset);
+  box-shadow: var(--shadow-md);
+}
+
+.react-flow__attribution {
+  background: transparent;
+  color: var(--faint-3);
+  font-size: var(--font-2xs);
+}
+
+.react-flow__attribution a {
+  color: var(--faint-2);
+}

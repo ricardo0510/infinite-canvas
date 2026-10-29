@@ -2,6 +2,7 @@ import { MarkerType } from "@xyflow/react";
 import type { CanvasEdge, CanvasNode, CanvasSnapshot, NoteColor } from "../types";
 import { AI_NODE_WIDTH, EMPTY_NODE_HEIGHT } from "./geometry";
 import { SCHEMA_VERSION } from "./storage";
+import { DEFAULT_EDGE_STROKE } from "./theme";
 
 const COLORS: NoteColor[] = ["violet", "cyan", "amber", "emerald"];
 
@@ -42,7 +43,7 @@ export function buildStressSnapshot(count: number): CanvasSnapshot {
         target: id,
         type: "bezier",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-        style: { stroke: "#5b6478", strokeWidth: 1.5 },
+        style: { stroke: DEFAULT_EDGE_STROKE, strokeWidth: 1.5 },
       });
     }
   }

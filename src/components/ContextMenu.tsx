@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { XYPosition } from "@xyflow/react";
 import { createUploadedNode } from "../lib/upload";
+import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import type { NodeKind } from "../types";
@@ -32,6 +33,7 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
 
 export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
+  useMenuKeyboard(ref, true);
   const addNode = useCanvasStore((state) => state.addNode);
   const addConnectedNode = useCanvasStore((state) => state.addConnectedNode);
   const selectNodes = useCanvasStore((state) => state.selectNodes);

@@ -81,7 +81,7 @@ src/
     canvasStore.ts        # nodes/edges/history/clipboard
     uiStore.ts            # 吸附开关、帮助面板
   types.ts
-  App.tsx / main.tsx / index.css
+  App.tsx / main.tsx / styles/
 ```
 
 **当前构建指标**

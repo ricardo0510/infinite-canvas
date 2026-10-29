@@ -20,7 +20,8 @@ import { storeImage } from "../lib/imageStore";
 import { readImageFile, type LoadedImage } from "../lib/images";
 import { buildStressSnapshot } from "../lib/stress";
 import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
-import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
+import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
+import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { CanvasNode, NoteColor } from "../types";
@@ -56,7 +57,7 @@ const edgeTypes = { smoothstep: CanvasEdge, bezier: CanvasEdge } satisfies EdgeT
 const edgeOptions = {
   type: "bezier",
   markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
-  style: { stroke: "#5b6478", strokeWidth: 1.5 },
+  style: { stroke: DEFAULT_EDGE_STROKE, strokeWidth: 1.5 },
 };
 
 /** Above this node count the minimap is collapsed automatically (it can be reopened). */
@@ -521,7 +522,7 @@ export function FlowCanvas() {
         multiSelectionKeyCode={["Shift", "Control", "Meta"]}
         zoomOnDoubleClick={false}
         defaultEdgeOptions={edgeOptions}
-        connectionLineStyle={{ stroke: "#8b5cf6", strokeWidth: 2 }}
+        connectionLineStyle={{ stroke: NOTE_COLORS.violet, strokeWidth: 2 }}
       >
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2a3040" />
         {showMiniMap ? (
@@ -535,7 +536,7 @@ export function FlowCanvas() {
               if (node.type === "group") return "#2c2518";
               if (node.type === "video") return "#f59e0b";
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
-              return color ? NOTE_COLORS[color] : "#5b6478";
+              return color ? NOTE_COLORS[color] : DEFAULT_EDGE_STROKE;
             }}
           />
         ) : null}

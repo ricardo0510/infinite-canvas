@@ -1,7 +1,7 @@
 # Infinite Canvas 节点样式与交互逻辑
 
 > 当前实现：schema v5  
-> 代码：`src/components/nodes/*`、`src/components/ai/*`、`src/components/edges/*`、`src/store/canvasStore.ts`、`src/components/FlowCanvas.tsx`、`src/index.css`
+> 代码：`src/components/nodes/*`、`src/components/ai/*`、`src/components/edges/*`、`src/store/canvasStore.ts`、`src/components/FlowCanvas.tsx`、`src/styles/*.scss`
 
 ---
 

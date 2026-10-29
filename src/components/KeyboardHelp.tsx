@@ -1,5 +1,6 @@
 ﻿import { useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
+import { Modal } from "./ui/Modal";
 
 const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] = [
   {
@@ -57,10 +58,6 @@ export function KeyboardHelp() {
       const editable =
         target instanceof HTMLElement &&
         Boolean(target.closest("input, textarea, [contenteditable='true']"));
-      if (event.key === "Escape" && open) {
-        setOpen(false);
-        return;
-      }
       if (!editable && (event.key === "?" || (event.key === "/" && event.shiftKey))) {
         event.preventDefault();
         setOpen(!useUiStore.getState().helpOpen);
@@ -68,45 +65,37 @@ export function KeyboardHelp() {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, setOpen]);
+  }, [setOpen]);
 
   if (!open) return null;
 
   return (
-    <div className="modal-backdrop" onPointerDown={() => setOpen(false)}>
-      <div
-        className="help-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="help-title"
-        onPointerDown={(event) => event.stopPropagation()}
-      >
-        <header className="help-head">
-          <h2 id="help-title">键盘快捷键</h2>
-          <button type="button" className="help-close" onClick={() => setOpen(false)} aria-label="关闭">
-            ×
-          </button>
-        </header>
-        <div className="help-grid">
-          {GROUPS.map((group) => (
-            <section key={group.title} className="help-group">
-              <h3>{group.title}</h3>
-              <dl>
-                {group.items.map((item) => (
-                  <div key={item.action} className="help-row">
-                    <dt>
-                      {item.keys.map((key) => (
-                        <kbd key={key}>{key}</kbd>
-                      ))}
-                    </dt>
-                    <dd>{item.action}</dd>
-                  </div>
-                ))}
-              </dl>
-            </section>
-          ))}
-        </div>
+    <Modal onClose={() => setOpen(false)} className="help-modal" labelledBy="help-title">
+      <header className="help-head">
+        <h2 id="help-title">键盘快捷键</h2>
+        <button type="button" className="help-close" onClick={() => setOpen(false)} aria-label="关闭">
+          ×
+        </button>
+      </header>
+      <div className="help-grid">
+        {GROUPS.map((group) => (
+          <section key={group.title} className="help-group">
+            <h3>{group.title}</h3>
+            <dl>
+              {group.items.map((item) => (
+                <div key={item.action} className="help-row">
+                  <dt>
+                    {item.keys.map((key) => (
+                      <kbd key={key}>{key}</kbd>
+                    ))}
+                  </dt>
+                  <dd>{item.action}</dd>
+                </div>
+              ))}
+            </dl>
+          </section>
+        ))}
       </div>
-    </div>
+    </Modal>
   );
 }

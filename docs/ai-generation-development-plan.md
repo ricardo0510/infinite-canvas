@@ -1579,7 +1579,7 @@ src/components/ContextMenu.tsx
 src/components/CommandPalette.tsx
 src/components/nodes/TextNode.tsx
 src/components/nodes/ImageNode.tsx
-src/index.css                 # 面板/状态/视频节点样式
+src/styles/_ai.scss        # 面板/状态/视频节点样式
 vite.config.ts                # dev 代理
 README.md / ROADMAP.md
 ```

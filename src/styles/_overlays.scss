@@ -1,0 +1,182 @@
+/* ---------- File drop overlay ---------- */
+
+.drop-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-drop);
+  display: grid;
+  place-items: center;
+  border: 2px dashed rgb(34 211 238 / 45%);
+  background: rgb(5 7 11 / 55%);
+  pointer-events: none;
+  backdrop-filter: blur(2px);
+}
+
+.drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 22px 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3xl);
+  background: rgb(17 20 27 / 92%);
+  box-shadow: 0 24px 70px rgb(0 0 0 / 50%);
+  color: var(--text);
+}
+
+.drop-plus {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-lg);
+  background: rgb(34 211 238 / 15%);
+  color: var(--accent-2);
+  font-size: var(--font-3xl);
+  line-height: 1;
+}
+
+.drop-card strong {
+  font-size: var(--font-md);
+}
+
+.drop-card > span:last-child {
+  color: var(--muted);
+  font-size: var(--font-xs);
+}
+
+/* ---------- Toasts ---------- */
+
+.toast-host {
+  position: fixed;
+  top: 72px;
+  right: var(--space-4);
+  z-index: var(--z-toast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 10px 10px 10px var(--space-3);
+  border: 1px solid var(--border-strong);
+  border-left-width: 3px;
+  border-radius: var(--radius-lg);
+  background: var(--panel-raised);
+  color: var(--text-2);
+  font-size: var(--font-sm);
+  line-height: 1.45;
+  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
+  pointer-events: auto;
+  animation: toast-in 0.18s ease-out;
+}
+
+.toast-info {
+  border-left-color: var(--accent-2);
+}
+
+.toast-success {
+  border-left-color: var(--success);
+}
+
+.toast-error {
+  border-left-color: var(--danger);
+}
+
+.toast-message {
+  flex: 1 1 auto;
+}
+
+.toast-close {
+  padding: 0 2px;
+  border: 0;
+  background: transparent;
+  color: var(--faint);
+  font-size: var(--font-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: var(--text-strong);
+}
+
+.toast-close:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Crash screen ---------- */
+
+.crash-screen {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-crash);
+  display: grid;
+  place-items: center;
+  padding: var(--space-6);
+  background: var(--bg);
+}
+
+.crash-card {
+  max-width: 460px;
+  padding: 26px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-3xl);
+  background: var(--panel);
+  text-align: center;
+}
+
+.crash-card h1 {
+  margin: 0;
+  font-size: var(--font-2xl);
+}
+
+.crash-card p {
+  color: var(--muted);
+  font-size: var(--font-sm);
+  line-height: 1.6;
+}
+
+.crash-card code {
+  display: block;
+  margin: var(--space-3) 0;
+  padding: var(--space-2);
+  overflow: auto;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--danger-soft);
+  font-size: var(--font-xs);
+  text-align: left;
+}
+
+.crash-card button {
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid rgb(139 92 246 / 55%);
+  border-radius: var(--radius-md);
+  background: rgb(139 92 246 / 14%);
+  color: var(--accent-soft);
+  cursor: pointer;
+}
+
+.crash-card button:hover {
+  background: rgb(139 92 246 / 22%);
+}

@@ -1,4 +1,4 @@
-﻿import { NOTE_COLORS } from "../../store/canvasStore";
+﻿import { NOTE_COLORS } from "../../lib/theme";
 import type { NoteColor } from "../../types";
 
 type NodeColorsProps = {
