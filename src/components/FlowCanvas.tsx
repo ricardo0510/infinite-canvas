@@ -29,12 +29,14 @@ import { CommandPalette } from "./CommandPalette";
 import { ContextMenu, type ContextMenuState } from "./ContextMenu";
 import { EdgeToolbar } from "./EdgeToolbar";
 import { EmptyState } from "./EmptyState";
+import { MediaPreviewModal } from "./MediaPreviewModal";
 import { CanvasEdge } from "./edges/CanvasEdge";
 import { SelectionToolbar } from "./SelectionToolbar";
 import { StatusBar } from "./StatusBar";
 import { GroupNode } from "./nodes/GroupNode";
 import { ImageNode } from "./nodes/ImageNode";
 import { TextNode } from "./nodes/TextNode";
+import { NodeSelectionToolbar } from "./nodes/NodeSelectionToolbar";
 import { VideoNode } from "./nodes/VideoNode";
 
 const AiPanel = lazy(async () => {
@@ -49,12 +51,10 @@ const nodeTypes = {
   group: GroupNode,
 } satisfies NodeTypes;
 
-// Override the built-in smoothstep edge so every existing edge gets the
-// hover delete affordance without a schema migration.
-const edgeTypes = { smoothstep: CanvasEdge } satisfies EdgeTypes;
+const edgeTypes = { smoothstep: CanvasEdge, bezier: CanvasEdge } satisfies EdgeTypes;
 
 const edgeOptions = {
-  type: "smoothstep",
+  type: "bezier",
   markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
   style: { stroke: "#5b6478", strokeWidth: 1.5 },
 };
@@ -97,6 +97,8 @@ export function FlowCanvas() {
   const showMiniMap = useUiStore((state) => state.showMiniMap);
   const setMiniMap = useUiStore((state) => state.setMiniMap);
   const aiPanelNodeId = useUiStore((state) => state.aiPanelNodeId);
+  const selectedNodes = nodes.filter((node) => node.selected);
+  const selectedNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
   const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const flowStore = useStoreApi();
   const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
@@ -119,7 +121,7 @@ export function FlowCanvas() {
       setFlowViewport({ x: 40, y: 40, zoom: 1 });
       document.documentElement.dataset.bench = String(benchCount);
       document.documentElement.dataset.benchReady = String(Math.round(performance.now()));
-      useToastStore.getState().push(`Benchmark mode: ${benchCount} nodes`, "info");
+      useToastStore.getState().push(`基准模式：${benchCount} 个节点`, "info");
     }, 0);
   }, [benchCount, setFlowViewport]);
 
@@ -140,7 +142,7 @@ export function FlowCanvas() {
         toast(
           rejected?.reason instanceof Error
             ? rejected.reason.message
-            : "No images could be read.",
+            : "没有可读取的图片。",
           "error",
         );
         return;
@@ -169,15 +171,15 @@ export function FlowCanvas() {
       });
 
       useCanvasStore.getState().addImages(specs);
-      if (loaded.length > 1) toast(`Added ${loaded.length} images.`, "success");
+      if (loaded.length > 1) toast(`已添加 ${loaded.length} 张图片。`, "success");
       if (rejected) {
         toast(
-          rejected.reason instanceof Error ? rejected.reason.message : "Some files were skipped.",
+          rejected.reason instanceof Error ? rejected.reason.message : "部分文件已跳过。",
           "error",
         );
       }
       if (files.length > selected.length) {
-        toast(`Only the first ${selected.length} images were added.`, "info");
+        toast(`只添加了前 ${selected.length} 张图片。`, "info");
       }
     },
     [screenToFlowPosition],
@@ -310,7 +312,7 @@ export function FlowCanvas() {
     if (files.length === 0) return;
     const images = files.filter((file) => file.type.startsWith("image/"));
     if (images.length === 0) {
-      useToastStore.getState().push("Drop image files to add them to the canvas.", "error");
+      useToastStore.getState().push("拖入图片文件即可添加到画布。", "error");
       return;
     }
     void importImages(images, { x: event.clientX, y: event.clientY });
@@ -332,6 +334,10 @@ export function FlowCanvas() {
     (_event: MouseEvent, node: CanvasNode) => {
       raiseNode(node.id);
       if (node.type !== "text" && node.type !== "image" && node.type !== "video") {
+        setAiPanelNode(null);
+        return;
+      }
+      if ((node.data as { static?: boolean }).static === true) {
         setAiPanelNode(null);
         return;
       }
@@ -553,16 +559,18 @@ export function FlowCanvas() {
             <span className="drop-plus" aria-hidden="true">
               +
             </span>
-            <strong>Drop images to add nodes</strong>
-            <span>PNG, JPG, GIF or WebP · up to 4 MB each</span>
+            <strong>拖入图片以添加节点</strong>
+            <span>PNG、JPG、GIF 或 WebP · 每张不超过 4 MB</span>
           </div>
         </div>
       ) : null}
+      {selectedNode ? <NodeSelectionToolbar node={selectedNode} /> : null}
       {aiPanelNodeId ? (
         <Suspense fallback={null}>
           <AiPanel />
         </Suspense>
       ) : null}
+      <MediaPreviewModal />
       <CanvasControls />
       <EmptyState />
       <SelectionToolbar />

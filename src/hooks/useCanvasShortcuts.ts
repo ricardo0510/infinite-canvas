@@ -73,7 +73,7 @@ export function useCanvasShortcuts(): void {
       if (mod && key === "s") {
         event.preventDefault();
         if (new URLSearchParams(window.location.search).has("bench")) {
-          useToastStore.getState().push("Saving is disabled in benchmark mode.", "info");
+          useToastStore.getState().push("基准模式下已禁用保存。", "info");
           return;
         }
         saveSnapshot(store.getSnapshot());

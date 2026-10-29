@@ -19,6 +19,8 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Command palette (`/`) for nodes, templates, layout, export and view actions
 - Starter templates: flowchart, mind map, kanban, meeting notes
 - Drop image files anywhere or paste from the clipboard; images are fitted to a readable node size
+- Right-click `Upload file` creates static image or video nodes from local files
+- Selecting an image or video node with content shows a toolbar with fullscreen preview
 - Global error boundary and toast notifications for import/upload failures
 - Smart snapping to other nodes' edges/centers, dashed alignment guides while dragging
 - Align / distribute / group from the selection toolbar

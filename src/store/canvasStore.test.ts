@@ -26,7 +26,7 @@ describe("nodes", () => {
     expect(state.nodes).toHaveLength(1);
     expect(node(id).type).toBe("text");
     expect(node(id).selected).toBe(true);
-    expect(node(id).data).toMatchObject({ title: "Text", text: "", color: "emerald" });
+    expect(node(id).data).toMatchObject({ title: "文本", text: "", color: "emerald" });
     expect(state.past).toHaveLength(1);
   });
 
@@ -35,7 +35,7 @@ describe("nodes", () => {
     const b = add("text", 100, 0);
     useCanvasStore.getState().updateNodeData(a, { title: "Changed" });
     expect(node(a).data).toMatchObject({ title: "Changed" });
-    expect(node(b).data).toMatchObject({ title: "Text" });
+    expect(node(b).data).toMatchObject({ title: "文本" });
   });
 
   it("removes selected nodes and their edges", () => {
@@ -82,9 +82,9 @@ describe("images", () => {
     expect(ids).toHaveLength(2);
     expect(state.nodes).toHaveLength(2);
     expect(state.nodes.every((item) => item.type === "image" && item.selected)).toBe(true);
-    expect(node(ids[0]).data).toMatchObject({ src: "data:image/png;base64,AAAA", alt: "a.png" });
+    expect(node(ids[0]).data).toMatchObject({ src: "data:image/png;base64,AAAA", alt: "a.png", static: true });
     expect(node(ids[0]).width).toBe(280);
-    expect(node(ids[0]).height).toBe(278);
+    expect(node(ids[0]).height).toBe(244);
     expect(state.past).toHaveLength(1);
 
     useCanvasStore.getState().undo();

@@ -28,7 +28,7 @@ export function buildStressSnapshot(count: number): CanvasSnapshot {
       height: EMPTY_NODE_HEIGHT,
       style: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
       data: {
-        title: `Node ${index + 1}`,
+        title: `节点 ${index + 1}`,
         text: "",
         color: COLORS[index % COLORS.length],
         fontSize: 14,
@@ -40,7 +40,7 @@ export function buildStressSnapshot(count: number): CanvasSnapshot {
         id: `stress-edge-${index}`,
         source: `stress-node-${index - 1}`,
         target: id,
-        type: "smoothstep",
+        type: "bezier",
         markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
         style: { stroke: "#5b6478", strokeWidth: 1.5 },
       });

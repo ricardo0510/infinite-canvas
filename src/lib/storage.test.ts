@@ -79,7 +79,7 @@ describe("migrateSnapshot", () => {
       ],
       edges: [],
     });
-    expect(snapshot?.nodes[0].data).toEqual({ title: "Image", src: "", alt: "x" });
+    expect(snapshot?.nodes[0].data).toEqual({ title: "图片", src: "", alt: "x" });
     expect(snapshot?.nodes[0]).not.toHaveProperty("malicious");
   });
 
@@ -181,6 +181,7 @@ describe("video nodes", () => {
           type: "video",
           position: { x: 0, y: 0 },
           data: {
+            static: true,
             src: "https://cdn.example.com/a.mp4",
             thumbnailUrl: "https://cdn.example.com/a.jpg",
             alt: "clip",
@@ -209,6 +210,7 @@ describe("video nodes", () => {
     });
     expect(snapshot?.nodes[0].type).toBe("video");
     expect(snapshot?.nodes[0].data).toMatchObject({
+      static: true,
       src: "https://cdn.example.com/a.mp4",
       thumbnailUrl: "https://cdn.example.com/a.jpg",
       alt: "clip",

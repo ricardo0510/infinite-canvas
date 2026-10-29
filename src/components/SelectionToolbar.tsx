@@ -1,13 +1,13 @@
-import { useCanvasStore } from "../store/canvasStore";
+﻿import { useCanvasStore } from "../store/canvasStore";
 import type { AlignKind } from "../types";
 
 const ALIGN: { kind: AlignKind; label: string; icon: string }[] = [
-  { kind: "left", label: "Align left", icon: "⇤" },
-  { kind: "centerX", label: "Align horizontal centers", icon: "↔" },
-  { kind: "right", label: "Align right", icon: "⇥" },
-  { kind: "top", label: "Align top", icon: "⤒" },
-  { kind: "centerY", label: "Align vertical centers", icon: "↕" },
-  { kind: "bottom", label: "Align bottom", icon: "⤓" },
+  { kind: "left", label: "左对齐", icon: "⇤" },
+  { kind: "centerX", label: "水平居中", icon: "↔" },
+  { kind: "right", label: "右对齐", icon: "⇥" },
+  { kind: "top", label: "顶部对齐", icon: "⇡" },
+  { kind: "centerY", label: "垂直居中", icon: "↕" },
+  { kind: "bottom", label: "底部对齐", icon: "⇣" },
 ];
 
 export function SelectionToolbar() {
@@ -24,8 +24,8 @@ export function SelectionToolbar() {
   if (selectedCount === 0) return null;
 
   return (
-    <div className="selection-toolbar" role="toolbar" aria-label="Selection actions">
-      <span className="selection-count">{selectedCount} selected</span>
+    <div className="selection-toolbar" role="toolbar" aria-label="选择操作">
+      <span className="selection-count">已选中 {selectedCount} 个</span>
       {selectedCount >= 2 ? (
         <>
           <span className="selection-divider" />
@@ -45,29 +45,29 @@ export function SelectionToolbar() {
           <button
             type="button"
             className="selection-button"
-            title="Distribute horizontally"
-            aria-label="Distribute horizontally"
+            title="水平分布"
+            aria-label="水平分布"
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("x")}
           >
-            ⇹
+            ≡
           </button>
           <button
             type="button"
             className="selection-button"
-            title="Distribute vertically"
-            aria-label="Distribute vertically"
+            title="垂直分布"
+            aria-label="垂直分布"
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("y")}
           >
-            ⇳
+            ⋮
           </button>
           <span className="selection-divider" />
           <button
             type="button"
             className="selection-button"
-            title="Group selection (Ctrl/Cmd + G)"
-            aria-label="Group selection"
+            title="合并分组（Ctrl/Cmd + G）"
+            aria-label="合并分组"
             onClick={() => groupSelected()}
           >
             ▣
@@ -78,8 +78,8 @@ export function SelectionToolbar() {
         <button
           type="button"
           className="selection-button"
-          title="Ungroup (Ctrl/Cmd + Shift + G)"
-          aria-label="Ungroup"
+          title="取消分组（Ctrl/Cmd + Shift + G）"
+          aria-label="取消分组"
           onClick={ungroupSelected}
         >
           ▢
@@ -89,11 +89,11 @@ export function SelectionToolbar() {
       <button
         type="button"
         className="selection-button selection-danger"
-        title="Delete selected (Delete)"
-        aria-label="Delete selected"
+        title="删除选中节点（Delete）"
+        aria-label="删除选中节点"
         onClick={removeSelected}
       >
-        ✕
+        ×
       </button>
     </div>
   );

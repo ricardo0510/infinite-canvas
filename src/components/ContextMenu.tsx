@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import type { XYPosition } from "@xyflow/react";
+import { createUploadedNode } from "../lib/upload";
 import { useCanvasStore } from "../store/canvasStore";
+import { useToastStore } from "../store/toastStore";
 import type { NodeKind } from "../types";
 
 export type ContextMenuState = {
@@ -22,10 +24,10 @@ type ContextMenuProps = {
 };
 
 const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
-  { kind: "text", label: "Text" },
-  { kind: "image", label: "Image" },
-  { kind: "video", label: "Video" },
-  { kind: "group", label: "Group" },
+  { kind: "text", label: "文本" },
+  { kind: "image", label: "图片" },
+  { kind: "video", label: "视频" },
+  { kind: "group", label: "分组" },
 ];
 
 export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
@@ -41,6 +43,7 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
   const groupSelected = useCanvasStore((state) => state.groupSelected);
   const ungroupSelected = useCanvasStore((state) => state.ungroupSelected);
   const hasClipboard = useCanvasStore((state) => Boolean(state.clipboard));
+  const pushToast = useToastStore((state) => state.push);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -74,8 +77,22 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
     else addNode(kind, menu.flow);
   };
 
+  const handleUpload = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*,video/*";
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      void createUploadedNode(file, menu.flow).catch((error: unknown) => {
+        pushToast(error instanceof Error ? error.message : "上传失败。", "error");
+      });
+    };
+    input.click();
+  };
+
   const width = 208;
-  const height = menu.connection ? 260 : 430;
+  const height = menu.connection ? 260 : 460;
   const left = Math.min(menu.x, window.innerWidth - width - 8);
   const top = Math.min(menu.y, window.innerHeight - height - 8);
 
@@ -90,7 +107,7 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
       {menu.connection ? (
         <>
           <div className="context-label">
-            {menu.connection.fromHandleType === "source" ? "Add downstream node" : "Add upstream node"}
+            {menu.connection.fromHandleType === "source" ? "添加下游节点" : "添加上游节点"}
           </div>
           {addItems.map((item) => (
             <button
@@ -108,26 +125,26 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
           {menu.targetIds.length > 0 ? (
             <>
               <div className="context-label">
-                {menu.targetIds.length === 1 ? "1 node selected" : `${menu.targetIds.length} nodes selected`}
+                {menu.targetIds.length === 1 ? "1 个节点已选中" : `${menu.targetIds.length} 个节点已选中`}
               </div>
               <button type="button" role="menuitem" onClick={() => run(() => {
                 selectTargets();
                 duplicateSelected();
               })}>
-                Duplicate <kbd>Ctrl D</kbd>
+                复制 <kbd>Ctrl D</kbd>
               </button>
               <button type="button" role="menuitem" onClick={() => run(() => bringToFront(menu.targetIds))}>
-                Bring to front
+                置于顶层
               </button>
               <button type="button" role="menuitem" onClick={() => run(() => sendToBack(menu.targetIds))}>
-                Send to back
+                置于底层
               </button>
               {menu.targetIds.length >= 2 ? (
                 <button type="button" role="menuitem" onClick={() => run(() => {
                   selectTargets();
                   groupSelected();
                 })}>
-                  Group selection
+                  合并分组
                 </button>
               ) : null}
               {menu.hasGroup ? (
@@ -135,20 +152,20 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
                   selectTargets();
                   ungroupSelected();
                 })}>
-                  Ungroup
+                  取消分组
                 </button>
               ) : null}
               <button type="button" role="menuitem" className="context-danger" onClick={() => run(() => {
                 selectTargets();
                 removeSelected();
               })}>
-                Delete <kbd>Del</kbd>
+                删除 <kbd>Del</kbd>
               </button>
               <div className="context-divider" />
             </>
           ) : null}
 
-          <div className="context-label">Add</div>
+          <div className="context-label">添加</div>
           {addItems.map((item) => (
             <button
               key={item.kind}
@@ -159,12 +176,15 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
               {item.label}
             </button>
           ))}
+          <button type="button" role="menuitem" onClick={() => run(handleUpload)}>
+            上传文件
+          </button>
           <div className="context-divider" />
           <button type="button" role="menuitem" onClick={() => run(paste)} disabled={!hasClipboard}>
-            Paste <kbd>Ctrl V</kbd>
+            粘贴 <kbd>Ctrl V</kbd>
           </button>
           <button type="button" role="menuitem" onClick={() => run(onFitView)}>
-            Fit view
+            适应视图
           </button>
         </>
       )}

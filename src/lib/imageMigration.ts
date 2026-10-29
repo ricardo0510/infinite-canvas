@@ -46,9 +46,13 @@ export function migrateInlineImagesNow(): Promise<number> {
 /** Removes stored blobs that the current canvas no longer references. */
 export async function pruneOrphanImages(): Promise<number> {
   if (typeof indexedDB === "undefined") return 0;
-  const refs = useCanvasStore
-    .getState()
-    .nodes.filter((node) => node.type === "image" && isIdbImageRef(node.data.src))
-    .map((node) => node.data.src as string);
+  const refs: string[] = [];
+  for (const node of useCanvasStore.getState().nodes) {
+    if (node.type === "image" && isIdbImageRef(node.data.src)) refs.push(node.data.src);
+    if (node.type === "video") {
+      if (isIdbImageRef(node.data.src)) refs.push(node.data.src);
+      if (isIdbImageRef(node.data.thumbnailUrl)) refs.push(node.data.thumbnailUrl);
+    }
+  }
   return pruneImages(refs);
 }

@@ -4,10 +4,10 @@ import { useCanvasStore } from "../store/canvasStore";
 import type { NodeKind } from "../types";
 
 const ACTIONS: { kind: NodeKind; label: string; hint: string }[] = [
-  { kind: "text", label: "Text", hint: "Write or generate text" },
-  { kind: "image", label: "Image", hint: "Upload or link" },
-  { kind: "video", label: "Video", hint: "Generate a clip" },
-  { kind: "group", label: "Group", hint: "Container for nodes" },
+  { kind: "text", label: "文本", hint: "编写或生成文本" },
+  { kind: "image", label: "图片", hint: "展示或生成图片" },
+  { kind: "video", label: "视频", hint: "生成或播放视频" },
+  { kind: "group", label: "分组", hint: "组织节点" },
 ];
 
 export function EmptyState() {
@@ -45,8 +45,8 @@ export function EmptyState() {
   return (
     <div className="empty-state">
       <div className="empty-card">
-        <h2>Start with a blank canvas</h2>
-        <p>Double-click anywhere, right-click for more, or pick a node type below.</p>
+        <h2>从空白画布开始</h2>
+        <p>双击任意位置、右键查看更多，或在下方选择节点类型。</p>
         <div className="empty-actions">
           {ACTIONS.map((action) => (
             <button key={action.kind} type="button" className="empty-action" onClick={() => add(action.kind)}>
@@ -56,7 +56,7 @@ export function EmptyState() {
           ))}
         </div>
         <div className="empty-divider" />
-        <p className="empty-templates-title">Or start from a template</p>
+        <p className="empty-templates-title">或从模板开始</p>
         <div className="empty-actions">
           {TEMPLATES.map((template) => (
             <button
@@ -71,7 +71,7 @@ export function EmptyState() {
           ))}
         </div>
         <p className="empty-footnote">
-          Press <kbd>?</kbd> for shortcuts 路 <kbd>/</kbd> for commands.
+          按 <kbd>?</kbd> 查看快捷键 · <kbd>/</kbd> 打开命令面板。
         </p>
       </div>
     </div>

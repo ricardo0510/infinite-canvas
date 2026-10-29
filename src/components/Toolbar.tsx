@@ -8,10 +8,10 @@ import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 
 const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
-  { kind: "text", label: "Text", glyph: "T", title: "Add text" },
-  { kind: "image", label: "Image", glyph: "▣", title: "Add an image" },
-  { kind: "video", label: "Video", glyph: "▶", title: "Add a video" },
-  { kind: "group", label: "Group", glyph: "▢", title: "Add a group" },
+  { kind: "text", label: "文本", glyph: "T", title: "添加文本" },
+  { kind: "image", label: "图片", glyph: "▣", title: "添加图片" },
+  { kind: "video", label: "视频", glyph: "▶", title: "添加视频" },
+  { kind: "group", label: "分组", glyph: "▢", title: "添加分组" },
 ];
 
 export function Toolbar() {
@@ -54,7 +54,7 @@ export function Toolbar() {
     try {
       const snapshot = parseSnapshot(JSON.parse(await file.text()));
       if (!snapshot) {
-        pushToast("This JSON does not look like a canvas snapshot.", "error");
+        pushToast("这个 JSON 不是有效的画布快照。", "error");
         return;
       }
       importSnapshot(snapshot);
@@ -63,15 +63,15 @@ export function Toolbar() {
         if (snapshot.viewport) setViewport(snapshot.viewport);
         else fitView({ padding: 0.2, duration: 300 });
       }, 0);
-      pushToast("Canvas imported.", "success");
+      pushToast("画布已导入。", "success");
     } catch {
-      pushToast("Could not read that file as JSON.", "error");
+      pushToast("无法读取该 JSON 文件。", "error");
     }
   };
 
   const handleClear = () => {
     if (!hasNodes) return;
-    if (window.confirm("Clear the canvas? This can be undone with Ctrl/Cmd + Z.")) clear();
+    if (window.confirm("清空画布？可以使用 Ctrl/Cmd + Z 撤销。")) clear();
   };
 
   const handleLayout = () => {
@@ -97,62 +97,62 @@ export function Toolbar() {
         ))}
       </div>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={undo} disabled={!canUndo} title="Undo (Ctrl/Cmd + Z)">
+      <button type="button" className="tool-button" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
         <span aria-hidden="true">↶</span>
-        <span className="tool-label">Undo</span>
+        <span className="tool-label">撤销</span>
       </button>
-      <button type="button" className="tool-button" onClick={redo} disabled={!canRedo} title="Redo (Ctrl/Cmd + Shift + Z)">
+      <button type="button" className="tool-button" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
         <span aria-hidden="true">↷</span>
-        <span className="tool-label">Redo</span>
+        <span className="tool-label">重做</span>
       </button>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={handleLayout} disabled={!hasNodes} title="Auto layout (Ctrl/Cmd + L)">
+      <button type="button" className="tool-button" onClick={handleLayout} disabled={!hasNodes} title="自动布局（Ctrl/Cmd + L）">
         <span aria-hidden="true">⤢</span>
-        <span className="tool-label">Layout</span>
+        <span className="tool-label">布局</span>
       </button>
       <button
         type="button"
         className={`tool-button${snapToGrid ? " is-on" : ""}`}
         onClick={toggleSnap}
         aria-pressed={snapToGrid}
-        title={`Snap to grid: ${snapToGrid ? "on" : "off"}`}
+        title={`网格吸附：${snapToGrid ? "开" : "关"}`}
       >
         <span aria-hidden="true">⌗</span>
-        <span className="tool-label">Snap</span>
+        <span className="tool-label">吸附</span>
       </button>
       <button
         type="button"
         className="tool-button"
         onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
-        title="Fit view"
+        title="适应视图"
       >
         <span aria-hidden="true">⛶</span>
-        <span className="tool-label">Fit</span>
+        <span className="tool-label">适配</span>
       </button>
       <span className="tool-divider" />
-      <button type="button" className="tool-button" onClick={() => void exportSnapshot(getSnapshot())} title="Export JSON">
+      <button type="button" className="tool-button" onClick={() => void exportSnapshot(getSnapshot())} title="导出 JSON">
         <span aria-hidden="true">↓</span>
-        <span className="tool-label">Export</span>
+        <span className="tool-label">导出</span>
       </button>
-      <button type="button" className="tool-button" onClick={() => fileInput.current?.click()} title="Import JSON">
+      <button type="button" className="tool-button" onClick={() => fileInput.current?.click()} title="导入 JSON">
         <span aria-hidden="true">↑</span>
-        <span className="tool-label">Import</span>
+        <span className="tool-label">导入</span>
       </button>
-      <button type="button" className="tool-button" onClick={() => setCommandOpen(true)} title="Command palette (/)">
+      <button type="button" className="tool-button" onClick={() => setCommandOpen(true)} title="命令面板（/）">
         <span aria-hidden="true">/</span>
-        <span className="tool-label">Commands</span>
+        <span className="tool-label">命令</span>
       </button>
-      <button type="button" className="tool-button" onClick={() => setAiSettingsOpen(true)} title="AI settings">
+      <button type="button" className="tool-button" onClick={() => setAiSettingsOpen(true)} title="AI 设置">
         <span aria-hidden="true">⚙</span>
-        <span className="tool-label">AI</span>
+        <span className="tool-label">AI 设置</span>
       </button>
-      <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="Keyboard shortcuts (?)">
+      <button type="button" className="tool-button" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
         <span aria-hidden="true">?</span>
-        <span className="tool-label">Shortcuts</span>
+        <span className="tool-label">快捷键</span>
       </button>
-      <button type="button" className="tool-button tool-danger" onClick={handleClear} disabled={!hasNodes} title="Clear canvas">
+      <button type="button" className="tool-button tool-danger" onClick={handleClear} disabled={!hasNodes} title="清空画布">
         <span aria-hidden="true">×</span>
-        <span className="tool-label">Clear</span>
+        <span className="tool-label">清空</span>
       </button>
       <input
         ref={fileInput}

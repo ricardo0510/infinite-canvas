@@ -11,7 +11,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
-    console.error("Canvas crashed", error, info);
+    console.error("画布崩溃", error, info);
   }
 
   render() {
@@ -20,11 +20,11 @@ export class ErrorBoundary extends Component<Props, State> {
     return (
       <div className="crash-screen">
         <div className="crash-card">
-          <h1>Something went wrong</h1>
-          <p>The canvas hit an unexpected error. Your saved snapshot is still in local storage.</p>
+          <h1>出了点问题</h1>
+          <p>画布遇到意外错误。已保存的快照仍然保留在本地存储中。</p>
           <code>{this.state.error.message}</code>
           <button type="button" onClick={() => window.location.reload()}>
-            Reload
+            重新加载
           </button>
         </div>
       </div>

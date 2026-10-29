@@ -102,6 +102,7 @@ export type TextData = {
 
 export type ImageData = {
   title: string;
+  static?: boolean;
   src: string;
   alt: string;
   generation?: GenerationMeta;
@@ -110,6 +111,7 @@ export type ImageData = {
 
 export type VideoData = {
   title: string;
+  static?: boolean;
   src: string;
   thumbnailUrl: string;
   alt: string;

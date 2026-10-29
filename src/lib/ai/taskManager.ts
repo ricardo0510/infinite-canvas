@@ -96,7 +96,7 @@ async function poll(task: WatchedTask): Promise<void> {
   } catch (error) {
     task.failures += 1;
     const code = error instanceof AiRequestError ? error.code : -1;
-    const message = error instanceof Error ? error.message : "Task query failed";
+    const message = error instanceof Error ? error.message : "任务查询失败";
     if (task.failures >= 5) {
       handler?.(failedTask(task, code, message), task.nodeId);
       unwatchTask(task.taskId);

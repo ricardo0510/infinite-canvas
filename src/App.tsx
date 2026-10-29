@@ -41,8 +41,8 @@ function App() {
               ◈
             </span>
             <div className="brand-copy">
-              <h1>Infinite Canvas</h1>
-              <p>React Flow · Zustand · local-first</p>
+              <h1>无限画布</h1>
+              <p>React Flow · Zustand · 本地优先</p>
             </div>
           </div>
           <Toolbar />

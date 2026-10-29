@@ -291,7 +291,7 @@ function nodeData(
   switch (type) {
     case "text":
       return {
-        title: text(data.title, "Text"),
+        title: text(data.title, "文本"),
         text: text(data.text),
         color: color(data.color),
         fontSize: Math.min(64, Math.max(10, number(data.fontSize, 16))),
@@ -299,14 +299,16 @@ function nodeData(
       };
     case "image":
       return {
-        title: text(data.title, "Image"),
+        title: text(data.title, "图片"),
+        ...(data.static === true ? { static: true } : {}),
         src: sanitizeImageSrc(data.src),
         alt: text(data.alt),
         ...(generation ? { generation } : {}),
       };
     case "video":
       return {
-        title: text(data.title, "Video"),
+        title: text(data.title, "视频"),
+        ...(data.static === true ? { static: true } : {}),
         src: sanitizeVideoSrc(data.src),
         thumbnailUrl: sanitizeImageSrc(data.thumbnailUrl),
         alt: text(data.alt),
@@ -314,7 +316,7 @@ function nodeData(
       };
     default:
       return {
-        label: text(data.label, "Group"),
+        label: text(data.label, "分组"),
         color: color(data.color),
       };
   }
@@ -329,7 +331,7 @@ function sanitizeNode(value: unknown): CanvasNode | null {
   const height = size(value.height) ?? fallback.height;
   const rawData = legacyNote && isRecord(value.data)
     ? {
-        title: text(value.data.title, "Text"),
+        title: text(value.data.title, "文本"),
         text: text(value.data.body),
         color: value.data.color,
         fontSize: 16,
@@ -444,18 +446,50 @@ export function saveSnapshot(snapshot: CanvasSnapshot): void {
 
 export async function exportSnapshot(snapshot: CanvasSnapshot): Promise<void> {
   let nodes = snapshot.nodes;
-  if (nodes.some((node) => node.type === "image" && isIdbImageRef(node.data.src))) {
+  const hasLocalMedia = nodes.some(
+    (node) =>
+      (node.type === "image" && isIdbImageRef(node.data.src)) ||
+      (node.type === "video" &&
+        (isIdbImageRef(node.data.src) || isIdbImageRef(node.data.thumbnailUrl))),
+  );
+  if (hasLocalMedia) {
     nodes = await Promise.all(
       nodes.map(async (node) => {
-        if (node.type !== "image" || !isIdbImageRef(node.data.src)) return node;
-        const image = await getImageBlob(node.data.src);
-        if (!image) return node;
-        try {
-          const src = await blobToDataUrl(image);
-          return { ...node, data: { ...node.data, src } } as CanvasNode;
-        } catch {
-          return node;
+        if (node.type === "image" && isIdbImageRef(node.data.src)) {
+          const image = await getImageBlob(node.data.src);
+          if (!image) return node;
+          try {
+            const src = await blobToDataUrl(image);
+            return { ...node, data: { ...node.data, src } } as CanvasNode;
+          } catch {
+            return node;
+          }
         }
+        if (node.type === "video") {
+          let data = node.data;
+          if (isIdbImageRef(data.src)) {
+            const video = await getImageBlob(data.src);
+            if (video) {
+              try {
+                data = { ...data, src: await blobToDataUrl(video) };
+              } catch {
+                // Keep the local reference if the blob cannot be read.
+              }
+            }
+          }
+          if (isIdbImageRef(data.thumbnailUrl)) {
+            const poster = await getImageBlob(data.thumbnailUrl);
+            if (poster) {
+              try {
+                data = { ...data, thumbnailUrl: await blobToDataUrl(poster) };
+              } catch {
+                // Keep the local reference if the blob cannot be read.
+              }
+            }
+          }
+          return data === node.data ? node : ({ ...node, data } as CanvasNode);
+        }
+        return node;
       }),
     );
   }

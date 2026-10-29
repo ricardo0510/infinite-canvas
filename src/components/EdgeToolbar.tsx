@@ -1,22 +1,29 @@
-import { MarkerType } from "@xyflow/react";
+﻿import { MarkerType } from "@xyflow/react";
 import { useEffect, useRef } from "react";
 import { NOTE_COLORS, useCanvasStore } from "../store/canvasStore";
 import type { NoteColor } from "../types";
 
 const DEFAULT_STROKE = "#5b6478";
 
+const COLOR_LABELS: Record<NoteColor, string> = {
+  violet: "紫罗兰",
+  cyan: "青色",
+  amber: "琥珀",
+  emerald: "翠绿",
+};
+
 const COLORS: { label: string; value: string }[] = [
-  { label: "Default", value: DEFAULT_STROKE },
+  { label: "默认", value: DEFAULT_STROKE },
   ...(Object.keys(NOTE_COLORS) as NoteColor[]).map((color) => ({
-    label: color,
+    label: COLOR_LABELS[color],
     value: NOTE_COLORS[color],
   })),
 ];
 
 const DASHES: { label: string; value: string | undefined; glyph: string }[] = [
-  { label: "Solid", value: undefined, glyph: "—" },
-  { label: "Dashed", value: "6 4", glyph: "╌" },
-  { label: "Dotted", value: "2 4", glyph: "┈" },
+  { label: "实线", value: undefined, glyph: "—" },
+  { label: "虚线", value: "6 4", glyph: "┄" },
+  { label: "点线", value: "2 4", glyph: "···" },
 ];
 
 export function EdgeToolbar() {
@@ -72,12 +79,12 @@ export function EdgeToolbar() {
   };
 
   return (
-    <div className="selection-toolbar edge-toolbar" role="toolbar" aria-label="Edge style">
+    <div className="selection-toolbar edge-toolbar" role="toolbar" aria-label="杩炵嚎鏍峰紡">
       <input
         className="edge-label-input"
         value={typeof edge.label === "string" ? edge.label : ""}
-        placeholder="Edge label"
-        aria-label="Edge label"
+        placeholder="杩炵嚎鏍囩"
+        aria-label="杩炵嚎鏍囩"
         maxLength={80}
         onFocus={() => {
           editing.current = false;
@@ -96,8 +103,8 @@ export function EdgeToolbar() {
           key={color.value}
           type="button"
           className={`selection-button edge-color-button${stroke === color.value ? " is-active" : ""}`}
-          title={`Edge color: ${color.label}`}
-          aria-label={`Edge color: ${color.label}`}
+          title={`杩炵嚎棰滆壊锛?{color.label}`}
+          aria-label={`杩炵嚎棰滆壊锛?{color.label}`}
           onClick={() => setColor(color.value)}
         >
           <span className="edge-color-dot" style={{ background: color.value }} />
@@ -109,8 +116,8 @@ export function EdgeToolbar() {
           key={item.label}
           type="button"
           className={`selection-button${dash === item.value ? " is-active" : ""}`}
-          title={`Line style: ${item.label}`}
-          aria-label={`Line style: ${item.label}`}
+          title={`绾挎潯鏍峰紡锛?{item.label}`}
+          aria-label={`绾挎潯鏍峰紡锛?{item.label}`}
           onClick={() => setStyle({ strokeDasharray: item.value })}
         >
           {item.glyph}
@@ -120,20 +127,19 @@ export function EdgeToolbar() {
       <button
         type="button"
         className={`selection-button${hasArrow ? " is-active" : ""}`}
-        title={hasArrow ? "Remove arrow" : "Add arrow"}
-        aria-label={hasArrow ? "Remove arrow" : "Add arrow"}
+        title={hasArrow ? "绉婚櫎绠ご" : "娣诲姞绠ご"}
+        aria-label={hasArrow ? "绉婚櫎绠ご" : "娣诲姞绠ご"}
         onClick={toggleArrow}
       >
-        →
-      </button>
+        鈫?      </button>
       <button
         type="button"
         className="selection-button selection-danger"
-        title="Delete edge"
-        aria-label="Delete edge"
+        title="鍒犻櫎杩炵嚎"
+        aria-label="鍒犻櫎杩炵嚎"
         onClick={() => removeEdge(edge.id)}
       >
-        ✕
+        脳
       </button>
     </div>
   );

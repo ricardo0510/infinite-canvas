@@ -8,12 +8,12 @@ export function StatusBar() {
 
   return (
     <div className="statusbar" role="status">
-      <span>{nodeCount} {nodeCount === 1 ? "node" : "nodes"}</span>
+      <span>{nodeCount} 个节点</span>
       <span className="statusbar-sep">·</span>
-      <span>{edgeCount} {edgeCount === 1 ? "edge" : "edges"}</span>
+      <span>{edgeCount} 条连线</span>
       <span className="statusbar-sep">·</span>
       <span>{Math.round(zoom * 100)}%</span>
-      <span className="statusbar-hint">Double-click to add · drag handles to connect</span>
+      <span className="statusbar-hint">双击空白添加 · 拖拽端口连线</span>
     </div>
   );
 }

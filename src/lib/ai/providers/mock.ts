@@ -14,9 +14,9 @@ function wait(ms: number, signal: { aborted: boolean }): Promise<void> {
 }
 
 function mockImage(prompt: string, index: number): string {
-  const label = (prompt.trim() || "Mock image").slice(0, 42).replace(/[<>&]/g, "");
+  const label = (prompt.trim() || "模拟图片").slice(0, 42).replace(/[<>&]/g, "");
   const hue = (index * 67 + 210) % 360;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 70% 28%)"/><stop offset="1" stop-color="hsl(${(hue + 90) % 360} 70% 52%)"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#g)"/><circle cx="760" cy="250" r="220" fill="rgba(255,255,255,.14)"/><circle cx="230" cy="820" r="300" fill="rgba(0,0,0,.18)"/><text x="64" y="520" fill="white" font-family="Inter, sans-serif" font-size="52" font-weight="600">${label}</text><text x="64" y="590" fill="rgba(255,255,255,.72)" font-family="Inter, sans-serif" font-size="30">Mock image ${index + 1}</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="hsl(${hue} 70% 28%)"/><stop offset="1" stop-color="hsl(${(hue + 90) % 360} 70% 52%)"/></linearGradient></defs><rect width="1024" height="1024" fill="url(#g)"/><circle cx="760" cy="250" r="220" fill="rgba(255,255,255,.14)"/><circle cx="230" cy="820" r="300" fill="rgba(0,0,0,.18)"/><text x="64" y="520" fill="white" font-family="Inter, sans-serif" font-size="52" font-weight="600">${label}</text><text x="64" y="590" fill="rgba(255,255,255,.72)" font-family="Inter, sans-serif" font-size="30">模拟图片 ${index + 1}</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 

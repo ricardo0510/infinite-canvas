@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useReactFlow, useStore } from "@xyflow/react";
 import { useUiStore } from "../store/uiStore";
 
@@ -33,7 +33,7 @@ export function CanvasControls() {
   return (
     <div ref={rootRef} className="canvas-controls">
       {open ? (
-        <div className="zoom-menu" role="menu" aria-label="Zoom presets">
+        <div className="zoom-menu" role="menu" aria-label="缩放比例">
           {ZOOM_PRESETS.map((preset) => {
             const active = Math.abs(zoom - preset) < 0.01;
             return (
@@ -61,26 +61,26 @@ export function CanvasControls() {
               setOpen(false);
             }}
           >
-            <span>Fit view</span>
+            <span>适应视图</span>
             <span aria-hidden="true">⛶</span>
           </button>
         </div>
       ) : null}
       <div className="canvas-control-group">
-        <button type="button" className="canvas-button" onClick={() => zoomOut({ duration: 200 })} title="Zoom out" aria-label="Zoom out">
+        <button type="button" className="canvas-button" onClick={() => zoomOut({ duration: 200 })} title="缩小" aria-label="缩小">
           −
         </button>
         <button
           type="button"
           className="canvas-button canvas-zoom-value"
           onClick={() => setOpen((value) => !value)}
-          title="Zoom presets"
+          title="缩放比例"
           aria-haspopup="menu"
           aria-expanded={open}
         >
           {percent}%
         </button>
-        <button type="button" className="canvas-button" onClick={() => zoomIn({ duration: 200 })} title="Zoom in" aria-label="Zoom in">
+        <button type="button" className="canvas-button" onClick={() => zoomIn({ duration: 200 })} title="放大" aria-label="放大">
           +
         </button>
         <span className="canvas-divider" />
@@ -88,8 +88,8 @@ export function CanvasControls() {
           type="button"
           className="canvas-button"
           onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
-          title="Fit view"
-          aria-label="Fit view"
+          title="适应视图"
+          aria-label="适应视图"
         >
           ⛶
         </button>
@@ -97,8 +97,8 @@ export function CanvasControls() {
           type="button"
           className={`canvas-button${showMiniMap ? " is-on" : ""}`}
           onClick={toggleMiniMap}
-          title={showMiniMap ? "Hide minimap" : "Show minimap"}
-          aria-label={showMiniMap ? "Hide minimap" : "Show minimap"}
+          title={showMiniMap ? "隐藏小地图" : "显示小地图"}
+          aria-label={showMiniMap ? "隐藏小地图" : "显示小地图"}
           aria-pressed={showMiniMap}
         >
           ▦

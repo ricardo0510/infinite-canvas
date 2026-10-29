@@ -5,19 +5,19 @@ import type { AiModel, ModelKind } from "./types";
 const MOCK_MODELS: AiModel[] = [
   {
     id: "mock-text",
-    name: "Mock Text",
+    name: "模拟文本",
     kind: "text",
     modes: [],
-    description: "Local demo text model",
+    description: "本地模拟文本模型",
     limits: { maxPromptLength: 8000, maxImages: 0, maxVideos: 0 },
     output: { image: null, video: null },
   },
   {
     id: "mock-image",
-    name: "Mock Image",
+    name: "模拟图片",
     kind: "image",
     modes: ["textToImage", "imageToImage"],
-    description: "Local demo image model",
+    description: "本地模拟图片模型",
     limits: { maxPromptLength: 2000, maxImages: 4, maxVideos: 0 },
     output: {
       image: {
@@ -29,18 +29,18 @@ const MOCK_MODELS: AiModel[] = [
     },
     params: {
       qualityTiers: [
-        { key: "standard", label: "Standard" },
-        { key: "high", label: "High" },
+        { key: "standard", label: "标准" },
+        { key: "high", label: "高清" },
       ],
       backgrounds: ["opaque", "transparent", "auto"],
     },
   },
   {
     id: "mock-video",
-    name: "Mock Video",
+    name: "模拟视频",
     kind: "video",
     modes: ["textToVideo", "imageToVideo", "firstLastFrame"],
-    description: "Local demo video model",
+    description: "本地模拟视频模型",
     limits: { maxPromptLength: 2000, maxImages: 2, maxVideos: 1 },
     output: {
       image: null,
@@ -54,8 +54,8 @@ const MOCK_MODELS: AiModel[] = [
     },
     params: {
       qualityTiers: [
-        { key: "standard", label: "Standard" },
-        { key: "high", label: "High" },
+        { key: "standard", label: "标准" },
+        { key: "high", label: "高清" },
       ],
     },
   },

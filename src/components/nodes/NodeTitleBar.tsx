@@ -1,13 +1,14 @@
-import { useRef, useState, type KeyboardEvent, type MouseEvent } from "react";
+import { useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useCanvasStore } from "../../store/canvasStore";
 
 type NodeTitleBarProps = {
   id: string;
   title: string;
   defaultTitle: string;
+  actions?: ReactNode;
 };
 
-export function NodeTitleBar({ id, title, defaultTitle }: NodeTitleBarProps) {
+export function NodeTitleBar({ id, title, defaultTitle, actions }: NodeTitleBarProps) {
   const updateNodeData = useCanvasStore((state) => state.updateNodeData);
   const commit = useCanvasStore((state) => state.commit);
   const [editing, setEditing] = useState(false);
@@ -48,7 +49,7 @@ export function NodeTitleBar({ id, title, defaultTitle }: NodeTitleBarProps) {
           ref={inputRef}
           className="nodrag node-title-input"
           value={draft}
-          aria-label="Node title"
+          aria-label="节点标题"
           autoFocus
           onChange={(event) => setDraft(event.target.value)}
           onBlur={finishEditing}
@@ -58,10 +59,11 @@ export function NodeTitleBar({ id, title, defaultTitle }: NodeTitleBarProps) {
           onPointerDown={(event) => event.stopPropagation()}
         />
       ) : (
-        <span className="node-title" onDoubleClick={startEditing} title="Double-click to rename">
+        <span className="node-title" onDoubleClick={startEditing} title="双击重命名">
           {title || defaultTitle}
         </span>
       )}
+      {actions ? <div className="node-head-actions nodrag">{actions}</div> : null}
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { AI_NODE_WIDTH, mediaNodeHeight } from "../../lib/geometry";
 import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
 import { useCanvasStore } from "../../store/canvasStore";
-import { useUiStore } from "../../store/uiStore";
 import type { VideoNodeModel } from "../../types";
 import { NodeEmptyState } from "./NodeEmptyState";
 import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
@@ -13,8 +12,8 @@ import { nodePropsEqual } from "./nodePropsEqual";
 
 function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
   const resizeNode = useCanvasStore((state) => state.resizeNode);
-  const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const rawSrc = sanitizeVideoSrc(data.src);
+  const src = useResolvedImageSrc(rawSrc);
   const poster = useResolvedImageSrc(sanitizeImageSrc(data.thumbnailUrl));
   const generation = data.generation;
   const running = generation?.status === "running" || generation?.status === "queued";
@@ -33,7 +32,7 @@ function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
       className={`ai-node ai-node-video${selected ? " is-selected" : ""}${running ? " is-running" : ""}`}
       style={{ "--node-accent": "#f59e0b" } as CSSProperties}
     >
-      <NodeTitleBar id={id} title={data.title} defaultTitle="Video" />
+      <NodeTitleBar id={id} title={data.title} defaultTitle="视频" />
       <Handle type="target" position={Position.Left} className="node-handle" />
       {running ? (
         <NodeLoadingOverlay
@@ -41,11 +40,11 @@ function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
           progress={generation?.status === "running" ? generation?.progress : undefined}
         />
       ) : null}
-      <div className="node-body nodrag nowheel">
-        {rawSrc ? (
+      <div className="node-body nowheel">
+        {src ? (
           <video
-            className="node-video"
-            src={rawSrc}
+            className="node-video nodrag"
+            src={src}
             poster={poster || undefined}
             controls
             preload="metadata"
@@ -71,14 +70,6 @@ function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
           />
         ) : null}
         {generation?.error ? <p className="node-error">{generation.error.message}</p> : null}
-      </div>
-      <div className="node-foot">
-        <span className="node-foot-label" title={data.alt || data.title || "Video"}>
-          {data.alt || data.title || "Video"}
-        </span>
-        <button type="button" className="nodrag ai-node-button" onClick={() => setAiPanelNode(id)}>
-          AI
-        </button>
       </div>
       <Handle type="source" position={Position.Right} className="node-handle" />
     </div>

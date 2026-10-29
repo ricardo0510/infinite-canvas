@@ -60,84 +60,84 @@ function CommandPaletteSession() {
     };
 
     return [
-      { id: "text", label: "New text", group: "Add", keywords: "label", run: add("text") },
-      { id: "image", label: "New image", group: "Add", keywords: "picture upload", run: add("image") },
-      { id: "video", label: "New video", group: "Add", keywords: "movie clip generate", run: add("video") },
-      { id: "group", label: "New group", group: "Add", keywords: "container", run: add("group") },
+      { id: "text", label: "新建文本", group: "添加", keywords: "文字", run: add("text") },
+      { id: "image", label: "新建图片", group: "添加", keywords: "图片 上传", run: add("image") },
+      { id: "video", label: "新建视频", group: "添加", keywords: "视频 生成", run: add("video") },
+      { id: "group", label: "新建分组", group: "添加", keywords: "容器", run: add("group") },
       ...TEMPLATES.map((item) => ({
         id: `template-${item.id}`,
-        label: `Template: ${item.label}`,
-        group: "Templates",
+        label: `模板：${item.label}`,
+        group: "模板",
         keywords: item.description,
         run: template(item.id),
       })),
-      { id: "undo", label: "Undo", group: "Edit", hint: "Ctrl/Cmd Z", run: () => state().undo() },
+      { id: "undo", label: "撤销", group: "编辑", hint: "Ctrl/Cmd Z", run: () => state().undo() },
       {
         id: "redo",
-        label: "Redo",
-        group: "Edit",
+        label: "重做",
+        group: "编辑",
         hint: "Ctrl/Cmd Shift Z",
         run: () => state().redo(),
       },
       {
         id: "select-all",
-        label: "Select all",
-        group: "Edit",
+        label: "全选",
+        group: "编辑",
         hint: "Ctrl/Cmd A",
         run: () => state().selectAll(),
       },
       {
         id: "duplicate",
-        label: "Duplicate selection",
-        group: "Edit",
+        label: "复制选中节点",
+        group: "编辑",
         hint: "Ctrl/Cmd D",
         run: () => state().duplicateSelected(),
       },
       {
         id: "delete",
-        label: "Delete selection",
-        group: "Edit",
+        label: "删除选中节点",
+        group: "编辑",
         hint: "Del",
         run: () => state().removeSelected(),
       },
       {
         id: "group-selection",
-        label: "Group selection",
-        group: "Arrange",
+        label: "合并分组",
+        group: "排列",
         hint: "Ctrl/Cmd G",
         run: () => state().groupSelected(),
       },
       {
         id: "ungroup-selection",
-        label: "Ungroup selection",
-        group: "Arrange",
+        label: "取消分组",
+        group: "排列",
         hint: "Ctrl/Cmd Shift G",
         run: () => state().ungroupSelected(),
       },
       {
         id: "layout",
-        label: "Auto layout",
-        group: "Arrange",
+        label: "自动布局",
+        group: "排列",
         hint: "Ctrl/Cmd L",
         run: layout,
       },
-      { id: "fit", label: "Fit view", group: "View", hint: "Ctrl/Cmd 0", run: fit },
+      { id: "fit", label: "适应视图", group: "视图", hint: "Ctrl/Cmd 0", run: fit },
       {
         id: "snap",
-        label: snapToGrid ? "Turn grid snap off" : "Turn grid snap on",
-        group: "View",
+        label: snapToGrid ? "关闭网格吸附" : "开启网格吸附",
+        group: "视图",
         run: () => ui().toggleSnap(),
       },
       {
         id: "minimap",
-        label: showMiniMap ? "Hide minimap" : "Show minimap",
-        group: "View",
+        label: showMiniMap ? "隐藏小地图" : "显示小地图",
+        group: "视图",
         run: () => ui().toggleMiniMap(),
       },
       {
         id: "export",
-        label: "Export JSON",
-        group: "Canvas",
+        label: "导出 JSON",
+        group: "画布",
         hint: "Ctrl/Cmd E",
         run: () => {
           void exportSnapshot(state().getSnapshot());
@@ -145,12 +145,12 @@ function CommandPaletteSession() {
       },
       {
         id: "clear",
-        label: "Clear canvas",
-        group: "Canvas",
-        keywords: "delete all reset",
+        label: "清空画布",
+        group: "画布",
+        keywords: "删除 全部 重置",
         run: () => {
           if (state().nodes.length === 0) return;
-          if (window.confirm("Clear the canvas? This can be undone.")) state().clear();
+          if (window.confirm("清空画布？此操作可以撤销。")) state().clear();
         },
       },
     ];
@@ -209,14 +209,14 @@ function CommandPaletteSession() {
         className="command-palette"
         role="dialog"
         aria-modal="true"
-        aria-label="Command palette"
+        aria-label="命令面板"
         onPointerDown={(event) => event.stopPropagation()}
       >
         <input
           className="command-input"
           value={query}
-          placeholder="Search commands and templates…"
-          aria-label="Command search"
+          placeholder="搜索命令和模板…"
+          aria-label="搜索命令"
           autoFocus
           onChange={(event) => {
             setQuery(event.target.value);
@@ -225,7 +225,7 @@ function CommandPaletteSession() {
         />
         <div className="command-list" ref={listRef}>
           {filtered.length === 0 ? (
-            <p className="command-empty">No matching commands.</p>
+            <p className="command-empty">没有匹配的命令。</p>
           ) : (
             filtered.map((command, index) => {
               const showGroup = command.group !== lastGroup;
@@ -253,9 +253,9 @@ function CommandPaletteSession() {
           )}
         </div>
         <div className="command-footer">
-          <span>↑↓ navigate</span>
-          <span>Enter run</span>
-          <span>Esc close</span>
+          <span>↑↓ 选择</span>
+          <span>回车执行</span>
+          <span>Esc 关闭</span>
         </div>
       </div>
     </div>

@@ -28,8 +28,8 @@ function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
         <input
           className="nodrag group-label"
           value={data.label}
-          placeholder="Group"
-          aria-label="Group label"
+          placeholder="分组"
+          aria-label="分组名称"
           onFocus={() => {
             editing.current = false;
           }}
@@ -49,6 +49,7 @@ function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
           }}
         />
       </div>
+      <div className="group-body" />
     </div>
   );
 }

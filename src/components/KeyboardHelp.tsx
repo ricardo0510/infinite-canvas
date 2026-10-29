@@ -1,48 +1,48 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { useUiStore } from "../store/uiStore";
 
 const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] = [
   {
-    title: "Editing",
+    title: "编辑",
     items: [
-      { keys: ["Ctrl/Cmd + Z"], action: "Undo" },
-      { keys: ["Ctrl/Cmd + Shift + Z"], action: "Redo" },
-      { keys: ["Ctrl/Cmd + C", "Ctrl/Cmd + V"], action: "Copy / paste" },
-      { keys: ["Ctrl/Cmd + D"], action: "Duplicate" },
-      { keys: ["Delete", "Backspace"], action: "Delete selection" },
-      { keys: ["Ctrl/Cmd + A"], action: "Select all" },
-      { keys: ["Ctrl/Cmd + E"], action: "Export JSON" },
-      { keys: ["Ctrl/Cmd + S"], action: "Save to localStorage" },
+      { keys: ["Ctrl/Cmd + Z"], action: "撤销" },
+      { keys: ["Ctrl/Cmd + Shift + Z"], action: "重做" },
+      { keys: ["Ctrl/Cmd + C", "Ctrl/Cmd + V"], action: "复制 / 粘贴" },
+      { keys: ["Ctrl/Cmd + D"], action: "复制副本" },
+      { keys: ["Delete", "Backspace"], action: "删除选中" },
+      { keys: ["Ctrl/Cmd + A"], action: "全选" },
+      { keys: ["Ctrl/Cmd + E"], action: "导出 JSON" },
+      { keys: ["Ctrl/Cmd + S"], action: "保存到本地存储" },
     ],
   },
   {
-    title: "Arrange",
+    title: "排列",
     items: [
-      { keys: ["Ctrl/Cmd + G"], action: "Group selection" },
-      { keys: ["Ctrl/Cmd + Shift + G"], action: "Ungroup" },
-      { keys: ["Ctrl/Cmd + L"], action: "Auto layout" },
-      { keys: ["Arrow keys"], action: "Nudge 1px (Shift: 10px)" },
-      { keys: ["F"], action: "Focus selection" },
+      { keys: ["Ctrl/Cmd + G"], action: "合并分组" },
+      { keys: ["Ctrl/Cmd + Shift + G"], action: "取消分组" },
+      { keys: ["Ctrl/Cmd + L"], action: "自动布局" },
+      { keys: ["方向键"], action: "移动 1px（Shift：10px）" },
+      { keys: ["F"], action: "聚焦选中节点" },
     ],
   },
   {
-    title: "Canvas",
+    title: "画布",
     items: [
-      { keys: ["Double-click"], action: "Add a text node" },
-      { keys: ["Right-click"], action: "Context menu" },
-      { keys: ["Handle → blank"], action: "Create a connected node" },
-      { keys: ["Drop image file"], action: "Create image nodes" },
-      { keys: ["Ctrl/Cmd + V"], action: "Paste image from clipboard" },
-      { keys: ["Click edge"], action: "Edit label / style" },
-      { keys: ["Hover edge"], action: "Delete edge" },
-      { keys: ["Middle/right drag"], action: "Pan" },
-      { keys: ["Left drag"], action: "Box select" },
-      { keys: ["Shift/Ctrl + click"], action: "Add to selection" },
-      { keys: ["Drag node over group"], action: "Join / leave group" },
-      { keys: ["Ctrl/Cmd + 0"], action: "Fit view" },
-      { keys: ["/"], action: "Command palette" },
-      { keys: ["?"], action: "This panel" },
-      { keys: ["Esc"], action: "Clear selection / close panels" },
+      { keys: ["双击"], action: "添加文本节点" },
+      { keys: ["右键"], action: "打开右键菜单" },
+      { keys: ["端口拖到空白"], action: "创建并连接节点" },
+      { keys: ["拖入图片"], action: "创建图片节点" },
+      { keys: ["Ctrl/Cmd + V"], action: "粘贴图片" },
+      { keys: ["点击连线"], action: "编辑标签 / 样式" },
+      { keys: ["悬停连线"], action: "删除连线" },
+      { keys: ["中键/右键拖拽"], action: "平移画布" },
+      { keys: ["左键拖拽"], action: "框选" },
+      { keys: ["Shift/Ctrl + 点击"], action: "追加选择" },
+      { keys: ["拖拽节点到分组"], action: "加入 / 离开分组" },
+      { keys: ["Ctrl/Cmd + 0"], action: "适应视图" },
+      { keys: ["/"], action: "命令面板" },
+      { keys: ["?"], action: "快捷键面板" },
+      { keys: ["Esc"], action: "清除选择 / 关闭面板" },
     ],
   },
 ];
@@ -82,8 +82,8 @@ export function KeyboardHelp() {
         onPointerDown={(event) => event.stopPropagation()}
       >
         <header className="help-head">
-          <h2 id="help-title">Keyboard shortcuts</h2>
-          <button type="button" className="help-close" onClick={() => setOpen(false)} aria-label="Close">
+          <h2 id="help-title">键盘快捷键</h2>
+          <button type="button" className="help-close" onClick={() => setOpen(false)} aria-label="关闭">
             ×
           </button>
         </header>

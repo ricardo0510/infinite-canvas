@@ -1,11 +1,41 @@
 import {
   BaseEdge,
   EdgeLabelRenderer,
-  getSmoothStepPath,
+  getBezierPath,
+  useReactFlow,
   type EdgeProps,
 } from "@xyflow/react";
-import { useState, type CSSProperties } from "react";
+import { useCallback, useState, type CSSProperties, type MouseEvent } from "react";
 import { useCanvasStore } from "../../store/canvasStore";
+
+type Point = { x: number; y: number };
+
+function getClosestPointOnPath(path: SVGPathElement, point: Point): Point | null {
+  if (typeof path.getTotalLength !== "function" || typeof path.getPointAtLength !== "function") {
+    return null;
+  }
+  let total = 0;
+  try {
+    total = path.getTotalLength();
+  } catch {
+    return null;
+  }
+  if (!total) return null;
+
+  let best: Point | null = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (let index = 0; index <= 48; index++) {
+    const candidate = path.getPointAtLength((total * index) / 48);
+    const dx = candidate.x - point.x;
+    const dy = candidate.y - point.y;
+    const distance = dx * dx + dy * dy;
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = { x: candidate.x, y: candidate.y };
+    }
+  }
+  return best;
+}
 
 export function CanvasEdge({
   id,
@@ -21,27 +51,53 @@ export function CanvasEdge({
   label,
   interactionWidth,
 }: EdgeProps) {
-  const [hovered, setHovered] = useState(false);
+  const { screenToFlowPosition } = useReactFlow();
   const removeEdge = useCanvasStore((state) => state.removeEdge);
-  const [path, labelX, labelY] = getSmoothStepPath({
+  const [edgeHovered, setEdgeHovered] = useState(false);
+  const [buttonHovered, setButtonHovered] = useState(false);
+  const [hoverPoint, setHoverPoint] = useState<Point | null>(null);
+  const [path, labelX, labelY] = getBezierPath({
     sourceX,
     sourceY,
     sourcePosition,
     targetX,
     targetY,
     targetPosition,
+    curvature: 0.35,
   });
 
   const baseWidth = (style?.strokeWidth as number | undefined) ?? 1.5;
   const pathStyle: CSSProperties = {
     ...style,
-    strokeWidth: selected ? 3 : hovered ? 2.5 : baseWidth,
+    strokeWidth: selected ? 3 : edgeHovered ? 2.5 : baseWidth,
   };
-  const showButton = hovered || Boolean(selected);
+  const showButton = selected || edgeHovered || buttonHovered;
   const showLabel = Boolean(label);
+  const buttonX = hoverPoint?.x ?? labelX;
+  const buttonY = hoverPoint?.y ?? labelY;
+
+  const handleMouseMove = useCallback(
+    (event: MouseEvent<SVGGElement>) => {
+      const pathElement = event.currentTarget.querySelector<SVGPathElement>(".react-flow__edge-path");
+      if (!pathElement) return;
+      const flowPoint = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+      const nearest = getClosestPointOnPath(pathElement, flowPoint);
+      if (!nearest) return;
+      setHoverPoint((current) =>
+        current && Math.abs(current.x - nearest.x) < 1 && Math.abs(current.y - nearest.y) < 1
+          ? current
+          : nearest,
+      );
+    },
+    [screenToFlowPosition],
+  );
 
   return (
-    <g onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}>
+    <g
+      onMouseEnter={() => setEdgeHovered(true)}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={() => setEdgeHovered(false)}
+    >
       <BaseEdge
         id={id}
         path={path}
@@ -64,16 +120,16 @@ export function CanvasEdge({
           <div
             className="edge-delete-wrap nodrag nopan"
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY - 20}px)`,
+              transform: `translate(-50%, -50%) translate(${buttonX}px, ${buttonY}px)`,
             }}
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
+            onMouseEnter={() => setButtonHovered(true)}
+            onMouseLeave={() => setButtonHovered(false)}
           >
             <button
               type="button"
               className="edge-delete"
-              aria-label="Delete edge"
-              title="Delete edge"
+              aria-label="删除连线"
+              title="删除连线"
               onClick={(event) => {
                 event.stopPropagation();
                 removeEdge(id);

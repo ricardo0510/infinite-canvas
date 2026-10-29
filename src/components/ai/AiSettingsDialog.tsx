@@ -30,12 +30,14 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
         aria-labelledby="ai-settings-title"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <h2 id="ai-settings-title">AI settings</h2>
+        <h2 id="ai-settings-title">AI 设置</h2>
         <p className="ai-settings-note">
-          {isAiMock() ? "当前为 Mock 模式。填写 API 地址后会使用真实接口。" : "当前使用真实 AI 接口。"}
+          {isAiMock()
+            ? "当前为模拟模式。填写接口地址后会使用真实接口。"
+            : "当前使用真实 AI 接口。"}
         </p>
         <label className="ai-field">
-          <span>API Base</span>
+          <span>接口地址</span>
           <input
             value={apiBase}
             placeholder="https://api.example.com/v1"
@@ -43,7 +45,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
           />
         </label>
         <label className="ai-field">
-          <span>Realtime Base（可选）</span>
+          <span>实时通道地址（可选）</span>
           <input
             value={realtimeBase}
             placeholder="wss://api.example.com"
@@ -51,11 +53,11 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
           />
         </label>
         <label className="ai-field">
-          <span>Token</span>
+          <span>访问令牌</span>
           <input
             type="password"
             value={token}
-            placeholder="Bearer token"
+            placeholder="访问令牌"
             onChange={(event) => setToken(event.target.value)}
           />
         </label>

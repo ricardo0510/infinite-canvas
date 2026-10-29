@@ -8,7 +8,7 @@ function openDatabase(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
   dbPromise = new Promise((resolve, reject) => {
     if (typeof indexedDB === "undefined") {
-      reject(new Error("IndexedDB is not available."));
+      reject(new Error("IndexedDB 不可用。"));
       return;
     }
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -17,7 +17,7 @@ function openDatabase(): Promise<IDBDatabase> {
       if (!db.objectStoreNames.contains(STORE_NAME)) db.createObjectStore(STORE_NAME);
     };
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("Could not open IndexedDB."));
+    request.onerror = () => reject(request.error ?? new Error("无法打开 IndexedDB。"));
   });
   return dbPromise;
 }
@@ -25,7 +25,7 @@ function openDatabase(): Promise<IDBDatabase> {
 function requestResult<T>(request: IDBRequest<T>): Promise<T> {
   return new Promise((resolve, reject) => {
     request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error ?? new Error("IndexedDB request failed."));
+    request.onerror = () => reject(request.error ?? new Error("IndexedDB 请求失败。"));
   });
 }
 
@@ -41,7 +41,7 @@ export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ""));
-    reader.onerror = () => reject(reader.error ?? new Error("Could not read image data."));
+    reader.onerror = () => reject(reader.error ?? new Error("无法读取图片数据。"));
     reader.readAsDataURL(blob);
   });
 }
@@ -101,7 +101,7 @@ export async function pruneImages(keepRefs: Iterable<string>): Promise<number> {
       const transaction = db.transaction(STORE_NAME, "readonly");
       const request = transaction.objectStore(STORE_NAME).getAllKeys();
       request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error ?? new Error("Could not list images."));
+      request.onerror = () => reject(request.error ?? new Error("无法列出图片。"));
     });
     const orphaned = keys.filter((key): key is string => typeof key === "string" && !keep.has(key));
     if (orphaned.length === 0) return 0;

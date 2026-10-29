@@ -3,7 +3,6 @@ import type { CanvasNode, NodeKind } from "../types";
 
 export const AI_NODE_WIDTH = 280;
 export const NODE_HEADER_HEIGHT = 34;
-export const NODE_FOOTER_HEIGHT = 34;
 export const EMPTY_NODE_HEIGHT = 160;
 
 export const MIN_SIZE: Record<NodeKind, { width: number; height: number }> = {
@@ -23,7 +22,7 @@ export const DEFAULT_SIZE: Record<NodeKind, { width: number; height: number }> =
 export function mediaNodeHeight(width: number, contentWidth: number, contentHeight: number): number {
   if (!(contentWidth > 0) || !(contentHeight > 0)) return EMPTY_NODE_HEIGHT;
   const bodyHeight = (width * contentHeight) / contentWidth;
-  return Math.round(NODE_HEADER_HEIGHT + bodyHeight + NODE_FOOTER_HEIGHT);
+  return Math.round(NODE_HEADER_HEIGHT + bodyHeight);
 }
 
 export const GRID_SIZE = 8;

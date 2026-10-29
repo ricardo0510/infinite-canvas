@@ -244,22 +244,11 @@ export async function generateNode(nodeId: string): Promise<void> {
   let mode = current.mode;
   if (kind === "image") {
     const hasImage = upstream.references.some((item) => item.kind === "image");
-    if (mode !== "textToImage" && mode !== "imageToImage") {
-      mode = hasImage ? "imageToImage" : "textToImage";
-    }
-    if (hasImage && mode === "textToImage") mode = "imageToImage";
-    if (mode === "imageToImage" && !hasImage) throw new Error("图生图需要至少一张上游图片");
+    mode = hasImage ? "imageToImage" : "textToImage";
   } else if (kind === "video") {
     const hasVideo = upstream.references.some((item) => item.kind === "video");
     const images = upstream.references.filter((item) => item.kind === "image");
-    if (!mode || !["textToVideo", "imageToVideo", "firstLastFrame", "referenceVideo"].includes(mode)) {
-      mode = hasVideo ? "referenceVideo" : images.length > 0 ? "imageToVideo" : "textToVideo";
-    }
-    if (hasVideo) mode = "referenceVideo";
-    else if (mode === "textToVideo" && images.length > 0) mode = "imageToVideo";
-    if (mode === "imageToVideo" && images.length === 0) throw new Error("图生视频需要至少一张上游图片");
-    if (mode === "firstLastFrame" && images.length < 2) throw new Error("首尾帧模式需要两张上游图片");
-    if (mode === "referenceVideo" && !hasVideo) throw new Error("参考视频模式需要至少一个上游视频");
+    mode = hasVideo ? "referenceVideo" : images.length > 0 ? "imageToVideo" : "textToVideo";
   }
 
   const references = mapUpstreamReferences(kind, mode, upstream.references);

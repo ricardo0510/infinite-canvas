@@ -14,7 +14,7 @@ export function ToastHost() {
           <button
             type="button"
             className="toast-close"
-            aria-label="Dismiss notification"
+            aria-label="关闭通知"
             onClick={() => dismiss(toast.id)}
           >
             ×

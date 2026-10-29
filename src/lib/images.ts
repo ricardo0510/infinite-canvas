@@ -41,7 +41,7 @@ async function decodeSize(blob: Blob): Promise<{ width: number; height: number }
     return await new Promise((resolve, reject) => {
       const image = new Image();
       image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
-      image.onerror = () => reject(new Error("the image could not be decoded."));
+      image.onerror = () => reject(new Error("无法解码图片。"));
       image.src = url;
     });
   } finally {
@@ -51,16 +51,16 @@ async function decodeSize(blob: Blob): Promise<{ width: number; height: number }
 
 export async function readImageFile(file: File): Promise<LoadedImage> {
   if (!file.type.startsWith("image/")) {
-    throw new Error(`${file.name}: only image files are supported.`);
+    throw new Error(`${file.name}: 仅支持图片文件.`);
   }
   if (file.size > MAX_IMAGE_BYTES) {
-    throw new Error(`${file.name}: image is larger than 4 MB.`);
+    throw new Error(`${file.name}: 图片不能超过 4 MB。`);
   }
 
   try {
     const { width, height } = await decodeSize(file);
     return { blob: file, width, height, name: file.name };
   } catch {
-    throw new Error(`${file.name}: could not decode the image.`);
+    throw new Error(`${file.name}: 无法解码图片。`);
   }
 }

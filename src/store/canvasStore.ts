@@ -49,7 +49,7 @@ const demo: CanvasSnapshot = {
       height: DEFAULT_SIZE.text.height,
       style: { width: DEFAULT_SIZE.text.width, height: DEFAULT_SIZE.text.height },
       data: {
-        title: "Infinite Canvas",
+        title: "无限画布",
         text: "双击空白处添加文本节点。\n右键打开菜单，拖拽右侧端口连线。\n单击节点打开生成输入框。",
         color: "violet",
         fontSize: 14,
@@ -63,7 +63,7 @@ const demo: CanvasSnapshot = {
       height: DEFAULT_SIZE.text.height,
       style: { width: DEFAULT_SIZE.text.width, height: DEFAULT_SIZE.text.height },
       data: {
-        title: "A small idea",
+        title: "一个小想法",
         text: "节点顶部可以拖拽，双击标题可以重命名。\n图片和视频节点会根据内容比例调整高度。",
         color: "cyan",
         fontSize: 14,
@@ -75,7 +75,7 @@ const demo: CanvasSnapshot = {
       id: "edge-welcome-idea",
       source: "welcome",
       target: "idea",
-      type: "smoothstep",
+      type: "bezier",
       markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
       style: { stroke: "#5b6478", strokeWidth: 1.5 },
     },
@@ -100,7 +100,7 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "text",
-        data: { title: "Text", text: "", color: "emerald", fontSize: 16 },
+        data: { title: "文本", text: "", color: "emerald", fontSize: 16 },
       };
       return node;
     }
@@ -108,7 +108,7 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "image",
-        data: { title: "Image", src: "", alt: "" },
+        data: { title: "图片", src: "", alt: "" },
       };
       return node;
     }
@@ -116,7 +116,7 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "video",
-        data: { title: "Video", src: "", thumbnailUrl: "", alt: "" },
+        data: { title: "视频", src: "", thumbnailUrl: "", alt: "" },
       };
       return node;
     }
@@ -124,7 +124,7 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       const node: CanvasNode = {
         ...base,
         type: "group",
-        data: { label: "Group", color: "amber" },
+        data: { label: "分组", color: "amber" },
         zIndex: -1,
       };
       return node;
@@ -180,7 +180,7 @@ function defaultEdge(connection: Connection): CanvasEdge {
   return {
     ...connection,
     id: newId("edge"),
-    type: "smoothstep",
+    type: "bezier",
     markerEnd: { type: MarkerType.ArrowClosed, width: 16, height: 16 },
     style: { stroke: "#5b6478", strokeWidth: 1.5 },
   };
@@ -445,7 +445,8 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
         height,
         style: { ...(base.style ?? {}), width: AI_NODE_WIDTH, height },
         data: {
-          title: image.alt || "Image",
+          title: image.alt || "图片",
+          static: true,
           src: sanitizeImageSrc(image.src),
           alt: image.alt ?? "",
         },
@@ -839,7 +840,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       width,
       height,
       style: { width, height },
-      data: { label: `${selected.length} items`, color: "amber" } satisfies GroupData,
+      data: { label: `${selected.length} 个节点`, color: "amber" } satisfies GroupData,
       zIndex: minZ,
       selected: true,
     };
