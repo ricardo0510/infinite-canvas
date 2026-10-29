@@ -14,9 +14,16 @@
     "prisma:migrate": "prisma migrate dev",
     "dev:worker": "tsx watch src/worker.ts",
     "start:worker": "node dist/worker.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "prisma:seed": "prisma db seed",
+    "dev:admin": "tsx watch src/admin-server.ts",
+    "start:admin": "node dist/admin-server.js"
   },
   "dependencies": {
+    "@adminjs/fastify": "^4.2.0",
+    "@adminjs/prisma": "^5.0.4",
+    "@bull-board/api": "^9.10.5",
+    "@bull-board/fastify": "^9.10.5",
     "@fastify/multipart": "^9.0.3",
     "@fastify/static": "^10.1.2",
     "@nestjs/common": "^11.1.6",
@@ -26,9 +33,11 @@
     "@nestjs/platform-ws": "^11.1.6",
     "@nestjs/websockets": "^11.1.6",
     "@prisma/client": "^6.19.0",
+    "adminjs": "^7.8.17",
     "bullmq": "^6.5.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
+    "dotenv": "^18.0.9",
     "fastify": "5.11.3",
     "image-size": "^2.0.2",
     "infinite-canvas": "file:..",
@@ -45,5 +54,8 @@
     "tsx": "^4.20.6",
     "typescript": "~5.9.3",
     "vitest": "^3.2.4"
+  },
+  "prisma": {
+    "seed": "node --import tsx prisma/seed.ts"
   }
 }

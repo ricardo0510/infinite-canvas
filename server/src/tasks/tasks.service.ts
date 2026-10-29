@@ -41,7 +41,7 @@ export class TasksService {
     const existing = await this.repo.findByClientRequest(userId, kind, dto.clientRequestId);
     if (existing) return { task: existing, created: false };
 
-    const model = this.models.require(dto.modelId, kind);
+    const model = await this.models.require(dto.modelId, kind);
     if (!dto.prompt.trim()) {
       throw new ApiException(20001, "prompt 不能为空", 422);
     }

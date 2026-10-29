@@ -27,3 +27,5 @@ server/uploads
 server/.env
 server/.env.local
 server/data
+
+server/.adminjs

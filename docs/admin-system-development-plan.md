@@ -2,6 +2,8 @@
 
 > 关联：`docs/backend-api-plan.md`、`server/`  
 > 目标：给运营/管理员提供模型、Provider、任务、用户、队列和审计管理能力，不改变画布端现有交互。
+>
+> **当前实现（MVP）**：AdminJS + Bull Board 独立管理服务，端口 `8791`；资源 `ModelConfig / ProviderConfig / Task`；模型目录已改为读 `ModelConfig`；Provider 运行时仍读环境变量；用户/Token/RBAC/审计为后续阶段。
 
 ---
 
@@ -30,50 +32,37 @@
 
 ## 2. 总体方案
 
-### 2.1 推荐形态
+### 2.1 当前实现
 
 ```text
-admin/                     # 独立 Vite + React 管理端
-  src/
-    api/                   # 管理 API 客户端
-    pages/                 # Dashboard / Models / Providers / Tasks ...
-    components/
-    layouts/
-server/src/admin/          # 管理 API 模块
-  auth/                    # 登录、会话、CSRF
-  models/                  # 模型目录 CRUD
-  providers/               # Provider 配置与测试
-  tasks/                   # 任务查询、取消、重试
-  users/                   # 用户与 Token
-  uploads/                 # 资源管理
-  queue/                   # BullMQ 管理
-  audit/                   # 审计日志
-  settings/                # 系统设置
+server/src/admin-server.ts   # 独立 Fastify 管理服务（ADMIN_PORT=8791）
+server/src/admin/admin.ts    # AdminJS 资源与登录
+server/src/admin/queue-board.ts # Bull Board
+server/prisma/schema.prisma  # ModelConfig / ProviderConfig
 ```
 
-- 管理 API 与业务 API 复用同一个 NestJS 服务，路径统一为 `/v1/admin/*`。
-- 管理端独立部署在 `admin.example.com` 或同域 `/admin`，不与画布端共用会话。
-- 管理端与业务端使用不同的鉴权体系：业务用 `API_TOKEN`，管理端用管理员会话，互不通用。
-- 若后续安全要求更高，可把 `server/src/admin` 拆成独立服务，接口契约不变。
+- AdminJS：`http://localhost:8791/admin`，管理 `ModelConfig`、`ProviderConfig`、`Task`（只读）。
+- Bull Board：`http://localhost:8791/admin/queues`，Basic Auth 使用 `ADMIN_EMAIL` / `ADMIN_PASSWORD`。
+- 管理服务与业务 API 分离端口，避免 AdminJS 的 multipart/session 插件与 Fastify 上传解析冲突。
+- 管理端使用独立 Cookie 会话；业务端仍使用 `API_TOKEN`。
+- `ModelConfig` 已接入 `/v1/models`（10 秒缓存）；`ProviderConfig` 目前只做配置管理，DeepSeek 运行时仍读环境变量。
+- 自定义管理 API（用户、Token、审计、设置）后续按本文设计补到 `server/src/admin` 或独立 Nest 模块。
 
 ### 2.2 技术选型
 
 | 层 | 选择 | 说明 |
 | --- | --- | --- |
-| 管理端 | React 19 + Vite + TypeScript | 与画布端同语言 |
-| UI | Ant Design 5 + 深色主题 | 表格、表单、弹窗、权限控制成熟 |
-| 数据请求 | TanStack Query | 缓存、刷新、分页、错误重试 |
-| 路由 | React Router | 页面级权限 |
-| 表单 | Ant Design Form + Zod | 模型能力 JSON 需要额外校验 |
-| 管理 API | NestJS + Prisma | 复用现有 envelope / filter / interceptor |
-| 队列管理 | BullMQ API | `getJobCounts`、失败任务重试 |
-| 审计 | PostgreSQL 追加表 | 不写对象存储，便于查询 |
+| 当前管理端 | AdminJS 7 + Bull Board | 直接复用 Prisma 表与 BullMQ，MVP 最快 |
+| 后续定制 UI | Refine + Ant Design | 复杂 Dashboard、精细权限时替换 |
+| 管理 API | NestJS / Fastify | 后续自定义接口复用现有 envelope / filter / interceptor |
 
 不建议把管理端塞进画布端 `src/`；独立 `admin/` 子项目，避免权限、依赖和构建互相污染。
 
 ---
 
 ## 3. 权限模型
+
+> 当前 AdminJS MVP 只有一个环境变量管理员账号，尚未启用角色权限；上线前必须补 RBAC。
 
 ### 3.1 角色
 
@@ -104,6 +93,8 @@ admin.read / admin.write
 ---
 
 ## 4. 管理员认证
+
+> 当前 MVP 使用 `ADMIN_EMAIL` / `ADMIN_PASSWORD` + AdminJS Cookie 会话；`AdminUser/AdminSession` 表与 SSO 为后续阶段。
 
 ### 4.1 登录方式
 
@@ -158,6 +149,8 @@ model AdminSession {
 - 数据来源：任务表聚合 + BullMQ `getJobCounts`。
 
 ### 5.2 模型管理
+
+> 当前已实现：AdminJS 管理 `ModelConfig`，`/v1/models` 读取该表（10 秒缓存）。ProviderConfig 运行时联动尚未完成。
 
 - 列表：ID、名称、类型、模式、Provider、状态、排序、更新时间。
 - 编辑：
@@ -228,6 +221,8 @@ model ProviderConfig {
 
 ### 5.4 任务管理
 
+> 当前已实现：AdminJS 任务列表/详情（只读）。取消/重试与批量操作待补。
+
 - 列表筛选：用户、kind（text/image/video）、status、modelId、日期范围、taskId、clientRequestId。
 - 列：taskId、kind、model、status、progress、耗时、创建时间、用户。
 - 详情：
@@ -292,6 +287,8 @@ model ApiToken {
 
 ### 5.7 队列与实时
 
+> 当前已实现：Bull Board 队列统计、失败任务查看/重试、暂停/恢复。实时连接统计待补。
+
 - 队列统计：`getJobCounts()`。
 - 失败任务列表：jobId、taskId、失败原因、时间。
 - 操作：重试单个/批量失败 job、移除失败 job、暂停/恢复队列。
@@ -323,6 +320,8 @@ before, after, ip, userAgent, requestId, createdAt
 ---
 
 ## 6. 管理 API 设计
+
+> 当前 AdminJS/Bull Board 使用自己的路由（`/admin`、`/admin/queues`）。以下 `/v1/admin/*` 是后续自定义管理 API 的设计，用于用户、Token、审计、设置、批量重试等 AdminJS 不擅长的场景。
 
 统一前缀：`/v1/admin`。沿用 `{ code, message, data }` 响应和现有异常过滤器。
 
@@ -497,14 +496,14 @@ GET /v1/admin/dashboard/overview
 
 ### 9.2 阶段计划
 
-| 阶段 | 内容 | 预估 |
+| 阶段 | 内容 | 状态 |
 | --- | --- | --- |
-| A0 | 管理端脚手架、登录、会话、AdminGuard、布局 | 2–3 天 |
-| A1 | Dashboard 只读 + 模型列表只读 | 1–2 天 |
-| A2 | 模型/Provider CRUD + 密钥托管 + 连通性测试 | 3–5 天 |
-| A3 | 任务列表/详情/取消/重试 + 用户与 Token | 3–5 天 |
-| A4 | 上传、队列、设置、审计 | 3–5 天 |
-| A5 | SSO/2FA、S3、监控、压测 | 3–5 天 |
+| A0 | AdminJS + Bull Board + Prisma 配置表 | 已完成 |
+| A1 | 模型目录读 `ModelConfig`、任务只读列表 | 已完成 |
+| A2 | Provider 运行时联动 + 密钥加密 + 连通性测试 | 待开发 |
+| A3 | 任务取消/重试、用户与 Token | 待开发 |
+| A4 | 上传、设置、审计 | 待开发 |
+| A5 | RBAC、SSO/2FA、S3、监控 | 待开发 |
 
 建议先做 A0–A1，让运营能看到任务和模型状态；A2 再做写入操作。
 

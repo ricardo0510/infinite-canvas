@@ -18,7 +18,8 @@
     "lint:api": "npm --prefix server run lint",
     "test:api": "npm --prefix server run test",
     "preview": "vite preview",
-    "dev:worker": "npm --prefix server run dev:worker"
+    "dev:worker": "npm --prefix server run dev:worker",
+    "dev:admin": "npm --prefix server run dev:admin"
   },
   "dependencies": {
     "@dagrejs/dagre": "^3.1.3",

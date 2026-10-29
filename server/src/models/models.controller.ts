@@ -10,10 +10,10 @@ export class ModelsController {
   constructor(private readonly models: ModelsService) {}
 
   @Get()
-  list(@Query("kind") kind?: string) {
+  async list(@Query("kind") kind?: string) {
     if (kind !== undefined && !KINDS.includes(kind as ModelKind)) {
       throw new ApiException(20001, "kind 必须是 text / image / video", 422);
     }
-    return { models: this.models.list(kind as ModelKind | undefined) };
+    return { models: await this.models.list(kind as ModelKind | undefined) };
   }
 }

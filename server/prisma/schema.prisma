@@ -27,3 +27,37 @@ model Task {
   @@index([userId, createdAt])
   @@index([status, updatedAt])
 }
+
+model ModelConfig {
+  id            String   @id
+  name          String
+  kind          String
+  modes         Json
+  description   String?
+  logoUrl       String?
+  limits        Json
+  output        Json
+  params        Json?
+  pricing       Json?
+  providerId    String?
+  providerModel String?
+  enabled       Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProviderConfig {
+  id              String   @id @default(uuid())
+  name            String
+  type            String
+  baseUrl         String
+  apiKeyEncrypted String?
+  model           String?
+  timeoutMs       Int      @default(120000)
+  concurrency     Int      @default(4)
+  extra           Json?
+  enabled         Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
