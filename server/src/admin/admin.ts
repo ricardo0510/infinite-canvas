@@ -40,7 +40,96 @@ export async function setupAdmin(
   const prisma = new PrismaClient();
   const admin = new AdminJS({
     rootPath: "/admin",
-    branding: { companyName: "Infinite Canvas", withMadeWithLove: false },
+    branding: { companyName: "无限画布 · 管理后台", withMadeWithLove: false },
+    locale: {
+      language: "zh-CN",
+      availableLanguages: ["zh-CN"],
+      translations: {
+        "zh-CN": {
+          labels: {
+            ModelConfig: "模型配置",
+            ProviderConfig: "Provider 配置",
+            Task: "任务",
+          },
+          resources: {
+            ModelConfig: {
+              properties: {
+                id: "ID",
+                name: "名称",
+                kind: "类型",
+                modes: "模式",
+                description: "描述",
+                logoUrl: "Logo",
+                limits: "限制",
+                output: "输出能力",
+                params: "参数",
+                pricing: "价格",
+                providerId: "Provider",
+                providerModel: "上游模型",
+                enabled: "启用",
+                sortOrder: "排序",
+                createdAt: "创建时间",
+                updatedAt: "更新时间",
+              },
+              actions: {
+                new: "新建模型",
+                list: "模型列表",
+                show: "查看模型",
+                edit: "编辑模型",
+                delete: "删除模型",
+                bulkDelete: "批量删除模型",
+              },
+            },
+            ProviderConfig: {
+              properties: {
+                id: "ID",
+                name: "名称",
+                type: "类型",
+                baseUrl: "Base URL",
+                apiKeyEncrypted: "API Key（环境变量）",
+                model: "模型",
+                timeoutMs: "超时（毫秒）",
+                concurrency: "并发数",
+                extra: "扩展配置",
+                enabled: "启用",
+                createdAt: "创建时间",
+                updatedAt: "更新时间",
+              },
+              actions: {
+                new: "新建 Provider",
+                list: "Provider 列表",
+                show: "查看 Provider",
+                edit: "编辑 Provider",
+                delete: "删除 Provider",
+                bulkDelete: "批量删除 Provider",
+              },
+            },
+            Task: {
+              properties: {
+                id: "任务 ID",
+                userId: "用户",
+                kind: "类型",
+                status: "状态",
+                progress: "进度",
+                modelId: "模型",
+                mode: "模式",
+                request: "请求",
+                result: "结果",
+                error: "错误",
+                clientRequestId: "幂等键",
+                createdAt: "创建时间",
+                updatedAt: "更新时间",
+                expiresAt: "过期时间",
+              },
+              actions: {
+                list: "任务列表",
+                show: "查看任务",
+              },
+            },
+          },
+        },
+      },
+    },
     resources: [
       {
         resource: { model: getModelByName("ModelConfig"), client: prisma },

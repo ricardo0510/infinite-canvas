@@ -86,7 +86,7 @@ npm run build
 npm run dev:admin   # http://localhost:8791/admin
 `
 
-- AdminJS：/admin，管理 ModelConfig / ProviderConfig / Task（Task 只读）。
+- AdminJS：/admin，默认中文界面，管理 ModelConfig / ProviderConfig / Task（Task 只读）。
 - Bull Board：/admin/queues，Basic Auth 使用 ADMIN_EMAIL / ADMIN_PASSWORD。
 - 模型目录已改为读取 ModelConfig 表；ProviderConfig 目前只做配置管理，DeepSeek 运行时仍读环境变量。
 - 管理端依赖 .env 中的 ADMIN_EMAIL、ADMIN_PASSWORD、ADMIN_COOKIE_SECRET、ADMIN_PORT。
