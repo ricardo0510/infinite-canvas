@@ -55,6 +55,7 @@ function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
           value={data.text}
           aria-label="文本内容"
           style={{ fontSize }}
+          onContextMenu={(event) => event.preventDefault()}
           onFocus={() => {
             editing.current = false;
           }}

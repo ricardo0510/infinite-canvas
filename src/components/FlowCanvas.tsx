@@ -170,6 +170,24 @@ export function FlowCanvas() {
     });
   };
 
+  useEffect(() => {
+    const onContextMenu = (event: globalThis.MouseEvent) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      // 弹窗与 AI 输入框保留浏览器原生菜单，方便复制/粘贴文本。
+      if (target.closest(".modal, .help-modal, .ai-panel, .command-palette")) return;
+      event.preventDefault();
+    };
+    window.addEventListener("contextmenu", onContextMenu, true);
+    return () => window.removeEventListener("contextmenu", onContextMenu, true);
+  }, []);
+
+  const handleCanvasContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
+    const target = event.target;
+    if (target instanceof Element && target.closest(".ai-panel")) return;
+    event.preventDefault();
+  };
+
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
     setPasteAnchor(screenToFlowPosition({ x: event.clientX, y: event.clientY }));
   };
@@ -217,6 +235,7 @@ export function FlowCanvas() {
     <div
       className="canvas"
       onDoubleClick={handleDoubleClick}
+      onContextMenu={handleCanvasContextMenu}
       onPointerMove={handlePointerMove}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
