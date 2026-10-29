@@ -1,11 +1,31 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, Optional } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { ApiException } from "../common/api-exception";
 import type { AiModel, ModelKind } from "./model.types";
 import { SEED_MODELS } from "./models.seed";
 
 @Injectable()
 export class ModelsService {
-  private readonly models = SEED_MODELS;
+  private readonly models: AiModel[];
+
+  constructor(@Optional() config?: ConfigService) {
+    const apiKey = config?.get<string>("DEEPSEEK_API_KEY")?.trim();
+    this.models = [...SEED_MODELS];
+    if (apiKey) {
+      const modelId = config?.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-4.1-flash";
+      if (!this.models.some((model) => model.id === modelId)) {
+        this.models.unshift({
+          id: modelId,
+          name: "DeepSeek 4.1 Flash",
+          kind: "text",
+          modes: [],
+          description: "DeepSeek 4.1 Flash（OpenAI 兼容接口）",
+          limits: { maxPromptLength: 60_000, maxImages: 0, maxVideos: 0 },
+          output: { image: null, video: null },
+        });
+      }
+    }
+  }
 
   list(kind?: ModelKind): AiModel[] {
     return this.models

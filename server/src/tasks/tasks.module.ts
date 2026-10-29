@@ -6,6 +6,7 @@ import { PrismaTaskRepository } from "./prisma-task.repository";
 import { TASK_REPOSITORY, InMemoryTaskRepository } from "./task.repository";
 import { TaskEvents } from "./task.events";
 import { TaskProcessorService } from "./task-processor.service";
+import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
 import { TasksController } from "./tasks.controller";
 import { TasksService } from "./tasks.service";
 
@@ -16,6 +17,7 @@ import { TasksService } from "./tasks.service";
     TasksService,
     TaskEvents,
     TaskProcessorService,
+    DeepSeekTextProvider,
     {
       provide: TASK_REPOSITORY,
       inject: [ConfigService],

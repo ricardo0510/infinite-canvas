@@ -4,10 +4,24 @@
 
 - NestJS + Fastify，统一 `{ code, message, data }` 响应。
 - 模型目录、图片上传、文本/图片/视频异步任务、任务查询/取消、WebSocket 实时推送。
-- 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘，生成结果由 Mock Provider 产生。
+- 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘。
+- 文本模型支持 DeepSeek 4.1 Flash（OpenAI 兼容接口）；图片/视频仍由 Mock Provider 产生。
 - Redis + BullMQ 负责任务队列；`npm run dev` 默认在 API 进程内启动 Worker，生产可拆成独立 Worker 进程。
 
-后续替换点：S3/OSS、真实模型 Provider、生产鉴权与限流。
+后续替换点：S3/OSS、图片/视频真实 Provider、生产鉴权与限流。
+
+## DeepSeek 4.1 Flash
+
+在 `.env` 中配置：
+
+```bash
+DEEPSEEK_API_KEY=sk-...
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-4.1-flash
+DEEPSEEK_TIMEOUT_MS=120000
+```
+
+配置后 `GET /v1/models` 会自动返回 `DeepSeek 4.1 Flash`，并作为文本模型默认首选。`DEEPSEEK_MODEL` 必须与上游实际模型 ID 一致；如果网关使用别名，改这个值即可。
 
 ## 运行
 

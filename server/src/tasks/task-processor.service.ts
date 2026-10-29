@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
+import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
 import { TasksService } from "./tasks.service";
 import type { ImageResultItem, InternalTask, VideoResultItem } from "./task.types";
 
@@ -18,7 +19,10 @@ function mockSvg(prompt: string, index: number): string {
 export class TaskProcessorService {
   private readonly activeRuns = new Set<string>();
 
-  constructor(private readonly tasks: TasksService) {}
+  constructor(
+    private readonly tasks: TasksService,
+    private readonly deepseek: DeepSeekTextProvider,
+  ) {}
 
   async execute(taskId: string): Promise<void> {
     if (this.activeRuns.has(taskId)) return;
@@ -55,6 +59,34 @@ export class TaskProcessorService {
   }
 
   private async runText(task: InternalTask): Promise<void> {
+    if (this.deepseek.isModel(task.modelId)) {
+      await sleep(150);
+      if (!(await this.tasks.isActive(task.taskId))) return;
+      await this.tasks.setProgress(task.taskId, 50);
+      if (!(await this.tasks.isActive(task.taskId))) return;
+
+      const result = await this.deepseek.generate({
+        prompt: task.request.prompt,
+        systemPrompt: task.request.params.systemPrompt,
+        temperature: task.request.params.temperature,
+        maxOutputTokens: task.request.params.maxOutputTokens,
+      });
+      if (!(await this.tasks.isActive(task.taskId))) return;
+
+      await this.tasks.complete(task.taskId, [
+        {
+          id: `item_${randomUUID()}`,
+          kind: "text",
+          text: result.text,
+          modelId: task.modelId,
+          createdAt: new Date().toISOString(),
+          ...(result.usage ? { usage: result.usage } : {}),
+          ...(result.finishReason ? { finishReason: result.finishReason } : {}),
+        },
+      ]);
+      return;
+    }
+
     await sleep(600);
     if (!(await this.tasks.isActive(task.taskId))) return;
     await this.tasks.setProgress(task.taskId, 60);
