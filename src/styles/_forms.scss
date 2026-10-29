@@ -79,5 +79,39 @@
 }
 
 select.control {
+  padding-right: 28px;
+  overflow: hidden;
   cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5' fill='none' stroke='%238b93a7' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 9px center;
+  text-overflow: ellipsis;
+}
+
+select.control:hover:not(:disabled) {
+  border-color: var(--border-strong);
+}
+
+select.control:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgb(139 92 246 / 16%);
+}
+
+select.control:disabled {
+  cursor: not-allowed;
+}
+
+select.control option {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+select.control option:checked {
+  background: var(--accent-deep);
+  color: #fff;
+}
+
+select.control option:disabled {
+  color: var(--faint);
 }
