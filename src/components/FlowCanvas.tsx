@@ -15,10 +15,10 @@ import {
 } from "@xyflow/react";
 import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from "react";
 import { GRID_SIZE } from "../lib/geometry";
-import { isEditableTarget } from "../lib/dom";
 import { buildStressSnapshot } from "../lib/stress";
 import { snapDragChanges } from "../lib/guides";
 import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
+import { useCanvasKeys } from "../hooks/useCanvasKeys";
 import { useImageDrop } from "../hooks/useImageDrop";
 import { useNodeGrouping } from "../hooks/useNodeGrouping";
 import { useCanvasStore } from "../store/canvasStore";
@@ -97,6 +97,7 @@ export function FlowCanvas() {
   const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const flowStore = useStoreApi();
   const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
+  useCanvasKeys();
   const { dragOver, handleDragOver, handleDragLeave, handleDrop } = useImageDrop();
   const { guides, clearGuides, handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
     useNodeGrouping();
@@ -116,50 +117,6 @@ export function FlowCanvas() {
       useToastStore.getState().push(`基准模式：${benchCount} 个节点`, "info");
     }, 0);
   }, [benchCount, setFlowViewport]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isEditableTarget(event.target)) return;
-      const mod = event.metaKey || event.ctrlKey;
-      if (mod && event.key === "0") {
-        event.preventDefault();
-        fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 });
-        return;
-      }
-      if (!mod && !event.shiftKey && event.key.toLowerCase() === "f") {
-        const selected = useCanvasStore.getState().nodes.filter((node) => node.selected);
-        if (selected.length === 0) return;
-        event.preventDefault();
-        fitView({
-          nodes: selected.map((node) => ({ id: node.id })),
-          padding: 0.4,
-          duration: 300,
-          maxZoom: 1.25,
-        });
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [fitView]);
-
-  // Keep browser page zoom out of the way; the canvas handles its own zoom.
-  useEffect(() => {
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey || event.metaKey) event.preventDefault();
-    };
-    const zoomKeys = new Set(["+", "=", "-", "_", "0"]);
-    const handleZoomKeyDown = (event: KeyboardEvent) => {
-      if ((event.ctrlKey || event.metaKey) && !event.altKey && zoomKeys.has(event.key)) {
-        event.preventDefault();
-      }
-    };
-    window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("keydown", handleZoomKeyDown);
-    return () => {
-      window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("keydown", handleZoomKeyDown);
-    };
-  }, []);
 
   const handleNodesChange = useCallback(
     (changes: NodeChange<CanvasNode>[]) => {
