@@ -271,6 +271,15 @@ describe("clipboard", () => {
     expect(state.nodes).toHaveLength(2);
     expect(state.nodes[1].position).toEqual({ x: 36, y: 36 });
   });
+
+  it("does not create nodes until paste", () => {
+    const a = add("text", 0, 0);
+    useCanvasStore.getState().selectNodes([a]);
+    useCanvasStore.getState().copySelected();
+    expect(useCanvasStore.getState().nodes).toHaveLength(1);
+    useCanvasStore.getState().paste();
+    expect(useCanvasStore.getState().nodes).toHaveLength(2);
+  });
 });
 
 describe("arrange", () => {

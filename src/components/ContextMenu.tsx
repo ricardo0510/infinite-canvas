@@ -36,7 +36,7 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
   const addNode = useCanvasStore((state) => state.addNode);
   const addConnectedNode = useCanvasStore((state) => state.addConnectedNode);
   const selectNodes = useCanvasStore((state) => state.selectNodes);
-  const duplicateSelected = useCanvasStore((state) => state.duplicateSelected);
+  const copySelected = useCanvasStore((state) => state.copySelected);
   const removeSelected = useCanvasStore((state) => state.removeSelected);
   const paste = useCanvasStore((state) => state.paste);
   const bringToFront = useCanvasStore((state) => state.bringToFront);
@@ -135,11 +135,11 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
                 onClick={() =>
                   run(() => {
                     selectTargets();
-                    duplicateSelected();
+                    copySelected();
                   })
                 }
               >
-                复制 <kbd>Ctrl D</kbd>
+                复制 <kbd>Ctrl C</kbd>
               </Button>
               <Button
                 variant="menu"
