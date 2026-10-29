@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
 import type { AiModel } from "../models/model.types";
 import { ModelsService } from "../models/models.service";
+import { ProviderCatalogService } from "../byok/provider-catalog.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { TaskEvents } from "./task.events";
 import { TASK_REPOSITORY, type TaskRepository } from "./task.repository";
@@ -35,13 +36,15 @@ export class TasksService {
     private readonly models: ModelsService,
     private readonly events: TaskEvents,
     @Inject(TASK_REPOSITORY) private readonly repo: TaskRepository,
+    private readonly catalog: ProviderCatalogService,
   ) {}
 
   async create(userId: string, kind: TaskKind, dto: CreateGenerationDto): Promise<CreatedTask> {
     const existing = await this.repo.findByClientRequest(userId, kind, dto.clientRequestId);
     if (existing) return { task: existing, created: false };
 
-    const model = await this.models.require(dto.modelId, kind);
+    const resolved = await this.resolveModel(userId, dto.modelId, kind);
+    const model = resolved.model;
     if (!dto.prompt.trim()) {
       throw new ApiException(20001, "prompt 不能为空", 422);
     }
@@ -72,6 +75,9 @@ export class TasksService {
       expiresAt: new Date(Date.now() + RESULT_TTL_MS).toISOString(),
       userId,
       clientRequestId: dto.clientRequestId,
+      ...(resolved.providerId ? { providerId: resolved.providerId } : {}),
+      ...(resolved.providerModel ? { providerModel: resolved.providerModel } : {}),
+      ...(resolved.credentialId ? { credentialId: resolved.credentialId } : {}),
       request: { prompt: dto.prompt, params, references },
     };
 
@@ -163,6 +169,33 @@ export class TasksService {
     task.updatedAt = now();
     await this.repo.update(task);
     this.events.emitUpdated(task);
+  }
+
+  private async resolveModel(
+    userId: string,
+    modelId: string,
+    kind: TaskKind,
+  ): Promise<{
+    model: AiModel;
+    providerId?: string;
+    providerModel?: string;
+    credentialId?: string;
+  }> {
+    const platform = await this.models.getById(modelId);
+    if (platform) {
+      if (platform.kind !== kind) {
+        throw new ApiException(20001, `模型 ${modelId} 不是 ${kind} 模型`, 422);
+      }
+      return { model: structuredClone(platform) };
+    }
+
+    const byok = await this.catalog.resolveGenerationModel(userId, modelId, kind);
+    return {
+      model: byok.model,
+      providerId: byok.providerId,
+      providerModel: byok.providerModel,
+      credentialId: byok.credentialId,
+    };
   }
 
   private validateReferences(

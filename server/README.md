@@ -54,6 +54,31 @@ npm run start:worker
 - 实时通道：`ws://localhost:8790`
 - 本地开发可不填 token；配置 `API_TOKEN` 后必须填写。
 
+## BYOK（用户自带 API Key）
+
+供应商目录由平台维护，用户在「AI 设置 → 我的供应商」绑定自己的 Key。Key 使用
+AES-256-GCM 信封加密存储，接口只返回掩码，任务表只保存 `credentialId`。
+
+```bash
+KEY_ENCRYPTION_SECRET=请替换为随机长字符串
+```
+
+```text
+GET    /v1/providers
+GET    /v1/providers/:providerId/credentials
+POST   /v1/providers/:providerId/credentials
+PATCH  /v1/providers/:providerId/credentials/:credentialId
+DELETE /v1/providers/:providerId/credentials/:credentialId
+POST   /v1/providers/:providerId/credentials/:credentialId/test
+GET    /v1/providers/:providerId/models
+POST   /v1/providers/:providerId/models/sync
+GET    /v1/user/models
+PUT    /v1/user/models
+```
+
+第一版已打通 OpenAI 兼容文本模型（DeepSeek / OpenAI / SiliconFlow 等）；图片、视频
+仍使用平台 Key（当前为 Mock）。
+
 ## 接口
 
 ```text
@@ -86,7 +111,7 @@ npm run build
 npm run dev:admin   # http://localhost:8791/admin
 `
 
-- AdminJS：/admin，默认中文界面，管理 ModelConfig / ProviderConfig / Task（Task 只读）。
+- AdminJS：/admin，默认中文界面，管理 ModelConfig / ProviderConfig / ProviderModel / Task / 用户凭据（凭据只读且隐藏密文）。
 - Bull Board：/admin/queues，Basic Auth 使用 ADMIN_EMAIL / ADMIN_PASSWORD。
 - 模型目录已改为读取 ModelConfig 表；ProviderConfig 目前只做配置管理，DeepSeek 运行时仍读环境变量。
 - 管理端依赖 .env 中的 ADMIN_EMAIL、ADMIN_PASSWORD、ADMIN_COOKIE_SECRET、ADMIN_PORT。

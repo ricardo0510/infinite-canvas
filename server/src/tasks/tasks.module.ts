@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { PrismaClient } from "@prisma/client";
+import { ByokModule } from "../byok/byok.module";
 import { ModelsModule } from "../models/models.module";
 import { PrismaTaskRepository } from "./prisma-task.repository";
 import { TASK_REPOSITORY, InMemoryTaskRepository } from "./task.repository";
@@ -11,7 +12,7 @@ import { TasksController } from "./tasks.controller";
 import { TasksService } from "./tasks.service";
 
 @Module({
-  imports: [ModelsModule],
+  imports: [ModelsModule, ByokModule],
   controllers: [TasksController],
   providers: [
     TasksService,

@@ -1,6 +1,10 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
+import { ApiException } from "../common/api-exception";
+import { CredentialsService } from "../byok/credentials.service";
 import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
+import { UpstreamAuthError } from "../providers/provider-adapter";
+import { ProviderRegistry } from "../providers/provider-registry.service";
 import { TasksService } from "./tasks.service";
 import type { ImageResultItem, InternalTask, VideoResultItem } from "./task.types";
 
@@ -22,6 +26,8 @@ export class TaskProcessorService {
   constructor(
     private readonly tasks: TasksService,
     private readonly deepseek: DeepSeekTextProvider,
+    private readonly credentials: CredentialsService,
+    private readonly registry: ProviderRegistry,
   ) {}
 
   async execute(taskId: string): Promise<void> {
@@ -50,7 +56,7 @@ export class TaskProcessorService {
     } catch (error) {
       await this.tasks.fail(
         taskId,
-        30001,
+        error instanceof ApiException ? error.code : 30001,
         error instanceof Error ? error.message : "上游模型失败",
       );
     } finally {
@@ -59,6 +65,11 @@ export class TaskProcessorService {
   }
 
   private async runText(task: InternalTask): Promise<void> {
+    if (task.credentialId) {
+      await this.runByokText(task);
+      return;
+    }
+
     if (this.deepseek.isModel(task.modelId)) {
       await sleep(150);
       if (!(await this.tasks.isActive(task.taskId))) return;
@@ -113,7 +124,89 @@ export class TaskProcessorService {
     ]);
   }
 
+  private async runByokText(task: InternalTask): Promise<void> {
+    const credentialId = task.credentialId;
+    if (!credentialId) return;
+
+    await sleep(120);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 40);
+
+    let resolved;
+    try {
+      resolved = await this.credentials.resolve(credentialId);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        await this.tasks.fail(task.taskId, error.code, error.message);
+        return;
+      }
+      throw error;
+    }
+
+    const adapter = this.registry.get(resolved.provider.adapter);
+    if (!adapter.generateText) {
+      throw new ApiException(30001, "当前供应商暂不支持文本生成", 400);
+    }
+
+    if (!(await this.tasks.isActive(task.taskId))) return;
+
+    let result;
+    try {
+      result = await adapter.generateText(
+        {
+          baseUrl: resolved.provider.baseUrl,
+          apiKey: resolved.apiKey,
+          authType: resolved.provider.authType,
+          timeoutMs: resolved.provider.timeoutMs,
+          ...(resolved.provider.extra &&
+          typeof resolved.provider.extra === "object" &&
+          !Array.isArray(resolved.provider.extra)
+            ? { extra: resolved.provider.extra as Record<string, unknown> }
+            : {}),
+        },
+        {
+          model: task.providerModel ?? task.modelId,
+          prompt: task.request.prompt,
+          ...(task.request.params.systemPrompt
+            ? { systemPrompt: task.request.params.systemPrompt }
+            : {}),
+          ...(task.request.params.temperature !== undefined
+            ? { temperature: task.request.params.temperature }
+            : {}),
+          ...(task.request.params.maxOutputTokens !== undefined
+            ? { maxOutputTokens: task.request.params.maxOutputTokens }
+            : {}),
+        },
+      );
+    } catch (error) {
+      if (error instanceof UpstreamAuthError) {
+        await this.credentials.markInvalid(credentialId);
+        await this.tasks.fail(task.taskId, 30001, "API Key 已失效，请重新绑定");
+        return;
+      }
+      throw error;
+    }
+
+    await this.credentials.touch(credentialId);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+
+    await this.tasks.complete(task.taskId, [
+      {
+        id: `item_${randomUUID()}`,
+        kind: "text",
+        text: result.text,
+        modelId: task.modelId,
+        createdAt: new Date().toISOString(),
+        ...(result.usage ? { usage: result.usage } : {}),
+        ...(result.finishReason ? { finishReason: result.finishReason } : {}),
+      },
+    ]);
+  }
+
   private async runImage(task: InternalTask): Promise<void> {
+    if (task.credentialId) {
+      throw new ApiException(30001, "当前版本暂不支持图片 BYOK 生成", 400);
+    }
     await sleep(450);
     if (!(await this.tasks.isActive(task.taskId))) return;
     await this.tasks.setProgress(task.taskId, 55);
@@ -134,6 +227,9 @@ export class TaskProcessorService {
   }
 
   private async runVideo(task: InternalTask): Promise<void> {
+    if (task.credentialId) {
+      throw new ApiException(30001, "当前版本暂不支持视频 BYOK 生成", 400);
+    }
     await sleep(600);
     if (!(await this.tasks.isActive(task.taskId))) return;
     await this.tasks.setProgress(task.taskId, 50);

@@ -14,7 +14,13 @@ import { ApiResponseInterceptor } from "./common/api-response.interceptor";
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestFastifyApplication>(
     AppModule,
-    new FastifyAdapter({ logger: true, bodyLimit: 2 * 1024 * 1024 }),
+    new FastifyAdapter({
+      logger: {
+        level: "info",
+        redact: ["req.headers.authorization", "req.body.apiKey", "req.body.apiKeyEncrypted"],
+      },
+      bodyLimit: 2 * 1024 * 1024,
+    }),
   );
   const config = app.get(ConfigService);
 

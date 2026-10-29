@@ -70,6 +70,11 @@ export function mockModels(): AiModel[] {
   return MOCK_MODELS.map((model) => ({ ...model }));
 }
 
+export function clearModelCache(): void {
+  cached = null;
+  cachedAt = 0;
+}
+
 export async function listModels(kind?: ModelKind, force = false): Promise<AiModel[]> {
   if (isAiMock()) {
     return mockModels().filter((model) => !kind || model.kind === kind);

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { describe, expect, it } from "vitest";
 import { ApiException } from "../common/api-exception";
 import { ModelsService } from "../models/models.service";
+import type { ProviderCatalogService } from "../byok/provider-catalog.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { InMemoryTaskRepository } from "./task.repository";
 import { TaskEvents } from "./task.events";
@@ -12,6 +13,11 @@ function createService() {
     new ModelsService(),
     new TaskEvents(),
     new InMemoryTaskRepository(),
+    {
+      resolveGenerationModel: async () => {
+        throw new ApiException(10004, "模型不存在或未开通", 404);
+      },
+    } as unknown as ProviderCatalogService,
   );
 }
 

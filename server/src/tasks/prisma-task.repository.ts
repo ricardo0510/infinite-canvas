@@ -16,6 +16,9 @@ function createData(task: InternalTask): Prisma.TaskCreateInput {
     status: task.status,
     progress: task.progress,
     modelId: task.modelId,
+    providerId: task.providerId ?? null,
+    providerModel: task.providerModel ?? null,
+    credentialId: task.credentialId ?? null,
     mode: task.mode,
     request: task.request as unknown as Prisma.InputJsonValue,
     result: jsonOrNull(task.result),
@@ -52,6 +55,9 @@ function fromRow(row: TaskRow): InternalTask {
     expiresAt: row.expiresAt?.toISOString(),
     userId: row.userId,
     clientRequestId: row.clientRequestId,
+    ...(row.providerId ? { providerId: row.providerId } : {}),
+    ...(row.providerModel ? { providerModel: row.providerModel } : {}),
+    ...(row.credentialId ? { credentialId: row.credentialId } : {}),
     request: row.request as unknown as InternalTask["request"],
   };
 }

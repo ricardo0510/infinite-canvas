@@ -49,6 +49,10 @@ export async function setupAdmin(
           labels: {
             ModelConfig: "模型配置",
             ProviderConfig: "Provider 配置",
+            ProviderModel: "供应商模型",
+            User: "用户",
+            UserProviderCredential: "用户凭据",
+            UserModelPreference: "用户模型偏好",
             Task: "任务",
           },
           resources: {
@@ -87,6 +91,10 @@ export async function setupAdmin(
                 type: "类型",
                 baseUrl: "Base URL",
                 apiKeyEncrypted: "API Key（环境变量）",
+                adapter: "适配器",
+                authType: "鉴权方式",
+                docsUrl: "文档地址",
+                supportsModels: "支持模型同步",
                 model: "模型",
                 timeoutMs: "超时（毫秒）",
                 concurrency: "并发数",
@@ -152,6 +160,38 @@ export async function setupAdmin(
             apiKeyEncrypted: { isVisible: false },
             extra: { type: "mixed" },
           },
+        },
+      },
+      {
+        resource: { model: getModelByName("ProviderModel"), client: prisma },
+        options: {
+          navigation: { name: "模型" },
+          properties: {
+            capabilities: { type: "mixed" },
+          },
+        },
+      },
+      {
+        resource: { model: getModelByName("UserProviderCredential"), client: prisma },
+        options: {
+          navigation: { name: "用户" },
+          actions: {
+            new: false,
+            edit: false,
+            delete: false,
+            bulkDelete: false,
+          },
+          properties: {
+            apiKeyEncrypted: { isVisible: false },
+            keyMask: { isVisible: { list: true, show: true, edit: false } },
+          },
+        },
+      },
+      {
+        resource: { model: getModelByName("User"), client: prisma },
+        options: {
+          navigation: { name: "用户" },
+          actions: { new: false, edit: false, delete: false, bulkDelete: false },
         },
       },
       {
