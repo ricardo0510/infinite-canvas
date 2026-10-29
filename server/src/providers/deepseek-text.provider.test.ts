@@ -12,7 +12,7 @@ function provider(values: Record<string, string> = {}): DeepSeekTextProvider {
     config({
       DEEPSEEK_API_KEY: "test-key",
       DEEPSEEK_BASE_URL: "https://deepseek.test",
-      DEEPSEEK_MODEL: "deepseek-4.1-flash",
+      DEEPSEEK_MODEL: "deepseek-flash",
       DEEPSEEK_TIMEOUT_MS: "5000",
       ...values,
     }),
@@ -56,7 +56,7 @@ describe("DeepSeekTextProvider", () => {
     expect(url).toBe("https://deepseek.test/chat/completions");
     expect(init.method).toBe("POST");
     expect(JSON.parse(String(init.body))).toMatchObject({
-      model: "deepseek-4.1-flash",
+      model: "deepseek-flash",
       stream: false,
       max_tokens: 128,
       temperature: 0.5,
@@ -76,8 +76,8 @@ describe("DeepSeekTextProvider", () => {
 
   it("reports the configured model id", () => {
     const instance = provider();
-    expect(instance.model()).toBe("deepseek-4.1-flash");
-    expect(instance.isModel("deepseek-4.1-flash")).toBe(true);
+    expect(instance.model()).toBe("deepseek-flash");
+    expect(instance.isModel("deepseek-flash")).toBe(true);
     expect(instance.isModel("mock-text")).toBe(false);
   });
 });

@@ -11,7 +11,7 @@ function fallbackModels(config?: ConfigService): AiModel[] {
   const models = [...SEED_MODELS];
   const apiKey = config?.get<string>("DEEPSEEK_API_KEY")?.trim();
   if (apiKey) {
-    const modelId = config?.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-4.1-flash";
+    const modelId = config?.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-flash";
     if (!models.some((model) => model.id === modelId)) {
       models.unshift({
         id: modelId,

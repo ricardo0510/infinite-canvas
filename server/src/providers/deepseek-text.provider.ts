@@ -28,7 +28,7 @@ export class DeepSeekTextProvider {
       /\/+$/,
       "",
     );
-    this.modelId = config.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-4.1-flash";
+    this.modelId = config.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-flash";
     this.timeoutMs = Number(config.get<string>("DEEPSEEK_TIMEOUT_MS") ?? 120_000);
   }
 

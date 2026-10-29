@@ -17,7 +17,7 @@
 ```bash
 DEEPSEEK_API_KEY=sk-...
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-4.1-flash
+DEEPSEEK_MODEL=deepseek-flash
 DEEPSEEK_TIMEOUT_MS=120000
 ```
 

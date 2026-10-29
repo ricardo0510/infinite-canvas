@@ -34,7 +34,7 @@ async function main(): Promise<void> {
     },
   });
 
-  const deepseekModel = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-4.1-flash";
+  const deepseekModel = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
   await prisma.providerConfig.upsert({
     where: { id: "deepseek" },
     update: {},
