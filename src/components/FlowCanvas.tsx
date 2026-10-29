@@ -12,15 +12,15 @@ import {
   type NodeChange,
   type NodeTypes,
   type OnConnectEnd,
-  type OnNodeDrag,
 } from "@xyflow/react";
 import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from "react";
-import { byId, GRID_SIZE, nodeRect } from "../lib/geometry";
+import { GRID_SIZE } from "../lib/geometry";
 import { isEditableTarget } from "../lib/dom";
 import { buildStressSnapshot } from "../lib/stress";
-import { computeGuidesForDragging, snapDragChanges, type Guide } from "../lib/guides";
+import { snapDragChanges } from "../lib/guides";
 import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
 import { useImageDrop } from "../hooks/useImageDrop";
+import { useNodeGrouping } from "../hooks/useNodeGrouping";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
@@ -80,7 +80,6 @@ export function FlowCanvas() {
   const onEdgesChange = useCanvasStore((state) => state.onEdgesChange);
   const onConnect = useCanvasStore((state) => state.onConnect);
   const isValidConnection = useCanvasStore((state) => state.isValidConnection);
-  const commit = useCanvasStore((state) => state.commit);
   const addNode = useCanvasStore((state) => state.addNode);
   const raiseNode = useCanvasStore((state) => state.raiseNode);
   const setViewport = useCanvasStore((state) => state.setViewport);
@@ -99,8 +98,9 @@ export function FlowCanvas() {
   const flowStore = useStoreApi();
   const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
   const { dragOver, handleDragOver, handleDragLeave, handleDrop } = useImageDrop();
+  const { guides, clearGuides, handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
+    useNodeGrouping();
   const [menu, setMenu] = useState<ContextMenuState | null>(null);
-  const [guides, setGuides] = useState<Guide[]>([]);
 
   useEffect(() => {
     if (nodes.length >= MINIMAP_AUTO_HIDE) setMiniMap(false);
@@ -220,82 +220,6 @@ export function FlowCanvas() {
     openMenu(event, node.selected && selected.length > 0 ? selected : [node.id]);
   };
 
-  const handleNodeDragStart: OnNodeDrag<CanvasNode> = useCallback(
-    (_event, node) => {
-      commit();
-      raiseNode(node.id);
-    },
-    [commit, raiseNode],
-  );
-
-  const handleNodeDrag: OnNodeDrag<CanvasNode> = useCallback(
-    () => {
-      const zoom = flowStore.getState().transform[2] || 1;
-      setGuides(computeGuidesForDragging(useCanvasStore.getState().nodes, zoom));
-    },
-    [flowStore],
-  );
-
-  const handleNodeDragStop: OnNodeDrag<CanvasNode> = useCallback(
-    (_event, _node, draggedNodes) => {
-      setGuides([]);
-      // Dragging a group moves its children; it never enters another group.
-      if (draggedNodes.some((node) => node.type === "group")) return;
-
-      for (const dragged of draggedNodes) {
-        const state = useCanvasStore.getState();
-        const index = byId(state.nodes);
-        const live = index.get(dragged.id);
-        if (!live) continue;
-
-        const rect = nodeRect(live, index);
-        const centerX = rect.x + rect.width / 2;
-        const centerY = rect.y + rect.height / 2;
-        const currentParent = live.parentId ?? null;
-
-        // Pick the smallest containing group so nested groups behave sensibly.
-        let target: CanvasNode | null = null;
-        let targetArea = Number.POSITIVE_INFINITY;
-        for (const candidate of state.nodes) {
-          if (candidate.type !== "group" || candidate.id === currentParent) continue;
-          const groupRect = nodeRect(candidate, index);
-          const inside =
-            centerX >= groupRect.x &&
-            centerX <= groupRect.x + groupRect.width &&
-            centerY >= groupRect.y &&
-            centerY <= groupRect.y + groupRect.height;
-          if (!inside) continue;
-          const area = groupRect.width * groupRect.height;
-          if (area < targetArea) {
-            target = candidate;
-            targetArea = area;
-          }
-        }
-
-        if (target) {
-          state.reparentNode(live.id, target.id);
-          continue;
-        }
-
-        if (currentParent) {
-          const parent = index.get(currentParent);
-          if (!parent) {
-            state.reparentNode(live.id, null);
-            continue;
-          }
-          const parentRect = nodeRect(parent, index);
-          const inside =
-            centerX >= parentRect.x &&
-            centerX <= parentRect.x + parentRect.width &&
-            centerY >= parentRect.y &&
-            centerY <= parentRect.y + parentRect.height;
-          if (!inside) state.reparentNode(live.id, null);
-        }
-      }
-    },
-    [],
-  );
-
   // Dropping a connection on empty canvas opens the add-node menu and connects
   // the new node in the direction the user dragged.
   const handleConnectEnd: OnConnectEnd = useCallback(
@@ -350,7 +274,7 @@ export function FlowCanvas() {
         onPaneContextMenu={handlePaneContextMenu}
         onNodeContextMenu={handleNodeContextMenu}
         onPaneClick={() => {
-          setGuides([]);
+          clearGuides();
           setAiPanelNode(null);
         }}
         onMoveEnd={(_event, viewport) => setViewport(viewport)}
