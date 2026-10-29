@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Select } from "./Control";
 
 type FieldProps = {
   label: string;
@@ -8,7 +9,7 @@ type FieldProps = {
 
 export function Field({ label, children, className }: FieldProps) {
   return (
-    <label className={className ? `ai-field ${className}` : "ai-field"}>
+    <label className={className ? `field ${className}` : "field"}>
       <span>{label}</span>
       {children}
     </label>
@@ -28,7 +29,7 @@ type SelectFieldProps = {
 export function SelectField({ label, value, options, disabled, onChange }: SelectFieldProps) {
   return (
     <Field label={label}>
-      <select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
+      <Select value={value} disabled={disabled} onChange={(event) => onChange(event.target.value)}>
         {options.map((option) => {
           const optionValue = typeof option === "string" ? option : option.value;
           const optionLabel = typeof option === "string" ? option : option.label;
@@ -38,7 +39,7 @@ export function SelectField({ label, value, options, disabled, onChange }: Selec
             </option>
           );
         })}
-      </select>
+      </Select>
     </Field>
   );
 }

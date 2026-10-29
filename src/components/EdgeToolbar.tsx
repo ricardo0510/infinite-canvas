@@ -4,6 +4,7 @@ import { NOTE_COLORS, DEFAULT_EDGE_STROKE } from "../lib/theme";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NoteColor } from "../types";
 import { Button } from "./ui/Button";
+import { Input } from "./ui/Control";
 
 const DEFAULT_STROKE = DEFAULT_EDGE_STROKE;
 
@@ -82,7 +83,8 @@ export function EdgeToolbar() {
 
   return (
     <div className="selection-toolbar edge-toolbar" role="toolbar" aria-label="连线样式">
-      <input
+      <Input
+        controlSize="sm"
         className="edge-label-input"
         value={typeof edge.label === "string" ? edge.label : ""}
         placeholder="连线标签"

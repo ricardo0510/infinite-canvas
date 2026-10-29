@@ -1,3 +1,5 @@
+@use "surfaces" as surface;
+
 .empty-state {
   position: absolute;
   inset: 0;
@@ -8,15 +10,18 @@
 }
 
 .empty-card {
+  @include surface.card(
+    var(--border),
+    var(--radius-3xl),
+    rgb(17 20 27 / 88%),
+    var(--shadow-xl),
+    14px
+  );
+
   max-width: 420px;
   padding: 26px 28px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-3xl);
-  background: rgb(17 20 27 / 88%);
-  box-shadow: var(--shadow-xl);
   text-align: center;
   pointer-events: auto;
-  backdrop-filter: blur(14px);
 }
 
 .empty-card h2 {

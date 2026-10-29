@@ -4,6 +4,7 @@ import { MIN_SIZE } from "../../lib/geometry";
 import { NOTE_COLORS } from "../../lib/theme";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { GroupNodeModel } from "../../types";
+import { Input } from "../ui/Control";
 import { NodeColors } from "./NodeColors";
 import { nodePropsEqual } from "./nodePropsEqual";
 
@@ -26,7 +27,9 @@ function GroupNodeImpl({ id, data, selected }: NodeProps<GroupNodeModel>) {
       />
       <div className="group-head">
         <span className="node-dot" />
-        <input
+        <Input
+          variant="bare"
+          controlSize="xs"
           className="nodrag group-label"
           value={data.label}
           placeholder="分组"

@@ -6,6 +6,7 @@ import { useCanvasStore } from "../store/canvasStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 import { Button } from "./ui/Button";
+import { Input } from "./ui/Control";
 
 type Command = {
   id: string;
@@ -213,7 +214,9 @@ function CommandPaletteSession() {
         aria-label="命令面板"
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <input
+        <Input
+          variant="bare"
+          controlSize="lg"
           className="command-input"
           value={query}
           placeholder="搜索命令和模板…"

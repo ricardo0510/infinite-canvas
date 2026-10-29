@@ -1,18 +1,18 @@
+@use "surfaces" as surface;
+
 .edge-label {
+  @include surface.card(var(--border), var(--radius-full), rgb(17 20 27 / 88%), none, 6px);
+
   position: absolute;
   max-width: 200px;
   padding: 2px 7px;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  background: rgb(17 20 27 / 88%);
   color: var(--text-2);
   font-size: var(--font-xs);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
   pointer-events: none;
-  backdrop-filter: blur(6px);
 }
 
 .edge-toolbar {
@@ -22,22 +22,7 @@
 
 .edge-label-input {
   width: 128px;
-  height: 26px;
-  padding: 0 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  outline: none;
   background: var(--inset);
-  color: var(--text);
-  font-size: var(--font-xs);
-}
-
-.edge-label-input:focus {
-  border-color: var(--accent);
-}
-
-.edge-label-input::placeholder {
-  color: var(--muted);
 }
 
 .edge-color-button {

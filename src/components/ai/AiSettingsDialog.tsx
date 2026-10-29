@@ -3,6 +3,7 @@ import { useUiStore } from "../../store/uiStore";
 import { getAiApiBase, getAiRealtimeBase, isAiMock, setAiRuntimeConfig } from "../../lib/ai/config";
 import { getAiToken } from "../../lib/ai/auth";
 import { Button } from "../ui/Button";
+import { Input } from "../ui/Control";
 import { DialogHeader } from "../ui/DialogHeader";
 import { Field } from "../ui/Field";
 import { Modal } from "../ui/Modal";
@@ -27,21 +28,21 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
             : "当前使用真实 AI 接口。"}
         </p>
         <Field label="接口地址">
-          <input
+          <Input
             value={apiBase}
             placeholder="https://api.example.com/v1"
             onChange={(event) => setApiBase(event.target.value)}
           />
         </Field>
         <Field label="实时通道地址（可选）">
-          <input
+          <Input
             value={realtimeBase}
             placeholder="wss://api.example.com"
             onChange={(event) => setRealtimeBase(event.target.value)}
           />
         </Field>
         <Field label="访问令牌">
-          <input
+          <Input
             type="password"
             value={token}
             placeholder="访问令牌"

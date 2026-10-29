@@ -7,6 +7,7 @@ import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 import { Button } from "./ui/Button";
+import { Input } from "./ui/Control";
 
 const ADD_ITEMS: { kind: NodeKind; label: string; glyph: string; title: string }[] = [
   { kind: "text", label: "文本", glyph: "T", title: "添加文本" },
@@ -154,7 +155,7 @@ export function Toolbar() {
         <span aria-hidden="true">×</span>
         <span className="tool-label">清空</span>
       </Button>
-      <input
+      <Input
         ref={fileInput}
         type="file"
         accept="application/json,.json"

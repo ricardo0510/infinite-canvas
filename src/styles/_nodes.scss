@@ -1,3 +1,5 @@
+@use "surfaces" as surface;
+
 .react-flow__handle {
   z-index: var(--z-handle);
   width: 10px;
@@ -23,16 +25,14 @@
 /* ---------- Shared node frame ---------- */
 
 .ai-node {
+  @include surface.node;
+
   position: relative;
   display: flex;
   width: 100%;
   height: 100%;
   flex-direction: column;
   overflow: visible;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-  background: var(--gradient-node);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 32%);
   color: var(--text);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
@@ -99,14 +99,8 @@
 .node-title-input {
   flex: 1 1 auto;
   min-width: 0;
-  height: 22px;
-  padding: 0 5px;
-  border: 1px solid color-mix(in srgb, var(--node-accent) 60%, transparent);
-  border-radius: 5px;
-  outline: none;
-  background: var(--bg);
-  color: var(--text);
-  font-size: var(--font-sm);
+  border-color: color-mix(in srgb, var(--node-accent) 60%, transparent);
+  border-radius: var(--radius-xs);
 }
 
 .node-body {
@@ -130,9 +124,10 @@
   width: 100%;
   height: 100%;
   min-height: 0;
-  padding: var(--space-2) 10px;
+  padding: 8px 10px;
   overflow-y: auto;
   border: 0;
+  border-radius: 0;
   outline: none;
   background: transparent;
   color: var(--text);
@@ -190,13 +185,8 @@
   right: 6px;
   bottom: 6px;
   left: 6px;
-  margin: 0;
   padding: var(--space-1) 6px;
-  border-radius: var(--radius-sm);
-  background: rgb(248 113 113 / 16%);
-  color: var(--danger-soft);
   font-size: var(--font-2xs);
-  line-height: 1.4;
   pointer-events: none;
 }
 
@@ -254,10 +244,6 @@
 .group-label {
   flex: 1 1 auto;
   min-width: 0;
-  padding: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
   color: var(--node-accent);
   font-size: var(--font-xs);
   font-weight: 650;
@@ -346,15 +332,12 @@
 /* ---------- Node selection toolbar ---------- */
 
 .node-selection-toolbar {
+  @include surface.floating;
+
   display: flex;
   align-items: center;
   gap: var(--space-1);
   padding: var(--space-1);
-  border: 1px solid var(--border-strong);
-  border-radius: 9px;
-  background: rgb(15 18 24 / 96%);
-  box-shadow: 0 10px 30px rgb(0 0 0 / 45%);
-  backdrop-filter: blur(10px);
 }
 
 

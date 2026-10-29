@@ -42,3 +42,40 @@
   background: var(--panel-raised);
   box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
 }
+
+@mixin node {
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-xl);
+  background: var(--gradient-node);
+  box-shadow: 0 10px 28px rgb(0 0 0 / 32%);
+}
+
+@mixin floating(
+  $radius: var(--radius-lg),
+  $bg: rgb(15 18 24 / 96%),
+  $shadow: 0 10px 30px rgb(0 0 0 / 45%),
+  $blur: 10px
+) {
+  border: 1px solid var(--border-strong);
+  border-radius: $radius;
+  background: $bg;
+  box-shadow: $shadow;
+  backdrop-filter: blur($blur);
+}
+
+@mixin card(
+  $border: var(--border-strong),
+  $radius: var(--radius-3xl),
+  $bg: var(--panel),
+  $shadow: var(--shadow-xl),
+  $blur: null
+) {
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $bg;
+  box-shadow: $shadow;
+
+  @if $blur != null {
+    backdrop-filter: blur($blur);
+  }
+}

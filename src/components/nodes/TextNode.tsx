@@ -3,6 +3,7 @@ import { memo, useRef } from "react";
 import { NOTE_COLORS } from "../../lib/theme";
 import { useCanvasStore } from "../../store/canvasStore";
 import type { TextNodeModel } from "../../types";
+import { Textarea } from "../ui/Control";
 import { NodeColors } from "./NodeColors";
 import { NodeEmptyState } from "./NodeEmptyState";
 import { NodeFrame } from "./NodeFrame";
@@ -49,7 +50,7 @@ function TextNodeImpl({ id, data, selected }: NodeProps<TextNodeModel>) {
       }
     >
       {hasText ? (
-        <textarea
+        <Textarea
           className="nodrag nowheel node-textarea"
           value={data.text}
           aria-label="文本内容"

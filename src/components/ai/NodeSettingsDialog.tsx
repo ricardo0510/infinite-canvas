@@ -2,6 +2,7 @@ import type { GenerationMeta, GenerationParams, GenerationResultItem } from "../
 import { activateResult, patchGeneration } from "../../lib/ai/controller";
 import type { AiModel } from "../../lib/ai/types";
 import { Button } from "../ui/Button";
+import { Input, Textarea } from "../ui/Control";
 import { DialogHeader } from "../ui/DialogHeader";
 import { Field, SelectField } from "../ui/Field";
 import { Modal } from "../ui/Modal";
@@ -66,7 +67,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
               onChange={(value) => updateParams({ resolution: value })}
             />
             <Field label="数量">
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={imageOutput.maxCount}
@@ -95,7 +96,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
               onChange={(value) => updateParams({ resolution: value })}
             />
             <Field label="时长（秒）">
-              <input
+              <Input
                 type="number"
                 min={videoOutput.minDuration}
                 max={videoOutput.maxDuration}
@@ -132,7 +133,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
         {generation.kind === "text" ? (
           <>
             <Field label="系统提示词">
-              <textarea
+              <Textarea
                 rows={3}
                 value={generation.params?.systemPrompt ?? ""}
                 disabled={running}
@@ -140,7 +141,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
               />
             </Field>
             <Field label="温度">
-              <input
+              <Input
                 type="number"
                 min={0}
                 max={2}
@@ -151,7 +152,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
               />
             </Field>
             <Field label="最大输出长度">
-              <input
+              <Input
                 type="number"
                 min={1}
                 max={32768}
@@ -165,7 +166,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
 
         {imageOutput || videoOutput ? (
           <Field label="负向提示词">
-            <textarea
+            <Textarea
               rows={2}
               value={generation.params?.negativePrompt ?? ""}
               disabled={running}
@@ -176,7 +177,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
 
         {videoOutput?.supportsAudio ? (
           <label className="ai-check">
-            <input
+            <Input
               type="checkbox"
               checked={generation.params?.generateAudio === true}
               disabled={running}

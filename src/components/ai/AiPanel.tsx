@@ -9,6 +9,7 @@ import { cancelGeneration, defaultGeneration, generateNode, kindOfNode, patchGen
 import { defaultParams } from "../../lib/ai/models";
 import { useAiModels } from "../../lib/ai/useModels";
 import { Button } from "../ui/Button";
+import { Select, Textarea } from "../ui/Control";
 import { NodeSettingsDialog } from "./NodeSettingsDialog";
 
 function isRunning(generation: GenerationMeta): boolean {
@@ -90,7 +91,7 @@ export function AiPanel() {
           onPointerDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
         >
-          <textarea
+          <Textarea
             className="ai-prompt"
             value={generation.prompt}
             placeholder={kind === "text" ? "写下你想生成的内容…" : "描述你想生成的画面，可连接上游素材…"}
@@ -107,7 +108,7 @@ export function AiPanel() {
           />
 
           <div className="ai-panel-bottom">
-            <select
+            <Select
               className="ai-model-select"
               value={model?.id ?? ""}
               aria-label="Model"
@@ -122,7 +123,7 @@ export function AiPanel() {
                   {item.name}
                 </option>
               ))}
-            </select>
+            </Select>
             <Button
               size="md"
               disabled={running || !model}
@@ -143,11 +144,13 @@ export function AiPanel() {
           </div>
 
           {generation.error ? (
-            <p className="ai-error" role="alert">
+            <p className="error-banner ai-error" role="alert">
               {generation.error.message}
             </p>
           ) : null}
-          {modelsState.error ? <p className="ai-error">{modelsState.error}</p> : null}
+          {modelsState.error ? (
+            <p className="error-banner ai-error">{modelsState.error}</p>
+          ) : null}
         </div>
       </NodeToolbar>
 

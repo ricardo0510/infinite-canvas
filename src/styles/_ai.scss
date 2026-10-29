@@ -1,6 +1,15 @@
+@use "surfaces" as surface;
+
 /* ---------- AI prompt panel ---------- */
 
 .ai-panel {
+  @include surface.floating(
+    var(--radius-2xl),
+    rgb(15 18 24 / 98%),
+    0 24px 60px rgb(0 0 0 / 55%),
+    14px
+  );
+
   position: relative;
   display: flex;
   width: 560px;
@@ -10,11 +19,6 @@
   gap: 10px;
   overflow-y: auto;
   padding: var(--space-3);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-2xl);
-  background: rgb(15 18 24 / 98%);
-  box-shadow: 0 24px 60px rgb(0 0 0 / 55%);
-  backdrop-filter: blur(14px);
 }
 
 .ai-panel-compact {
@@ -22,26 +26,15 @@
 }
 
 .ai-prompt {
-  width: 100%;
   min-height: 96px;
   padding: 10px;
-  border: 1px solid var(--border);
   border-radius: 9px;
-  outline: none;
   background: var(--inset-3);
-  color: var(--text);
   font-size: var(--font-md);
-  line-height: 1.5;
-  resize: vertical;
 }
 
 .ai-prompt:focus {
-  border-color: var(--accent);
   box-shadow: 0 0 0 2px rgb(139 92 246 / 16%);
-}
-
-.ai-prompt::placeholder {
-  color: var(--muted);
 }
 
 .ai-panel-bottom {
@@ -51,84 +44,20 @@
 }
 
 .ai-model-select {
-  height: 30px;
+  width: auto;
   max-width: 220px;
-  min-width: 0;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  outline: none;
-  background: var(--inset-2);
-  color: var(--text);
-  font-size: var(--font-xs);
 }
-
-.ai-model-select:focus {
-  border-color: var(--accent);
-}
-
-.ai-model-select:disabled {
-  opacity: 0.55;
-}
-
-
-
 
 .ai-generate-button {
   margin-left: auto;
 }
 
 .ai-error {
-  margin: 0;
   padding: 6px var(--space-2);
-  border-radius: 7px;
-  background: rgb(248 113 113 / 14%);
-  color: var(--danger-soft);
   font-size: var(--font-xs);
-  line-height: 1.45;
 }
 
 /* ---------- Shared form fields ---------- */
-
-.ai-field {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-  min-width: 0;
-}
-
-.ai-field > span {
-  color: var(--muted);
-  font-size: var(--font-xs);
-  font-weight: 600;
-}
-
-.ai-field input,
-.ai-field select,
-.ai-field textarea {
-  width: 100%;
-  min-width: 0;
-  padding: 7px var(--space-2);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  outline: none;
-  background: var(--inset-2);
-  color: var(--text);
-  font-size: var(--font-sm);
-  resize: vertical;
-}
-
-.ai-field input:focus,
-.ai-field select:focus,
-.ai-field textarea:focus {
-  border-color: var(--accent);
-}
-
-.ai-field input:disabled,
-.ai-field select:disabled,
-.ai-field textarea:disabled {
-  opacity: 0.55;
-}
 
 .ai-check {
   display: flex;
@@ -146,10 +75,6 @@
   gap: 6px;
   padding-top: 2px;
 }
-
-
-
-
 
 .ai-result-text {
   display: -webkit-box;
@@ -179,13 +104,6 @@
 }
 
 /* ---------- Buttons ---------- */
-
-
-
-
-
-
-
 
 /* ---------- AI settings ---------- */
 

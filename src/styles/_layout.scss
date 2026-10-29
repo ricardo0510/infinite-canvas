@@ -1,3 +1,5 @@
+@use "surfaces" as surface;
+
 .app {
   display: flex;
   flex-direction: column;
@@ -70,6 +72,8 @@
 }
 
 .statusbar {
+  @include surface.card(var(--border), var(--radius-md), rgb(17 20 27 / 78%), none, 10px);
+
   position: absolute;
   bottom: var(--space-3);
   left: 50%;
@@ -79,13 +83,9 @@
   align-items: center;
   gap: 7px;
   padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: rgb(17 20 27 / 78%);
   color: var(--muted);
   font-size: var(--font-xs);
   pointer-events: none;
-  backdrop-filter: blur(10px);
 }
 
 .statusbar-sep {

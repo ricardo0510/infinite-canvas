@@ -43,7 +43,7 @@ export function NodeFrame({
       <div className="node-body nowheel">
         {children}
         {error ? (
-          <p className="node-error" role="alert">
+          <p className="error-banner node-error" role="alert">
             {error}
           </p>
         ) : null}

@@ -1,0 +1,83 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.field > span {
+  color: var(--muted);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.control {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  outline: none;
+  background: var(--inset-2);
+  color: var(--text);
+  font: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.control::placeholder {
+  color: var(--muted);
+}
+
+.control:focus {
+  border-color: var(--accent);
+}
+
+.control:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.control--xs {
+  height: 22px;
+  padding: 0 6px;
+  font-size: var(--font-2xs);
+}
+
+.control--sm {
+  height: 26px;
+  padding: 0 8px;
+  font-size: var(--font-xs);
+}
+
+.control--md {
+  height: 30px;
+  padding: 0 10px;
+  font-size: var(--font-sm);
+}
+
+.control--lg {
+  height: 32px;
+  padding: 0 12px;
+  font-size: var(--font-md);
+}
+
+.control--area {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.control--bare {
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
+
+.control--bare:focus {
+  border-color: transparent;
+}
+
+select.control {
+  cursor: pointer;
+}

@@ -1,5 +1,6 @@
 import { useRef, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
 import { useCanvasStore } from "../../store/canvasStore";
+import { Input } from "../ui/Control";
 
 type NodeTitleBarProps = {
   id: string;
@@ -45,8 +46,9 @@ export function NodeTitleBar({ id, title, defaultTitle, actions }: NodeTitleBarP
     <div className="node-head">
       <span className="node-dot" aria-hidden="true" />
       {editing ? (
-        <input
+        <Input
           ref={inputRef}
+          controlSize="xs"
           className="nodrag node-title-input"
           value={draft}
           aria-label="节点标题"
