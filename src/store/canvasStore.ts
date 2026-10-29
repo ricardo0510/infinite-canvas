@@ -319,7 +319,7 @@ type CanvasState = {
   removeSelected: () => void;
   copySelected: () => void;
   duplicateSelected: () => void;
-  paste: () => void;
+  paste: (anchor?: { x: number; y: number }) => void;
   undo: () => void;
   redo: () => void;
   clear: () => void;
@@ -659,14 +659,19 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     });
   },
 
-  paste: () => {
+  paste: (anchor) => {
     const { clipboard } = get();
     if (!clipboard || clipboard.nodes.length === 0) return;
+    let offset = { x: PASTE_OFFSET, y: PASTE_OFFSET };
+    if (anchor) {
+      const roots = clipboard.nodes.filter((node) => !node.parentId);
+      const base = roots.length > 0 ? roots : clipboard.nodes;
+      const minX = Math.min(...base.map((node) => node.position.x));
+      const minY = Math.min(...base.map((node) => node.position.y));
+      offset = { x: anchor.x - minX, y: anchor.y - minY };
+    }
     get().commit();
-    const clone = cloneSelection(clipboard.nodes, clipboard.edges, {
-      x: PASTE_OFFSET,
-      y: PASTE_OFFSET,
-    });
+    const clone = cloneSelection(clipboard.nodes, clipboard.edges, offset);
     set({
       nodes: [...get().nodes.map((node) => ({ ...node, selected: false })), ...clone.nodes],
       edges: [...get().edges, ...clone.edges],

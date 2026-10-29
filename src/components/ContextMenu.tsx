@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { XYPosition } from "@xyflow/react";
 import { createUploadedNode } from "../lib/upload";
+import { getPasteAnchor } from "../lib/pasteAnchor";
 import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
@@ -232,7 +233,7 @@ export function ContextMenu({ menu, onClose }: ContextMenuProps) {
             size="sm"
             block
             role="menuitem"
-            onClick={() => run(paste)}
+            onClick={() => run(() => paste(getPasteAnchor() ?? undefined))}
             disabled={!hasClipboard}
           >
             粘贴 <kbd>Ctrl V</kbd>

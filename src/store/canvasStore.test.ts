@@ -280,6 +280,15 @@ describe("clipboard", () => {
     useCanvasStore.getState().paste();
     expect(useCanvasStore.getState().nodes).toHaveLength(2);
   });
+
+  it("pastes at the pointer anchor", () => {
+    const a = add("text", 120, 80);
+    useCanvasStore.getState().selectNodes([a]);
+    useCanvasStore.getState().copySelected();
+    useCanvasStore.getState().paste({ x: 500, y: 400 });
+    const pasted = useCanvasStore.getState().nodes[1];
+    expect(pasted.position).toEqual({ x: 500, y: 400 });
+  });
 });
 
 describe("arrange", () => {

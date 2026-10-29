@@ -15,6 +15,7 @@ import {
 } from "@xyflow/react";
 import { lazy, Suspense, useCallback, useEffect, useState, type MouseEvent } from "react";
 import { GRID_SIZE } from "../lib/geometry";
+import { setPasteAnchor } from "../lib/pasteAnchor";
 import { buildStressSnapshot } from "../lib/stress";
 import { snapDragChanges } from "../lib/guides";
 import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
@@ -158,13 +159,19 @@ export function FlowCanvas() {
     const targetNodes = targetIds
       .map((id) => nodes.find((node) => node.id === id))
       .filter((node): node is CanvasNode => Boolean(node));
+    const point = screenToFlowPosition({ x: event.clientX, y: event.clientY });
+    setPasteAnchor(point);
     setMenu({
       x: event.clientX,
       y: event.clientY,
-      flow: screenToFlowPosition({ x: event.clientX, y: event.clientY }),
+      flow: point,
       targetIds,
       hasGroup: targetNodes.some((node) => node.type === "group"),
     });
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    setPasteAnchor(screenToFlowPosition({ x: event.clientX, y: event.clientY }));
   };
 
   const handlePaneContextMenu = (event: MouseEvent | globalThis.MouseEvent) => {
@@ -209,6 +216,7 @@ export function FlowCanvas() {
     <div
       className="canvas"
       onDoubleClick={handleDoubleClick}
+      onPointerMove={handlePointerMove}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

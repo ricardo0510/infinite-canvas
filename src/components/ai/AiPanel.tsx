@@ -98,7 +98,6 @@ export function AiPanel() {
             placeholder={kind === "text" ? "写下你想生成的内容…" : "描述你想生成的画面，可连接上游素材…"}
             aria-label="Prompt"
             rows={5}
-            autoFocus
             onChange={(event) => patchGeneration(nodeId, { prompt: event.target.value })}
             onKeyDown={(event) => {
               if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
