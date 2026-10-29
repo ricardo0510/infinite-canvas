@@ -170,22 +170,15 @@ export function FlowCanvas() {
     });
   };
 
-  useEffect(() => {
-    const onContextMenu = (event: globalThis.MouseEvent) => {
-      const target = event.target;
-      if (!(target instanceof Element)) return;
-      // 弹窗与 AI 输入框保留浏览器原生菜单，方便复制/粘贴文本。
-      if (target.closest(".modal, .help-modal, .ai-panel, .command-palette")) return;
-      event.preventDefault();
-    };
-    window.addEventListener("contextmenu", onContextMenu, true);
-    return () => window.removeEventListener("contextmenu", onContextMenu, true);
-  }, []);
-
   const handleCanvasContextMenu = (event: React.MouseEvent<HTMLDivElement>) => {
     const target = event.target;
-    if (target instanceof Element && target.closest(".ai-panel")) return;
-    event.preventDefault();
+    if (!(target instanceof Element)) return;
+    const selectionOverlay = target.closest(
+      ".react-flow__nodesselection, .react-flow__nodesselection-rect, .selection-toolbar, .node-selection-toolbar",
+    );
+    if (!selectionOverlay) return;
+    const selected = nodes.filter((node) => node.selected).map((node) => node.id);
+    if (selected.length > 0) openMenu(event, selected);
   };
 
   const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
