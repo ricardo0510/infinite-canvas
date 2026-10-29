@@ -95,7 +95,7 @@ export function FlowCanvas() {
   const selectedNode = selectedNodes.length === 1 ? selectedNodes[0] : null;
   const setAiPanelNode = useUiStore((state) => state.setAiPanelNode);
   const flowStore = useStoreApi();
-  const { screenToFlowPosition, fitView, setViewport: setFlowViewport } = useReactFlow();
+  const { screenToFlowPosition, setViewport: setFlowViewport } = useReactFlow();
   useCanvasKeys();
   const { dragOver, handleDragOver, handleDragLeave, handleDrop } = useImageDrop();
   const { guides, clearGuides, handleNodeDragStart, handleNodeDrag, handleNodeDragStop } =
@@ -311,7 +311,6 @@ export function FlowCanvas() {
         <ContextMenu
           menu={menu}
           onClose={() => setMenu(null)}
-          onFitView={() => fitView({ padding: 0.2, duration: 300 })}
         />
       ) : null}
     </div>

@@ -22,7 +22,6 @@ export type ContextMenuState = {
 type ContextMenuProps = {
   menu: ContextMenuState;
   onClose: () => void;
-  onFitView: () => void;
 };
 
 const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
@@ -31,7 +30,7 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "video", label: "视频" },
 ];
 
-export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
+export function ContextMenu({ menu, onClose }: ContextMenuProps) {
   const ref = useRef<HTMLDivElement>(null);
   useMenuKeyboard(ref, true);
   const addNode = useCanvasStore((state) => state.addNode);
@@ -237,9 +236,6 @@ export function ContextMenu({ menu, onClose, onFitView }: ContextMenuProps) {
             disabled={!hasClipboard}
           >
             粘贴 <kbd>Ctrl V</kbd>
-          </Button>
-          <Button variant="menu" size="sm" block role="menuitem" onClick={() => run(onFitView)}>
-            适应视图
           </Button>
         </>
       )}

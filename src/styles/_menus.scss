@@ -7,26 +7,66 @@
   z-index: var(--z-menu);
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  padding: 5px;
+  min-width: 208px;
+  padding: 6px;
+  border-radius: var(--radius-xl);
+  background: rgb(18 22 31 / 97%);
+  box-shadow: 0 20px 54px rgb(0 0 0 / 58%);
+  backdrop-filter: blur(14px);
+  animation: context-menu-in 0.12s ease-out;
+}
+
+@keyframes context-menu-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.context-menu .btn--menu {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 7px;
+  font-size: var(--font-xs);
+}
+
+.context-menu .btn--menu:hover:not(:disabled),
+.context-menu .btn--menu.is-active {
+  background: rgb(139 92 246 / 12%);
+  color: var(--text-strong);
+}
+
+.context-menu .btn--menu kbd {
+  opacity: 0.55;
+  font-size: var(--font-2xs);
+}
+
+.context-menu .context-danger {
+  color: var(--danger-soft);
+}
+
+.context-menu .context-danger:hover:not(:disabled) {
+  background: rgb(248 113 113 / 12%);
+  color: var(--danger-soft-2);
 }
 
 .context-label {
-  padding: 6px var(--space-2) var(--space-1);
-  color: var(--muted);
+  padding: 8px 10px 4px;
+  color: var(--faint);
   font-size: var(--font-2xs);
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
 .context-divider {
   height: 1px;
-  margin: var(--space-1) 2px;
+  margin: 6px 4px;
   background: var(--border);
-}
-
-.context-danger {
-  color: var(--danger-soft);
 }
 
 .command-backdrop {
