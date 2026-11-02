@@ -187,7 +187,7 @@ export class ProviderCatalogService {
 
   async listProviders(userId: string): Promise<PublicProvider[]> {
     const providers = await this.prisma.providerConfig.findMany({
-      where: { enabled: true, supportsModels: true },
+      where: { enabled: true },
       orderBy: { name: "asc" },
     });
     const credentials = await this.prisma.userProviderCredential.findMany({

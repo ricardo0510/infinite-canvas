@@ -68,6 +68,60 @@ const PROVIDER_MODELS: SeedProviderModel[] = [
       maxPromptLength: 2000,
     },
   },
+  {
+    providerId: "zhipu",
+    modelId: "cogvideox-flash",
+    displayName: "CogVideoX Flash",
+    kind: "video",
+    capabilities: {
+      source: "智谱 BigModel API 定价",
+      verifiedAt: "2026-11-02",
+      modes: ["textToVideo", "imageToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1", "4:3", "3:4"],
+      resolutions: ["1080p"],
+      minDuration: 5,
+      maxDuration: 5,
+      supportsAudio: false,
+      maxImages: 1,
+      maxPromptLength: 512,
+    },
+  },
+  {
+    providerId: "zhipu",
+    modelId: "cogvideox-2",
+    displayName: "CogVideoX 2",
+    kind: "video",
+    capabilities: {
+      source: "智谱 BigModel API 定价",
+      verifiedAt: "2026-11-02",
+      modes: ["textToVideo", "imageToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1", "4:3", "3:4"],
+      resolutions: ["1080p"],
+      minDuration: 5,
+      maxDuration: 5,
+      supportsAudio: false,
+      maxImages: 1,
+      maxPromptLength: 512,
+    },
+  },
+  {
+    providerId: "zhipu",
+    modelId: "cogvideox-3",
+    displayName: "CogVideoX 3",
+    kind: "video",
+    capabilities: {
+      source: "智谱 BigModel API 定价",
+      verifiedAt: "2026-11-02",
+      modes: ["textToVideo", "imageToVideo", "firstLastFrame"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p", "1080p", "4k"],
+      minDuration: 5,
+      maxDuration: 10,
+      supportsAudio: true,
+      maxImages: 2,
+      maxPromptLength: 512,
+    },
+  },
 ];
 
 // 旧版估算/已下线的数据，执行 seed 时一并清理。
@@ -135,6 +189,27 @@ async function main(): Promise<void> {
       supportsModels: true,
       baseUrl: "https://api.siliconflow.cn/v1",
       extra: { imageSizeField: "image_size", imageResponse: "images" },
+    },
+  });
+
+  await prisma.providerConfig.upsert({
+    where: { id: "zhipu" },
+    update: {
+      adapter: "zhipu",
+      authType: "bearer",
+      docsUrl: "https://docs.bigmodel.cn",
+      supportsModels: false,
+      baseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    },
+    create: {
+      id: "zhipu",
+      name: "智谱 BigModel",
+      type: "zhipu",
+      adapter: "zhipu",
+      authType: "bearer",
+      docsUrl: "https://docs.bigmodel.cn",
+      supportsModels: false,
+      baseUrl: "https://open.bigmodel.cn/api/paas/v4",
     },
   });
 

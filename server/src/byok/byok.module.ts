@@ -1,5 +1,6 @@
 import { Module } from "@nestjs/common";
 import { OpenAICompatibleAdapter } from "../providers/adapters/openai-compatible.adapter";
+import { ZhipuVideoAdapter } from "../providers/adapters/zhipu-video.adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
 import { SecretCipher } from "../security/secret-cipher";
 import { CredentialsService } from "./credentials.service";
@@ -12,6 +13,7 @@ import { UserModelsController } from "./user-models.controller";
   providers: [
     SecretCipher,
     OpenAICompatibleAdapter,
+    ZhipuVideoAdapter,
     ProviderRegistry,
     CredentialsService,
     ProviderCatalogService,
