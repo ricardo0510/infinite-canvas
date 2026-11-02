@@ -281,9 +281,16 @@ export class TaskProcessorService {
     const params = task.request.params;
     const references = task.request.references;
     const firstFrame =
-      references.find((reference) => reference.type === "firstFrame") ??
-      references.find((reference) => reference.type === "referenceImage");
-    const lastFrame = references.find((reference) => reference.type === "lastFrame");
+      task.mode === "imageToVideo"
+        ? references.find((reference) => reference.type === "referenceImage")
+        : task.mode === "firstLastFrame"
+          ? (references.find((reference) => reference.type === "firstFrame") ??
+            references.find((reference) => reference.type === "referenceImage"))
+          : undefined;
+    const lastFrame =
+      task.mode === "firstLastFrame"
+        ? references.find((reference) => reference.type === "lastFrame")
+        : undefined;
     const context = {
       baseUrl: resolved.provider.baseUrl,
       apiKey: resolved.apiKey,
