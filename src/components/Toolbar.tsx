@@ -89,6 +89,7 @@ export function Toolbar() {
         onChange={(kind) => addNode(kind as NodeKind, centerPosition())}
       />
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={undo}
@@ -99,6 +100,7 @@ export function Toolbar() {
         <Icon name="undo" size={17} />
       </Button>
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={redo}
@@ -109,6 +111,7 @@ export function Toolbar() {
         <Icon name="redo" size={17} />
       </Button>
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={() => setCommandOpen(true)}
@@ -118,6 +121,7 @@ export function Toolbar() {
         <Icon name="command" size={17} />
       </Button>
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={() => setAiSettingsOpen(true)}
@@ -127,6 +131,7 @@ export function Toolbar() {
         <Icon name="settings" size={17} />
       </Button>
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={() => setHelpOpen(true)}
@@ -136,6 +141,7 @@ export function Toolbar() {
         <Icon name="help" size={17} />
       </Button>
       <Button
+        variant="ghost"
         size="lg"
         icon
         onClick={() => fileInput.current?.click()}
@@ -144,7 +150,14 @@ export function Toolbar() {
       >
         <Icon name="upload" size={17} />
       </Button>
-      <Button size="lg" icon onClick={handleExport} title="导出 JSON" aria-label="导出 JSON">
+      <Button
+        variant="ghost"
+        size="lg"
+        icon
+        onClick={handleExport}
+        title="导出 JSON"
+        aria-label="导出 JSON"
+      >
         <Icon name="download" size={17} />
       </Button>
       <Input
