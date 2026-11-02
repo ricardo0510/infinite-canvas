@@ -4,10 +4,16 @@ import { NodeToolbar, Position, useInternalNode, useViewport } from "@xyflow/rea
 import { useCanvasStore } from "../../store/canvasStore";
 import { useToastStore } from "../../store/toastStore";
 import { useUiStore } from "../../store/uiStore";
-import type { GenerationMeta } from "../../types";
+import type { GenerationKind, GenerationMeta } from "../../types";
 import { cancelGeneration, defaultGeneration, generateNode, kindOfNode, patchGeneration } from "../../lib/ai/controller";
+import {
+  DEFAULT_IMAGE_ASPECT_RATIO,
+  DEFAULT_IMAGE_RESOLUTION,
+  formatImageResolution,
+} from "../../lib/ai/imageOptions";
 import { defaultParams } from "../../lib/ai/models";
 import { upstreamSourceNodes } from "../../lib/ai/refs";
+import type { AiModel } from "../../lib/ai/types";
 import { useAiModels } from "../../lib/ai/useModels";
 import { Button } from "../ui/Button";
 import { Select, Textarea } from "../ui/Control";
@@ -17,6 +23,36 @@ import { UpstreamClips } from "./UpstreamClips";
 
 function isRunning(generation: GenerationMeta): boolean {
   return generation.status === "queued" || generation.status === "running";
+}
+
+function configSummary(
+  kind: GenerationKind,
+  generation: GenerationMeta,
+  model: AiModel | undefined,
+): string[] {
+  if (kind === "image") {
+    return [
+      generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO,
+      formatImageResolution(generation.params?.resolution ?? DEFAULT_IMAGE_RESOLUTION),
+      `${generation.params?.count ?? 1} 张`,
+    ];
+  }
+  if (kind !== "video") return [];
+
+  const output = model?.output.video;
+  const items: string[] = [];
+  const ratio = generation.params?.aspectRatio ?? output?.aspectRatios[0];
+  if (ratio) items.push(ratio);
+  const resolution = generation.params?.resolution ?? output?.resolutions[0];
+  if (resolution) items.push(resolution);
+  const duration = generation.params?.duration ?? output?.minDuration;
+  if (duration !== undefined) items.push(`${duration}s`);
+  const tiers = model?.params?.qualityTiers ?? [];
+  const tierKey = generation.params?.qualityTier ?? tiers[0]?.key;
+  const tier = tiers.find((item) => item.key === tierKey);
+  if (tier) items.push(tier.label);
+  if (output?.supportsAudio && generation.params?.generateAudio) items.push("音频");
+  return items;
 }
 
 export function AiPanel() {
@@ -66,6 +102,7 @@ export function AiPanel() {
   if (!nodeId || !node || !kind || !generation) return null;
 
   const running = isRunning(generation);
+  const config = configSummary(kind, generation, model);
 
   const changeModel = (modelId: string) => {
     const next = models.find((item) => item.id === modelId);
@@ -116,6 +153,26 @@ export function AiPanel() {
             }}
           />
 
+          {config.length > 0 ? (
+            <div className="ai-config-row">
+              <div className="ai-config-chips">
+                {config.map((item) => (
+                  <span key={item} className="ai-config-chip">
+                    {item}
+                  </span>
+                ))}
+              </div>
+              <Button
+                size="xs"
+                variant="ghost"
+                disabled={running || !model}
+                onClick={() => setSettingsNodeId(nodeId)}
+              >
+                配置
+              </Button>
+            </div>
+          ) : null}
+
           <div className="ai-panel-bottom">
             <Select
               className="ai-model-select"
@@ -126,15 +183,6 @@ export function AiPanel() {
               disabled={modelsState.loading || running}
               onChange={changeModel}
             />
-            {kind !== "text" ? (
-              <Button
-                size="md"
-                disabled={running || !model}
-                onClick={() => setSettingsNodeId(nodeId)}
-              >
-                配置
-              </Button>
-            ) : null}
             <Button
               variant="primary"
               size="md"
