@@ -52,10 +52,6 @@ export function Toolbar() {
       .catch(() => pushToast("导出失败。", "error"));
   };
 
-  const handleAdd = (kind: NodeKind) => {
-    addNode(kind, centerPosition());
-  };
-
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -80,46 +76,76 @@ export function Toolbar() {
   };
 
   return (
-    <div className="toolbar">
+    <div className="toolbar" role="toolbar" aria-label="画布工具">
       <Select
-        className="new-node-select"
+        className="toolbar-add"
         menuClassName="context-menu"
         controlSize="lg"
         value=""
         options={ADD_ITEMS.map((item) => ({ value: item.kind, label: item.label }))}
-        placeholder="新建节点"
-        ariaLabel="新建节点"
-        onChange={(kind) => handleAdd(kind as NodeKind)}
+        placeholder="添加节点"
+        ariaLabel="添加节点"
+        trigger={<Icon name="plus" size={18} />}
+        onChange={(kind) => addNode(kind as NodeKind, centerPosition())}
       />
-      <span className="tool-divider" />
-      <Button size="lg" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
-        <Icon name="undo" size={15} />
-        <span className="tool-label">撤销</span>
+      <Button
+        size="lg"
+        icon
+        onClick={undo}
+        disabled={!canUndo}
+        title="撤销（Ctrl/Cmd + Z）"
+        aria-label="撤销"
+      >
+        <Icon name="undo" size={17} />
       </Button>
-      <Button size="lg" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
-        <Icon name="redo" size={15} />
-        <span className="tool-label">重做</span>
+      <Button
+        size="lg"
+        icon
+        onClick={redo}
+        disabled={!canRedo}
+        title="重做（Ctrl/Cmd + Shift + Z）"
+        aria-label="重做"
+      >
+        <Icon name="redo" size={17} />
       </Button>
-      <span className="tool-divider" />
-      <Button size="lg" onClick={handleExport} title="导出 JSON">
-        <Icon name="download" size={15} />
-        <span className="tool-label">导出</span>
+      <Button
+        size="lg"
+        icon
+        onClick={() => setCommandOpen(true)}
+        title="命令面板（/）"
+        aria-label="命令面板"
+      >
+        <Icon name="command" size={17} />
       </Button>
-      <Button size="lg" onClick={() => fileInput.current?.click()} title="导入 JSON">
-        <Icon name="upload" size={15} />
-        <span className="tool-label">导入</span>
+      <Button
+        size="lg"
+        icon
+        onClick={() => setAiSettingsOpen(true)}
+        title="AI 设置"
+        aria-label="AI 设置"
+      >
+        <Icon name="settings" size={17} />
       </Button>
-      <Button size="lg" onClick={() => setCommandOpen(true)} title="打开命令面板">
-        <Icon name="command" size={15} />
-        <span className="tool-label">命令</span>
+      <Button
+        size="lg"
+        icon
+        onClick={() => setHelpOpen(true)}
+        title="快捷键（?）"
+        aria-label="快捷键"
+      >
+        <Icon name="help" size={17} />
       </Button>
-      <Button size="lg" onClick={() => setAiSettingsOpen(true)} title="AI 设置">
-        <Icon name="settings" size={15} />
-        <span className="tool-label">AI 设置</span>
+      <Button
+        size="lg"
+        icon
+        onClick={() => fileInput.current?.click()}
+        title="导入 JSON"
+        aria-label="导入 JSON"
+      >
+        <Icon name="upload" size={17} />
       </Button>
-      <Button size="lg" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
-        <Icon name="help" size={15} />
-        <span className="tool-label">快捷键</span>
+      <Button size="lg" icon onClick={handleExport} title="导出 JSON" aria-label="导出 JSON">
+        <Icon name="download" size={17} />
       </Button>
       <Input
         ref={fileInput}

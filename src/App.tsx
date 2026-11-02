@@ -3,7 +3,6 @@ import { ReactFlowProvider } from "@xyflow/react";
 import { FlowCanvas } from "./components/FlowCanvas";
 import { ensureInlineImagesMigrated, pruneOrphanImages } from "./lib/imageMigration";
 import { KeyboardHelp } from "./components/KeyboardHelp";
-import { StatusBar } from "./components/StatusBar";
 import { ToastHost } from "./components/ToastHost";
 import { Toolbar } from "./components/Toolbar";
 import { Icon } from "./components/ui/Icon";
@@ -67,7 +66,6 @@ function App() {
         </div>
         <FlowCanvas />
         <div className="bottom-dock">
-          <StatusBar />
           <Toolbar />
         </div>
         {aiSettingsOpen ? (

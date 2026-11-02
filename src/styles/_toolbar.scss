@@ -1,62 +1,55 @@
 .toolbar {
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: 6px;
   max-width: 100%;
-  padding: 4px;
+  padding: 6px;
   border: 1px solid var(--line-strong);
-  border-radius: var(--r-panel);
+  border-radius: 999px;
   background: var(--surface-1);
   box-shadow: var(--shadow-float);
 }
 
-.tool-divider {
-  width: 1px;
-  height: var(--space-4);
-  margin: 0 3px;
-  background: var(--line);
+.toolbar .btn {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--text-3);
 }
 
-.toolbar .btn {
-  gap: 6px;
+.toolbar .btn:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text-strong);
 }
 
 .toolbar .btn .icon {
-  width: 15px;
-  height: 15px;
+  width: 18px;
+  height: 18px;
 }
 
-.new-node-select {
-  width: auto;
-  min-width: 120px;
+.toolbar-add {
+  width: 34px;
+  min-width: 34px;
 }
 
-.new-node-select .select-trigger {
-  justify-content: flex-start;
-  border-color: var(--accent);
-  background: var(--accent);
-  color: var(--accent-ink);
-  font-weight: 600;
+.toolbar-add .select-trigger {
+  width: 34px;
+  height: 34px;
+  min-width: 0;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-3);
 }
 
-.new-node-select .select-trigger:hover:not(:disabled) {
-  border-color: var(--accent-press);
-  background: var(--accent-press);
-  color: var(--accent-ink);
-}
-
-.new-node-select .select-trigger .select-chevron {
-  color: var(--accent-ink);
-  opacity: 0.8;
-}
-
-.new-node-select .select-trigger.is-placeholder .select-value {
-  color: var(--accent-ink);
-}
-
-.new-node-select .select-trigger.is-open {
-  border-color: var(--accent-press);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+.toolbar-add .select-trigger:hover:not(:disabled),
+.toolbar-add .select-trigger.is-open {
+  background: var(--surface-3);
+  color: var(--text-strong);
+  box-shadow: none;
 }

@@ -131,7 +131,7 @@ export function FlowCanvas() {
     const target = event.target as HTMLElement;
     if (
       target.closest(
-        ".react-flow__node, .react-flow__edge, .react-flow__panel, .react-flow__controls, .react-flow__minimap, .statusbar, .canvas-controls, .context-menu, .selection-toolbar, .empty-state",
+        ".react-flow__node, .react-flow__edge, .react-flow__panel, .react-flow__controls, .react-flow__minimap, .canvas-controls, .context-menu, .selection-toolbar, .empty-state",
       )
     ) {
       return;
@@ -207,7 +207,7 @@ export function FlowCanvas() {
       if (!element || !element.closest(".canvas")) return;
       if (
         element.closest(
-          ".react-flow__node, .react-flow__edge, .react-flow__panel, .toolbar, .canvas-controls, .statusbar, .selection-toolbar, .help-modal, .context-menu, .modal-backdrop, .empty-state",
+          ".react-flow__node, .react-flow__edge, .react-flow__panel, .toolbar, .canvas-controls, .selection-toolbar, .help-modal, .context-menu, .modal-backdrop, .empty-state",
         )
       ) {
         return;
@@ -280,7 +280,7 @@ export function FlowCanvas() {
         <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d4d4cc" />
         {showMiniMap && nodes.length > 0 ? (
           <MiniMap
-            position="bottom-right"
+            position="bottom-left"
             pannable
             zoomable
             maskColor="rgba(233, 233, 228, 0.75)"

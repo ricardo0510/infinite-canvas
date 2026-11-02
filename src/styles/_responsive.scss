@@ -1,27 +1,10 @@
-@media (min-width: 1281px) {
-  .react-flow__minimap {
-    bottom: 92px !important;
-  }
-}
-
-@media (max-width: 1280px) {
-  .tool-label {
-    display: none;
-  }
-
-  .toolbar .btn {
-    padding: 0 9px;
-  }
-}
-
 @media (max-width: 760px) {
   .brand-dock {
     top: 10px;
     left: 10px;
   }
 
-  .brand-copy p,
-  .statusbar-hint {
+  .brand-copy p {
     display: none;
   }
 
@@ -41,24 +24,15 @@
     gap: var(--space-1);
   }
 
-  .statusbar {
-    display: none;
-  }
-
   .canvas-controls {
     bottom: 60px;
   }
 
-  /* 小屏缩小第三方小地图，避免遮挡画布与控制条 */
+  /* 小屏缩小小地图，避免遮挡画布与控制条 */
   .react-flow__minimap {
     width: 132px !important;
     height: 88px !important;
-    bottom: 60px !important;
-  }
-
-  .toolbar .btn {
-    height: 30px;
-    padding: 0 var(--space-2);
+    bottom: 84px !important;
   }
 
   .help-grid {

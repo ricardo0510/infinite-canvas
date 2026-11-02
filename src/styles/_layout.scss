@@ -77,30 +77,6 @@
   transform: translateX(-50%);
 }
 
-.statusbar {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  max-width: 100%;
-  padding: 4px 8px;
-  border: 1px solid var(--line);
-  border-radius: var(--r-control);
-  background: var(--surface-1);
-  color: var(--text-3);
-  font-size: var(--font-2xs);
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-
-.statusbar-sep {
-  color: var(--text-4);
-}
-
-.statusbar-hint {
-  margin-left: var(--space-1);
-  color: var(--muted);
-}
-
 .react-flow__controls {
   overflow: hidden;
   border: 1px solid var(--line-strong);
@@ -133,6 +109,10 @@
   border-radius: var(--r-panel);
   background: var(--surface-1);
   box-shadow: var(--shadow-float);
+}
+
+.react-flow__minimap.bottom.left {
+  bottom: 40px;
 }
 
 .react-flow__attribution {

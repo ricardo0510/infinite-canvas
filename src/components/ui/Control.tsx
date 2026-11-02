@@ -4,6 +4,7 @@ import {
   useState,
   type ComponentPropsWithRef,
   type KeyboardEvent as ReactKeyboardEvent,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "./Icon";
@@ -65,6 +66,7 @@ type SelectProps = {
   menuClassName?: string;
   placeholder?: string;
   ariaLabel?: string;
+  trigger?: ReactNode;
 };
 
 const MENU_MAX_HEIGHT = 280;
@@ -79,6 +81,7 @@ export function Select({
   menuClassName,
   placeholder = "请选择",
   ariaLabel,
+  trigger,
 }: SelectProps) {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
@@ -254,17 +257,21 @@ export function Select({
         onClick={() => (open ? close() : openMenu())}
         onKeyDown={onTriggerKeyDown}
       >
-        <span className="select-value">{selected?.label ?? placeholder}</span>
-        <svg className="select-chevron" viewBox="0 0 12 12" aria-hidden="true">
-          <path
-            d="M3 4.5 6 7.5 9 4.5"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
-        </svg>
+        {trigger ?? (
+          <>
+            <span className="select-value">{selected?.label ?? placeholder}</span>
+            <svg className="select-chevron" viewBox="0 0 12 12" aria-hidden="true">
+              <path
+                d="M3 4.5 6 7.5 9 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </>
+        )}
       </button>
 
       {open && position
