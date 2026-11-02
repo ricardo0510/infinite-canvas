@@ -105,6 +105,18 @@ function booleanValue(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
 }
 
+function qualityTierList(value: unknown): { key: string; label: string }[] | null {
+  if (!Array.isArray(value)) return null;
+  const items = value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    const key = typeof record.key === "string" ? record.key.trim() : "";
+    const label = typeof record.label === "string" ? record.label.trim() : "";
+    return key ? [{ key, label: label || key }] : [];
+  });
+  return items.length > 0 ? items : null;
+}
+
 const DEFAULT_MODES: Record<ModelKind, string[]> = {
   text: [],
   image: ["textToImage", "imageToImage"],
@@ -136,6 +148,13 @@ function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
     };
   }
 
+  const tiers = qualityTierList(capabilities.qualityTiers);
+  const backgrounds = stringList(capabilities.backgrounds);
+  const params = {
+    ...(tiers ? { qualityTiers: tiers } : {}),
+    ...(backgrounds ? { backgrounds } : {}),
+  };
+
   return {
     id: publicModelId(row.providerId, row.modelId),
     name: row.displayName || row.modelId,
@@ -154,6 +173,7 @@ function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
       maxVideos: integer(capabilities.maxVideos, kind === "video" ? 1 : 0),
     },
     output,
+    ...(Object.keys(params).length > 0 ? { params } : {}),
   };
 }
 

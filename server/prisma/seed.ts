@@ -21,129 +21,60 @@ const PROVIDER_MODELS: SeedProviderModel[] = [
   },
   {
     providerId: "openai",
-    modelId: "gpt-image-1",
-    displayName: "GPT Image 1",
+    modelId: "gpt-image-2.5-sunburst",
+    displayName: "GPT Image 2.5 Sunburst",
     kind: "image",
     capabilities: {
-      modes: ["textToImage", "imageToImage"],
-      aspectRatios: ["1:1", "3:2", "2:3"],
-      resolutions: ["1k", "1.5k", "2k"],
-      maxCount: 4,
-      maxPromptLength: 4000,
-    },
-  },
-  {
-    providerId: "openai",
-    modelId: "dall-e-3",
-    displayName: "DALL·E 3",
-    kind: "image",
-    capabilities: {
-      modes: ["textToImage"],
-      aspectRatios: ["1:1", "16:9", "9:16"],
-      resolutions: ["1k", "2k"],
-      maxCount: 1,
-      maxPromptLength: 4000,
-    },
-  },
-  {
-    providerId: "openai",
-    modelId: "sora-2",
-    displayName: "Sora 2",
-    kind: "video",
-    capabilities: {
-      modes: ["textToVideo"],
-      aspectRatios: ["16:9", "9:16", "1:1"],
-      resolutions: ["720p", "1080p"],
-      minDuration: 5,
-      maxDuration: 10,
-      supportsAudio: false,
-      maxPromptLength: 2000,
-    },
-  },
-  {
-    providerId: "openai",
-    modelId: "sora-2-pro",
-    displayName: "Sora 2 Pro",
-    kind: "video",
-    capabilities: {
-      modes: ["textToVideo"],
-      aspectRatios: ["16:9", "9:16", "1:1"],
-      resolutions: ["720p", "1080p"],
-      minDuration: 5,
-      maxDuration: 10,
-      supportsAudio: false,
-      maxPromptLength: 2000,
-    },
-  },
-  {
-    providerId: "siliconflow",
-    modelId: "black-forest-labs/FLUX.1-schnell",
-    displayName: "FLUX.1 Schnell",
-    kind: "image",
-    capabilities: {
-      modes: ["textToImage", "imageToImage"],
-      aspectRatios: [
-        "1:1",
-        "3:2",
-        "2:3",
-        "4:3",
-        "3:4",
-        "5:4",
-        "4:5",
-        "16:9",
-        "9:16",
-        "21:9",
-      ],
-      resolutions: ["1k", "1.5k", "2k", "3k", "4k"],
-      maxCount: 4,
-      maxPromptLength: 4000,
-    },
-  },
-  {
-    providerId: "siliconflow",
-    modelId: "Kwai-Kolors/Kolors",
-    displayName: "Kolors",
-    kind: "image",
-    capabilities: {
+      source: "OpenAI Images API docs",
+      verifiedAt: "2026-11-02",
       modes: ["textToImage", "imageToImage"],
       aspectRatios: ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
-      resolutions: ["1k", "2k"],
+      resolutions: ["auto", "1k", "1.5k", "2k"],
+      qualityTiers: [
+        { key: "low", label: "低" },
+        { key: "medium", label: "中" },
+        { key: "high", label: "高" },
+        { key: "xhigh", label: "超高" },
+        { key: "max", label: "最高" },
+      ],
       maxCount: 4,
       maxPromptLength: 4000,
     },
   },
   {
-    providerId: "siliconflow",
-    modelId: "Wan-AI/Wan2.1-T2V-14B",
-    displayName: "Wan2.1 T2V 14B",
-    kind: "video",
+    providerId: "openai",
+    modelId: "gpt-image-2.5-flare",
+    displayName: "GPT Image 2.5 Flare",
+    kind: "image",
     capabilities: {
-      modes: ["textToVideo"],
-      aspectRatios: ["16:9", "9:16", "1:1"],
-      resolutions: ["720p"],
-      minDuration: 5,
-      maxDuration: 5,
-      supportsAudio: false,
-      maxPromptLength: 2000,
+      source: "OpenAI Images API docs",
+      verifiedAt: "2026-11-02",
+      modes: ["textToImage", "imageToImage"],
+      aspectRatios: ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
+      resolutions: ["auto", "1k", "1.5k", "2k"],
+      qualityTiers: [
+        { key: "low", label: "低" },
+        { key: "medium", label: "中" },
+        { key: "high", label: "高" },
+        { key: "xhigh", label: "超高" },
+        { key: "max", label: "最高" },
+      ],
+      maxCount: 4,
+      maxPromptLength: 4000,
     },
   },
-  {
-    providerId: "siliconflow",
-    modelId: "Wan-AI/Wan2.1-I2V-14B-720P",
-    displayName: "Wan2.1 I2V 14B",
-    kind: "video",
-    capabilities: {
-      modes: ["imageToVideo", "firstLastFrame"],
-      aspectRatios: ["16:9", "9:16", "1:1"],
-      resolutions: ["720p"],
-      minDuration: 5,
-      maxDuration: 5,
-      supportsAudio: false,
-      maxImages: 2,
-      maxPromptLength: 2000,
-    },
-  },
-] as const;
+];
+
+// 旧版估算/已下线的数据，执行 seed 时一并清理。
+const OBSOLETE_PROVIDER_MODELS = {
+  openai: ["gpt-image-1", "dall-e-3", "sora-2", "sora-2-pro"],
+  siliconflow: [
+    "black-forest-labs/FLUX.1-schnell",
+    "Kwai-Kolors/Kolors",
+    "Wan-AI/Wan2.1-T2V-14B",
+    "Wan-AI/Wan2.1-I2V-14B-720P",
+  ],
+} as const;
 
 async function main(): Promise<void> {
   await prisma.user.upsert({
@@ -225,6 +156,12 @@ async function main(): Promise<void> {
     });
   }
 
+  for (const [providerId, modelIds] of Object.entries(OBSOLETE_PROVIDER_MODELS)) {
+    await prisma.providerModel.deleteMany({
+      where: { providerId, modelId: { in: [...modelIds] } },
+    });
+  }
+
   await prisma.modelConfig.upsert({
     where: { id: deepseekModel },
     update: {},
@@ -249,7 +186,7 @@ async function main(): Promise<void> {
   });
   await prisma.providerConfig.deleteMany({ where: { id: "mock" } });
 
-  console.log("Seeded providers and text/image/video provider models");
+  console.log("Seeded verified provider models; removed obsolete/fake model data");
 }
 
 main()
