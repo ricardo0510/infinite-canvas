@@ -1,6 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { useReactFlow, useStore } from "@xyflow/react";
 import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
+import { useCanvasStore } from "../store/canvasStore";
 import { useUiStore } from "../store/uiStore";
 import { Button } from "./ui/Button";
 
@@ -11,6 +12,10 @@ export function CanvasControls() {
   const zoom = useStore((state) => state.transform[2]);
   const showMiniMap = useUiStore((state) => state.showMiniMap);
   const toggleMiniMap = useUiStore((state) => state.toggleMiniMap);
+  const snapToGrid = useUiStore((state) => state.snapToGrid);
+  const toggleSnap = useUiStore((state) => state.toggleSnap);
+  const autoLayout = useCanvasStore((state) => state.autoLayout);
+  const hasNodes = useCanvasStore((state) => state.nodes.length > 0);
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,6 +38,12 @@ export function CanvasControls() {
   }, [open]);
 
   const percent = Math.round(zoom * 100);
+
+  const handleLayout = () => {
+    void autoLayout().then(() => {
+      window.setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 0);
+    });
+  };
 
   return (
     <div ref={rootRef} className="canvas-controls">
@@ -93,6 +104,29 @@ export function CanvasControls() {
           +
         </Button>
         <span className="canvas-divider" />
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
+          onClick={handleLayout}
+          disabled={!hasNodes}
+          title="自动布局（Ctrl/Cmd + L）"
+          aria-label="自动布局"
+        >
+          ⤢
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          icon
+          className={snapToGrid ? "is-on" : undefined}
+          onClick={toggleSnap}
+          title={`网格吸附：${snapToGrid ? "开" : "关"}`}
+          aria-label={snapToGrid ? "关闭网格吸附" : "开启网格吸附"}
+          aria-pressed={snapToGrid}
+        >
+          ⌗
+        </Button>
         <Button
           variant="ghost"
           size="sm"

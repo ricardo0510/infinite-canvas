@@ -24,9 +24,6 @@ export function Toolbar() {
   const clear = useCanvasStore((state) => state.clear);
   const importSnapshot = useCanvasStore((state) => state.importSnapshot);
   const getSnapshot = useCanvasStore((state) => state.getSnapshot);
-  const autoLayout = useCanvasStore((state) => state.autoLayout);
-  const snapToGrid = useUiStore((state) => state.snapToGrid);
-  const toggleSnap = useUiStore((state) => state.toggleSnap);
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
   const setAiSettingsOpen = useUiStore((state) => state.setAiSettingsOpen);
@@ -75,12 +72,6 @@ export function Toolbar() {
     if (window.confirm("清空画布？可以使用 Ctrl/Cmd + Z 撤销。")) clear();
   };
 
-  const handleLayout = () => {
-    void autoLayout().then(() => {
-      window.setTimeout(() => fitView({ padding: 0.2, duration: 300 }), 0);
-    });
-  };
-
   return (
     <div className="toolbar">
       <Select
@@ -101,29 +92,6 @@ export function Toolbar() {
       <Button size="lg" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
         <span aria-hidden="true">↷</span>
         <span className="tool-label">重做</span>
-      </Button>
-      <span className="tool-divider" />
-      <Button size="lg" onClick={handleLayout} disabled={!hasNodes} title="自动布局（Ctrl/Cmd + L）">
-        <span aria-hidden="true">⤢</span>
-        <span className="tool-label">布局</span>
-      </Button>
-      <Button
-        size="lg"
-        className={snapToGrid ? "is-on" : undefined}
-        onClick={toggleSnap}
-        aria-pressed={snapToGrid}
-        title={`网格吸附：${snapToGrid ? "开" : "关"}`}
-      >
-        <span aria-hidden="true">⌗</span>
-        <span className="tool-label">吸附</span>
-      </Button>
-      <Button
-        size="lg"
-        onClick={() => fitView({ padding: 0.2, duration: 300, maxZoom: 1.25 })}
-        title="适应视图"
-      >
-        <span aria-hidden="true">⛶</span>
-        <span className="tool-label">适配</span>
       </Button>
       <span className="tool-divider" />
       <Button size="lg" onClick={() => void exportSnapshot(getSnapshot())} title="导出 JSON">
