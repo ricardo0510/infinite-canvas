@@ -412,20 +412,32 @@ export function migrateSnapshot(input: unknown): CanvasSnapshot | null {
 export const parseSnapshot = migrateSnapshot;
 
 export function loadSnapshot(): CanvasSnapshot | null {
-  try {
-    for (const key of [STORAGE_KEY, ...LEGACY_KEYS]) {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const snapshot = migrateSnapshot(JSON.parse(raw));
-      if (!snapshot) continue;
-      if (key !== STORAGE_KEY) {
-        saveSnapshot(snapshot);
-        localStorage.removeItem(key);
-      }
-      return snapshot;
+  for (const key of [STORAGE_KEY, ...LEGACY_KEYS]) {
+    let raw: string | null;
+    try {
+      raw = localStorage.getItem(key);
+    } catch {
+      continue;
     }
-  } catch {
-    return null;
+    if (!raw) continue;
+
+    let snapshot: CanvasSnapshot | null = null;
+    try {
+      snapshot = migrateSnapshot(JSON.parse(raw));
+    } catch {
+      snapshot = null;
+    }
+    if (!snapshot) continue;
+
+    if (key !== STORAGE_KEY) {
+      saveSnapshot(snapshot);
+      try {
+        localStorage.removeItem(key);
+      } catch {
+        // 旧键删除失败不影响本次加载。
+      }
+    }
+    return snapshot;
   }
   return null;
 }

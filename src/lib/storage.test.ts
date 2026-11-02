@@ -154,6 +154,22 @@ describe("viewport persistence", () => {
     expect(snapshot?.viewport).toBeUndefined();
   });
 
+  it("falls back to a legacy key when the current key is corrupt", () => {
+    localStorage.clear();
+    localStorage.setItem("infinite-canvas:v5", "{not json");
+    localStorage.setItem(
+      "infinite-canvas:v2",
+      JSON.stringify({
+        version: 2,
+        nodes: [{ id: "a", type: "note", position: { x: 0, y: 0 }, data: {} }],
+        edges: [],
+      }),
+    );
+    expect(loadSnapshot()?.nodes).toHaveLength(1);
+    expect(localStorage.getItem("infinite-canvas:v2")).toBeNull();
+    localStorage.clear();
+  });
+
   it("migrates the v2 localStorage key to the current schema", () => {
     localStorage.clear();
     localStorage.setItem(
