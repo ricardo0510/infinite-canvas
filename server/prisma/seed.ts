@@ -63,6 +63,45 @@ const PROVIDER_MODELS: SeedProviderModel[] = [
       maxPromptLength: 4000,
     },
   },
+  {
+    providerId: "siliconflow",
+    modelId: "Qwen/Qwen-Image",
+    displayName: "Qwen Image",
+    kind: "image",
+    capabilities: {
+      source: "SiliconFlow Image Generation API docs",
+      verifiedAt: "2026-11-02",
+      modes: ["textToImage"],
+      aspectRatios: ["1:1", "16:9", "9:16", "4:3", "3:4", "3:2", "2:3"],
+      resolutions: ["1k"],
+      imageSizes: [
+        "1328x1328",
+        "1664x928",
+        "928x1664",
+        "1472x1140",
+        "1140x1472",
+        "1584x1056",
+        "1056x1584",
+      ],
+      maxCount: 1,
+    },
+  },
+  {
+    providerId: "siliconflow",
+    modelId: "Kwai-Kolors/Kolors",
+    displayName: "Kolors",
+    kind: "image",
+    capabilities: {
+      source: "SiliconFlow Image Generation API docs",
+      verifiedAt: "2026-11-02",
+      modes: ["textToImage", "imageToImage"],
+      aspectRatios: ["1:1", "3:4", "1:2", "9:16"],
+      resolutions: ["1k"],
+      imageSizes: ["1024x1024", "960x1280", "768x1024", "720x1440", "720x1280"],
+      maxCount: 1,
+      maxImages: 1,
+    },
+  },
 ];
 
 // 旧版估算/已下线的数据，执行 seed 时一并清理。
@@ -70,7 +109,6 @@ const OBSOLETE_PROVIDER_MODELS = {
   openai: ["gpt-image-1", "dall-e-3", "sora-2", "sora-2-pro"],
   siliconflow: [
     "black-forest-labs/FLUX.1-schnell",
-    "Kwai-Kolors/Kolors",
     "Wan-AI/Wan2.1-T2V-14B",
     "Wan-AI/Wan2.1-I2V-14B-720P",
   ],
