@@ -57,7 +57,10 @@
 }
 
 @mixin node {
-  @include surface(var(--r-panel), var(--surface-2), var(--line));
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-panel);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-sm);
 }
 
 @mixin floating(

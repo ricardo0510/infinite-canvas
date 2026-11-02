@@ -277,16 +277,16 @@ export function FlowCanvas() {
         defaultEdgeOptions={edgeOptions}
         connectionLineStyle={{ stroke: ACCENT, strokeWidth: 1.75 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d9d9d0" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d4d4cc" />
         {showMiniMap && nodes.length > 0 ? (
           <MiniMap
             position="bottom-right"
             pannable
             zoomable
-            maskColor="rgba(245, 245, 241, 0.75)"
+            maskColor="rgba(233, 233, 228, 0.75)"
             nodeStrokeWidth={2}
             nodeColor={(node) => {
-              if (node.type === "group") return "#d9d9d0";
+              if (node.type === "group") return "#d4d4cc";
               if (node.type === "video") return NOTE_COLORS.amber;
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
               return color ? NOTE_COLORS[color] : DEFAULT_EDGE_STROKE;

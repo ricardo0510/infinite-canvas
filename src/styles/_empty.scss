@@ -10,7 +10,7 @@
 }
 
 .empty-card {
-  @include surface.card(var(--line), var(--r-dialog), var(--surface-1), var(--shadow-float));
+  @include surface.card(var(--line-strong), var(--r-dialog), var(--surface-1), var(--shadow-float));
 
   max-width: 420px;
   padding: 24px;

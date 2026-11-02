@@ -12,4 +12,4 @@ export const NOTE_COLORS: Record<NoteColor, string> = {
 };
 
 export const DEFAULT_EDGE_STROKE = "#6f6f66";
-export const ACCENT = "#1f1f1c";
+export const ACCENT = "#1b1b18";

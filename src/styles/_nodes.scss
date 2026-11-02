@@ -52,7 +52,7 @@
 
 .ai-node.is-selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent), var(--shadow-float);
+  box-shadow: 0 0 0 1px var(--accent), var(--shadow-lg);
 }
 
 .ai-node.is-running {
@@ -68,7 +68,7 @@
   overflow: hidden;
   border-bottom: 1px solid var(--line);
   border-radius: 7px 7px 0 0;
-  background: transparent;
+  background: var(--surface-2);
   cursor: grab;
   user-select: none;
 }
@@ -220,15 +220,15 @@
   width: 100%;
   height: 100%;
   flex-direction: column;
-  border: 1.5px dashed color-mix(in srgb, var(--node-accent) 50%, transparent);
+  border: 1.5px dashed color-mix(in srgb, var(--node-accent) 65%, transparent);
   border-radius: var(--r-dialog);
-  background: color-mix(in srgb, var(--node-accent) 5%, transparent);
+  background: color-mix(in srgb, var(--node-accent) 10%, transparent);
 }
 
 .group-node.is-selected {
   border-style: solid;
   border-color: var(--node-accent);
-  background: color-mix(in srgb, var(--node-accent) 8%, transparent);
+  background: color-mix(in srgb, var(--node-accent) 16%, transparent);
 }
 
 .group-head {
@@ -281,7 +281,7 @@
   gap: var(--space-2);
   overflow: hidden;
   border-radius: inherit;
-  background: rgb(252 252 249 / 86%);
+  background: rgb(255 255 255 / 86%);
   backdrop-filter: blur(2px);
   pointer-events: none;
 }
