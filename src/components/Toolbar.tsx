@@ -27,6 +27,8 @@ export function Toolbar() {
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
   const setCommandOpen = useUiStore((state) => state.setCommandOpen);
   const setAiSettingsOpen = useUiStore((state) => state.setAiSettingsOpen);
+  const agentOpen = useUiStore((state) => state.agentOpen);
+  const toggleAgentOpen = useUiStore((state) => state.toggleAgentOpen);
   const pushToast = useToastStore((state) => state.push);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
@@ -119,6 +121,18 @@ export function Toolbar() {
         aria-label="命令面板"
       >
         <Icon name="command" size={17} />
+      </Button>
+      <Button
+        variant="ghost"
+        size="lg"
+        icon
+        active={agentOpen}
+        onClick={toggleAgentOpen}
+        title="AI Agent（Ctrl/Cmd + K）"
+        aria-label="AI Agent"
+        aria-pressed={agentOpen}
+      >
+        <Icon name="sparkles" size={17} />
       </Button>
       <Button
         variant="ghost"

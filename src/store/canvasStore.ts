@@ -281,6 +281,8 @@ type CanvasState = {
   future: CanvasSnapshot[];
   clipboard: CanvasSnapshot | null;
   viewport: Viewport | null;
+  batching: boolean;
+  runBatch: (fn: () => void | Promise<void>) => Promise<void>;
   onNodesChange: (changes: NodeChange<CanvasNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<CanvasEdge>[]) => void;
   onConnect: (connection: Connection) => void;
@@ -344,6 +346,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   future: [],
   clipboard: null,
   viewport: initial.viewport ?? null,
+  batching: false,
 
   onNodesChange: (changes) => {
     if (changes.some((change) => change.type === "remove")) get().commit();
@@ -416,11 +419,35 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   },
 
   commit: () => {
+    if (get().batching) return;
     const { nodes, edges, past } = get();
     const last = past[past.length - 1];
     if (last && last.nodes === nodes && last.edges === edges) return;
     set({
       past: [...past.slice(-(HISTORY_LIMIT - 1)), { version: SCHEMA_VERSION, nodes, edges }],
+      future: [],
+    });
+  },
+
+  runBatch: async (fn) => {
+    if (get().batching) {
+      await fn();
+      return;
+    }
+    const { nodes, edges } = get();
+    const before: CanvasSnapshot = { version: SCHEMA_VERSION, nodes, edges };
+    set({ batching: true });
+    try {
+      await fn();
+    } catch (error) {
+      set({ nodes: before.nodes, edges: before.edges, batching: false });
+      throw error;
+    }
+    set({ batching: false });
+    const after = get();
+    if (after.nodes === before.nodes && after.edges === before.edges) return;
+    set({
+      past: [...after.past.slice(-(HISTORY_LIMIT - 1)), before],
       future: [],
     });
   },

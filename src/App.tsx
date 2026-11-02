@@ -16,8 +16,14 @@ const AiSettingsDialog = lazy(async () => {
   return { default: module.AiSettingsDialog };
 });
 
+const AgentPanel = lazy(async () => {
+  const module = await import("./components/agent/AgentPanel");
+  return { default: module.AgentPanel };
+});
+
 function App() {
   const aiSettingsOpen = useUiStore((state) => state.aiSettingsOpen);
+  const agentOpen = useUiStore((state) => state.agentOpen);
   useAutoSave();
   useCanvasShortcuts();
 
@@ -67,6 +73,11 @@ function App() {
           <KeyboardHelp />
           <ToastHost />
         </div>
+        {agentOpen ? (
+          <Suspense fallback={null}>
+            <AgentPanel />
+          </Suspense>
+        ) : null}
       </div>
     </ReactFlowProvider>
   );

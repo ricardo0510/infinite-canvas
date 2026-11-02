@@ -1,6 +1,7 @@
 import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { APP_GUARD } from "@nestjs/core";
+import { AgentModule } from "./agent/agent.module";
 import { ByokModule } from "./byok/byok.module";
 import { AuthGuard } from "./common/auth.guard";
 import { PrismaModule } from "./database/prisma.module";
@@ -20,6 +21,7 @@ import { UploadsModule } from "./uploads/uploads.module";
     }),
     PrismaModule,
     ByokModule,
+    AgentModule,
     ModelsModule,
     UploadsModule,
     TasksModule,

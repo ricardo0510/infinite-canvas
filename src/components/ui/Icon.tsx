@@ -120,6 +120,19 @@ const PATHS = {
   check: <path d="m4 12 5 5L20 6" />,
   play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
   "arrow-right": <path d="M4 12h15m-6-6 6 6-6 6" />,
+  sparkles: (
+    <>
+      <path d="M12 3.5 13.6 8l4.4 1.6L13.6 11 12 15.5 10.4 11 6 9.6 10.4 8z" />
+      <path d="M18 14.5 18.8 17l2.2.8-2.2.8L18 21l-.8-2.4L15 17.8l2.2-.8z" />
+    </>
+  ),
+  bot: (
+    <>
+      <rect x="4" y="8" width="16" height="11" rx="3" />
+      <path d="M12 4v4M8.5 13h.01M15.5 13h.01M9 16h6" />
+    </>
+  ),
+  send: <path d="M12 19V5m0 0-6 6m6-6 6 6" />,
 } satisfies Record<string, ReactNode>;
 
 export type IconName = keyof typeof PATHS;

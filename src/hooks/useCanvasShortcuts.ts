@@ -4,6 +4,7 @@ import { getPasteAnchor } from "../lib/pasteAnchor";
 import { exportSnapshot, saveSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
+import { useUiStore } from "../store/uiStore";
 
 function hasTextSelection(target: EventTarget | null): boolean {
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
@@ -50,6 +51,13 @@ export function useCanvasShortcuts(): void {
         event.preventDefault();
         if (editable && event.target instanceof HTMLElement) event.target.blur();
         store.copySelected();
+        return;
+      }
+
+      if (mod && key === "k") {
+        event.preventDefault();
+        useUiStore.getState().setAgentOpen(true);
+        window.dispatchEvent(new Event("ic:focus-agent"));
         return;
       }
 

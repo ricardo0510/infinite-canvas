@@ -12,6 +12,7 @@ type UiState = {
   aiPanelNodeId: string | null;
   aiSettingsOpen: boolean;
   mediaPreview: MediaPreviewState | null;
+  agentOpen: boolean;
   toggleSnap: () => void;
   setHelpOpen: (open: boolean) => void;
   setCommandOpen: (open: boolean) => void;
@@ -20,7 +21,14 @@ type UiState = {
   setAiPanelNode: (id: string | null) => void;
   setAiSettingsOpen: (open: boolean) => void;
   setMediaPreview: (preview: MediaPreviewState | null) => void;
+  setAgentOpen: (open: boolean) => void;
+  toggleAgentOpen: () => void;
 };
+
+function defaultAgentOpen(): boolean {
+  if (typeof window === "undefined") return true;
+  return window.innerWidth >= 1200;
+}
 
 export const useUiStore = create<UiState>((set) => ({
   snapToGrid: true,
@@ -30,6 +38,7 @@ export const useUiStore = create<UiState>((set) => ({
   aiPanelNodeId: null,
   aiSettingsOpen: false,
   mediaPreview: null,
+  agentOpen: defaultAgentOpen(),
   toggleSnap: () => set((state) => ({ snapToGrid: !state.snapToGrid })),
   setHelpOpen: (open) => set({ helpOpen: open, ...(open ? { commandOpen: false } : {}) }),
   setCommandOpen: (open) => set({ commandOpen: open, ...(open ? { helpOpen: false } : {}) }),
@@ -38,4 +47,6 @@ export const useUiStore = create<UiState>((set) => ({
   setAiPanelNode: (id) => set({ aiPanelNodeId: id }),
   setAiSettingsOpen: (open) => set({ aiSettingsOpen: open }),
   setMediaPreview: (preview) => set({ mediaPreview: preview }),
+  setAgentOpen: (open) => set({ agentOpen: open }),
+  toggleAgentOpen: () => set((state) => ({ agentOpen: !state.agentOpen })),
 }));
