@@ -1,5 +1,5 @@
 import { Handle, Position, useUpdateNodeInternals } from "@xyflow/react";
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ErrorBanner } from "../ui/Feedback";
 import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
 import { NodeTitleBar } from "./NodeTitleBar";
@@ -19,9 +19,10 @@ type NodeFrameProps = {
   children: ReactNode;
 };
 
-type Magnet = { side: "left" | "right"; top: number };
+type Magnet = { side: "left" | "right"; x: number; y: number };
 
 const MAGNET_RADIUS = 84;
+const RELEASE_RADIUS = 180;
 
 export function NodeFrame({
   id,
@@ -40,46 +41,79 @@ export function NodeFrame({
   const rootRef = useRef<HTMLDivElement>(null);
   const updateNodeInternals = useUpdateNodeInternals();
   const [magnet, setMagnet] = useState<Magnet | null>(null);
+  const magnetRef = useRef<Magnet | null>(null);
+  const active = magnet !== null;
 
   useEffect(() => {
     updateNodeInternals(id);
   }, [id, magnet, updateNodeInternals]);
 
-  useEffect(() => {
-    const onPointerUp = () => setMagnet(null);
-    window.addEventListener("pointerup", onPointerUp);
-    return () => window.removeEventListener("pointerup", onPointerUp);
-  }, []);
-
-  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.buttons !== 0) return;
+  const updateMagnet = useCallback((clientX: number, clientY: number, keepSide: boolean) => {
+    const apply = (next: Magnet | null) => {
+      magnetRef.current = next;
+      setMagnet(next);
+    };
     const root = rootRef.current;
     if (!root) return;
     const rect = root.getBoundingClientRect();
     if (rect.width === 0 || rect.height === 0) return;
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
-    const centerY = rect.height / 2;
-    const leftDistance = Math.hypot(x, y - centerY);
-    const rightDistance = Math.hypot(x - rect.width, y - centerY);
-    let side: "left" | "right";
-    if (magnet) {
-      side = magnet.side;
-    } else {
-      if (Math.min(leftDistance, rightDistance) > MAGNET_RADIUS) return;
-      side = leftDistance <= rightDistance ? "left" : "right";
+    const scale = root.offsetWidth > 0 ? rect.width / root.offsetWidth : 1;
+    const screenX = clientX - rect.left;
+    const screenY = clientY - rect.top;
+    const x = screenX / scale;
+    const y = screenY / scale;
+    const current = magnetRef.current;
+
+    if (keepSide && current) {
+      const outsideX = Math.max(0, rect.left - clientX, clientX - rect.right);
+      const outsideY = Math.max(0, rect.top - clientY, clientY - rect.bottom);
+      if (Math.hypot(outsideX, outsideY) > RELEASE_RADIUS) {
+        apply(null);
+        return;
+      }
+      apply({ side: current.side, x, y });
+      return;
     }
-    const top = Math.min(88, Math.max(12, (y / rect.height) * 100));
-    setMagnet((current) =>
-      current && current.side === side && Math.abs(current.top - top) < 0.4
-        ? current
-        : { side, top },
-    );
+
+    const centerY = rect.height / 2;
+    const leftDistance = Math.hypot(screenX, screenY - centerY);
+    const rightDistance = Math.hypot(screenX - rect.width, screenY - centerY);
+    if (Math.min(leftDistance, rightDistance) > MAGNET_RADIUS) return;
+    apply({ side: leftDistance <= rightDistance ? "left" : "right", x, y });
+  }, []);
+
+  useEffect(() => {
+    if (!active) return;
+    const onPointerMove = (event: PointerEvent) => {
+      if (event.buttons !== 0) return;
+      updateMagnet(event.clientX, event.clientY, true);
+    };
+    const onPointerUp = () => {
+      magnetRef.current = null;
+      setMagnet(null);
+    };
+    window.addEventListener("pointermove", onPointerMove, true);
+    window.addEventListener("pointerup", onPointerUp, true);
+    return () => {
+      window.removeEventListener("pointermove", onPointerMove, true);
+      window.removeEventListener("pointerup", onPointerUp, true);
+    };
+  }, [active, updateMagnet]);
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.buttons !== 0) return;
+    updateMagnet(event.clientX, event.clientY, Boolean(magnetRef.current));
   };
 
-  const handlePointerLeave = () => {
-    setMagnet(null);
-  };
+  const handleStyle = (side: "left" | "right") =>
+    magnet?.side === side
+      ? {
+          left: magnet.x,
+          top: magnet.y,
+          right: "auto",
+          transform: "translate(-50%, -50%)",
+        }
+      : undefined;
 
   return (
     <div
@@ -87,15 +121,9 @@ export function NodeFrame({
       className={`ai-node ai-node-${kind}${selected ? " is-selected" : ""}${running ? " is-running" : ""}`}
       style={{ "--node-accent": accent } as CSSProperties}
       onPointerMove={handlePointerMove}
-      onPointerLeave={handlePointerLeave}
     >
       <NodeTitleBar id={id} title={title} defaultTitle={defaultTitle} actions={actions} />
-      <Handle
-        type="target"
-        position={Position.Left}
-        className="node-handle"
-        style={magnet?.side === "left" ? { top: `${magnet.top}%` } : undefined}
-      />
+      <Handle type="target" position={Position.Left} className="node-handle" style={handleStyle("left")} />
       {running ? <NodeLoadingOverlay label={loadingLabel} progress={progress} /> : null}
       <div className="node-body nowheel">
         {children}
@@ -105,7 +133,7 @@ export function NodeFrame({
         type="source"
         position={Position.Right}
         className="node-handle"
-        style={magnet?.side === "right" ? { top: `${magnet.top}%` } : undefined}
+        style={handleStyle("right")}
       />
     </div>
   );
