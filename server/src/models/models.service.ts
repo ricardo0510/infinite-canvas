@@ -1,7 +1,8 @@
-import { Injectable, Optional, type OnModuleDestroy } from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import { PrismaClient, type ModelConfig } from "@prisma/client";
+import type { ModelConfig } from "@prisma/client";
 import { ApiException } from "../common/api-exception";
+import { PrismaService } from "../database/prisma.service";
 import type { AiModel, ModelKind } from "./model.types";
 import { isModelKind } from "./model.types";
 
@@ -23,19 +24,19 @@ function fromRow(row: ModelConfig): AiModel {
 }
 
 @Injectable()
-export class ModelsService implements OnModuleDestroy {
-  private readonly prisma: PrismaClient | null;
+export class ModelsService {
   private readonly fallback: AiModel[] = [];
+  private readonly hasDatabase: boolean;
   private readonly hasDeepseekKey: boolean;
   private cache: AiModel[] | null = null;
   private cachedAt = 0;
 
-  constructor(@Optional() config?: ConfigService) {
-    const databaseUrl = config?.get<string>("DATABASE_URL");
-    this.prisma = databaseUrl
-      ? new PrismaClient({ datasources: { db: { url: databaseUrl } } })
-      : null;
-    this.hasDeepseekKey = Boolean(config?.get<string>("DEEPSEEK_API_KEY")?.trim());
+  constructor(
+    private readonly prisma: PrismaService,
+    config: ConfigService,
+  ) {
+    this.hasDatabase = Boolean(config.get<string>("DATABASE_URL"));
+    this.hasDeepseekKey = Boolean(config.get<string>("DEEPSEEK_API_KEY")?.trim());
   }
 
   async list(kind?: ModelKind): Promise<AiModel[]> {
@@ -60,13 +61,9 @@ export class ModelsService implements OnModuleDestroy {
     return structuredClone(model);
   }
 
-  async onModuleDestroy(): Promise<void> {
-    await this.prisma?.$disconnect();
-  }
-
   private async load(): Promise<AiModel[]> {
     if (this.cache && Date.now() - this.cachedAt < CACHE_MS) return this.cache;
-    if (!this.prisma) return this.fallback;
+    if (!this.hasDatabase) return this.fallback;
 
     try {
       const rows = await this.prisma.modelConfig.findMany({

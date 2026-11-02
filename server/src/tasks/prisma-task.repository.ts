@@ -1,5 +1,4 @@
 import { Prisma, PrismaClient, type Task as TaskRow } from "@prisma/client";
-import type { OnModuleDestroy } from "@nestjs/common";
 import type { ApiTask, InternalTask, TaskKind, TaskStatus } from "./task.types";
 
 function jsonOrNull(value: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull {
@@ -62,7 +61,7 @@ function fromRow(row: TaskRow): InternalTask {
   };
 }
 
-export class PrismaTaskRepository implements OnModuleDestroy {
+export class PrismaTaskRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
   async create(task: InternalTask): Promise<void> {
@@ -101,9 +100,5 @@ export class PrismaTaskRepository implements OnModuleDestroy {
       where: { id: task.taskId },
       data: updateData(task),
     });
-  }
-
-  async onModuleDestroy(): Promise<void> {
-    await this.prisma.$disconnect();
   }
 }
