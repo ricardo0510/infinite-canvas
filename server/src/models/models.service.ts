@@ -1,7 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import type { ModelConfig } from "@prisma/client";
-import { ApiException } from "../common/api-exception";
 import { PrismaService } from "../database/prisma.service";
 import type { AiModel, ModelKind } from "./model.types";
 import { isModelKind } from "./model.types";
@@ -48,17 +47,6 @@ export class ModelsService {
 
   async getById(id: string): Promise<AiModel | undefined> {
     return (await this.load()).find((model) => model.id === id);
-  }
-
-  async require(id: string, kind?: ModelKind): Promise<AiModel> {
-    const model = await this.getById(id);
-    if (!model) {
-      throw new ApiException(10004, "模型不存在或未开通", 404);
-    }
-    if (kind && model.kind !== kind) {
-      throw new ApiException(20001, `模型 ${id} 不是 ${kind} 模型`, 422);
-    }
-    return structuredClone(model);
   }
 
   private async load(): Promise<AiModel[]> {

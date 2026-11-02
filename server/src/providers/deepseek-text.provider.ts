@@ -32,10 +32,6 @@ export class DeepSeekTextProvider {
     this.timeoutMs = Number(config.get<string>("DEEPSEEK_TIMEOUT_MS") ?? 120_000);
   }
 
-  isConfigured(): boolean {
-    return Boolean(this.apiKey);
-  }
-
   model(): string {
     return this.modelId;
   }

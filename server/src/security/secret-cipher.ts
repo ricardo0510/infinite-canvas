@@ -35,10 +35,6 @@ export class SecretCipher {
     this.kek = secret ? scryptSync(secret, KDF_SALT, KEY_LENGTH) : null;
   }
 
-  isConfigured(): boolean {
-    return this.kek !== null;
-  }
-
   encrypt(plain: string, aad: string): EncryptedSecret {
     const kek = this.requireKek();
     const dek = randomBytes(KEY_LENGTH);

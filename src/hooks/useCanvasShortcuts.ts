@@ -1,13 +1,9 @@
 import { useEffect } from "react";
+import { isEditableTarget } from "../lib/dom";
 import { getPasteAnchor } from "../lib/pasteAnchor";
 import { exportSnapshot, saveSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
-
-function isEditable(target: EventTarget | null): boolean {
-  if (!(target instanceof HTMLElement)) return false;
-  return Boolean(target.closest("input, textarea, [contenteditable='true']"));
-}
 
 function hasTextSelection(target: EventTarget | null): boolean {
   if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) {
@@ -22,7 +18,7 @@ export function useCanvasShortcuts(): void {
   // the 1px / 10px contract instead of moving by its default step.
   useEffect(() => {
     const onArrowKeyDown = (event: KeyboardEvent) => {
-      if (event.defaultPrevented || isEditable(event.target)) return;
+      if (event.defaultPrevented || isEditableTarget(event.target)) return;
       if (event.metaKey || event.ctrlKey || event.altKey) return;
       const key = event.key;
       if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(key)) return;
@@ -45,7 +41,7 @@ export function useCanvasShortcuts(): void {
       const store = useCanvasStore.getState();
       const mod = event.metaKey || event.ctrlKey;
       const key = event.key.toLowerCase();
-      const editable = isEditable(event.target);
+      const editable = isEditableTarget(event.target);
 
       // 选中节点时 Ctrl+C 复制节点；若正在输入框里选中了文本，则保留原生复制。
       if (mod && key === "c") {

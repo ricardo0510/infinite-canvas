@@ -27,13 +27,6 @@ function sendSubscriptions(): void {
   send({ type: "subscribe", data: { taskIds: [...subscriptions] } });
 }
 
-function stopTimers(): void {
-  if (reconnectTimer !== null) window.clearTimeout(reconnectTimer);
-  if (pingTimer !== null) window.clearInterval(pingTimer);
-  reconnectTimer = null;
-  pingTimer = null;
-}
-
 function scheduleReconnect(): void {
   if (reconnectTimer !== null || !getAiRealtimeBase()) return;
   attempts += 1;
@@ -125,11 +118,4 @@ export function unsubscribeTasks(taskIds: string[]): void {
     changed = true;
   }
   if (changed) send({ type: "unsubscribe", data: { taskIds } });
-}
-
-export function closeRealtime(): void {
-  stopTimers();
-  socket?.close();
-  socket = null;
-  subscriptions.clear();
 }

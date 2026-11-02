@@ -69,7 +69,3 @@ export function removePendingTask(taskId: string): void {
 export function removePendingTaskForNode(nodeId: string): void {
   write(read().filter((item) => item.nodeId !== nodeId));
 }
-
-export function clearPendingTasks(): void {
-  write([]);
-}

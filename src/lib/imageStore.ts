@@ -79,13 +79,6 @@ export async function getImageBlob(refOrId: string): Promise<Blob | null> {
   }
 }
 
-export async function deleteImage(refOrId: string): Promise<void> {
-  const id = imageIdFromRef(refOrId) ?? refOrId;
-  const db = await openDatabase();
-  const transaction = db.transaction(STORE_NAME, "readwrite");
-  await requestResult(transaction.objectStore(STORE_NAME).delete(id));
-}
-
 /** Deletes stored images not referenced by the current canvas. */
 export async function pruneImages(keepRefs: Iterable<string>): Promise<number> {
   const keep = new Set<string>();
