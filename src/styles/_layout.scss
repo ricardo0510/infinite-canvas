@@ -3,15 +3,16 @@
 .app {
   position: relative;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   height: 100%;
 }
 
-.brand-dock {
-  position: absolute;
-  top: var(--space-3);
-  left: var(--space-3);
-  z-index: var(--z-float);
+.app-main {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .brand {

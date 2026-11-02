@@ -95,6 +95,19 @@ const PATHS = {
       <path d="M10 11v6M14 11v6" />
     </>
   ),
+  "file-text": (
+    <>
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v4h4M9 12h6M9 16h4" />
+    </>
+  ),
+  image: (
+    <>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <circle cx="8.5" cy="10" r="1.5" />
+      <path d="m4 17 4.5-4.5 3 3L15 12l5 5" />
+    </>
+  ),
   close: <path d="M6 6l12 12M18 6 6 18" />,
   fullscreen: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   check: <path d="m4 12 5 5L20 6" />,
