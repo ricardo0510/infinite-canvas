@@ -1,6 +1,8 @@
 import "reflect-metadata";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ConfigService } from "@nestjs/config";
+import { OpenAICompatibleAdapter } from "./adapters/openai-compatible.adapter";
+import { UpstreamAuthError } from "./provider-adapter";
 import { DeepSeekTextProvider } from "./deepseek-text.provider";
 
 function config(values: Record<string, string>): ConfigService {
@@ -16,6 +18,7 @@ function provider(values: Record<string, string> = {}): DeepSeekTextProvider {
       DEEPSEEK_TIMEOUT_MS: "5000",
       ...values,
     }),
+    new OpenAICompatibleAdapter(),
   );
 }
 
@@ -69,8 +72,8 @@ describe("DeepSeekTextProvider", () => {
       vi.fn().mockResolvedValue(new Response("invalid api key", { status: 401 })),
     );
 
-    await expect(provider().generate({ prompt: "你好" })).rejects.toThrow(
-      "DeepSeek 请求失败（HTTP 401）",
+    await expect(provider().generate({ prompt: "你好" })).rejects.toBeInstanceOf(
+      UpstreamAuthError,
     );
   });
 

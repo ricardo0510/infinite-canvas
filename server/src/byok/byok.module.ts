@@ -18,6 +18,12 @@ import { UserModelsController } from "./user-models.controller";
     CredentialsService,
     ProviderCatalogService,
   ],
-  exports: [SecretCipher, ProviderRegistry, CredentialsService, ProviderCatalogService],
+  exports: [
+    SecretCipher,
+    ProviderRegistry,
+    CredentialsService,
+    ProviderCatalogService,
+    OpenAICompatibleAdapter,
+  ],
 })
 export class ByokModule {}
