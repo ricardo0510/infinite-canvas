@@ -2,7 +2,6 @@ import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
 import { CredentialsService, type ResolvedCredential } from "../byok/credentials.service";
-import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
 import {
   UpstreamAuthError,
   type ImageOutput,
@@ -23,7 +22,6 @@ export class TaskProcessorService {
 
   constructor(
     private readonly tasks: TasksService,
-    private readonly deepseek: DeepSeekTextProvider,
     private readonly credentials: CredentialsService,
     private readonly registry: ProviderRegistry,
   ) {}
@@ -63,45 +61,17 @@ export class TaskProcessorService {
   }
 
   private async runText(task: InternalTask): Promise<void> {
-    if (task.credentialId) {
-      await this.runByokText(task);
-      return;
+    if (!task.credentialId) {
+      throw new ApiException(20003, "请先在 AI 设置中绑定供应商 API Key", 400);
     }
-
-    if (this.deepseek.isModel(task.modelId)) {
-      await sleep(150);
-      if (!(await this.tasks.isActive(task.taskId))) return;
-      await this.tasks.setProgress(task.taskId, 50);
-      if (!(await this.tasks.isActive(task.taskId))) return;
-
-      const result = await this.deepseek.generate({
-        prompt: task.request.prompt,
-        systemPrompt: task.request.params.systemPrompt,
-        temperature: task.request.params.temperature,
-        maxOutputTokens: task.request.params.maxOutputTokens,
-      });
-      if (!(await this.tasks.isActive(task.taskId))) return;
-
-      await this.tasks.complete(task.taskId, [
-        {
-          id: `item_${randomUUID()}`,
-          kind: "text",
-          text: result.text,
-          modelId: task.modelId,
-          createdAt: new Date().toISOString(),
-          ...(result.usage ? { usage: result.usage } : {}),
-          ...(result.finishReason ? { finishReason: result.finishReason } : {}),
-        },
-      ]);
-      return;
-    }
-
-    throw new ApiException(30001, "当前模型未接入供应商", 400);
+    await this.runByokText(task);
   }
 
   private async runByokText(task: InternalTask): Promise<void> {
     const credentialId = task.credentialId;
-    if (!credentialId) return;
+    if (!credentialId) {
+      throw new ApiException(20003, "请先在 AI 设置中绑定供应商 API Key", 400);
+    }
 
     await sleep(120);
     if (!(await this.tasks.isActive(task.taskId))) return;
@@ -170,7 +140,7 @@ export class TaskProcessorService {
 
   private async runImage(task: InternalTask): Promise<void> {
     if (!task.credentialId) {
-      throw new ApiException(30001, "图片生成暂未接入供应商", 400);
+      throw new ApiException(20003, "请先在 AI 设置中绑定供应商 API Key", 400);
     }
 
     await sleep(120);
@@ -236,7 +206,7 @@ export class TaskProcessorService {
 
   private async runVideo(task: InternalTask): Promise<void> {
     if (!task.credentialId) {
-      throw new ApiException(30001, "视频生成暂未接入供应商", 400);
+      throw new ApiException(20003, "请先在 AI 设置中绑定供应商 API Key", 400);
     }
 
     await sleep(120);

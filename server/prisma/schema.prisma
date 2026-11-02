@@ -58,23 +58,6 @@ model ApiToken {
   @@index([userId])
 }
 
-model ModelConfig {
-  id            String   @id
-  name          String
-  kind          String
-  modes         Json
-  description   String?
-  logoUrl       String?
-  limits        Json
-  output        Json
-  params        Json?
-  pricing       Json?
-  enabled       Boolean  @default(true)
-  sortOrder     Int      @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-
 model ProviderConfig {
   id              String   @id @default(uuid())
   name            String

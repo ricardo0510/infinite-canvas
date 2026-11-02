@@ -67,7 +67,7 @@ npm run dev        # http://localhost:8790/v1
 npm run dev:admin  # http://localhost:8791/admin
 ```
 
-前端开发模式通过 Vite 代理访问 `/v1`，无需填写接口地址。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。文本模型支持 DeepSeek 4.1 Flash（配置 `DEEPSEEK_API_KEY` 后自动出现在模型列表），图片/视频生成待接入真实供应商。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)，后台管理方案见 [docs/admin-system-development-plan.md](./docs/admin-system-development-plan.md)，用户 API Key 托管方案见 [docs/byok-api-key-development-plan.md](./docs/byok-api-key-development-plan.md)。
+前端开发模式通过 Vite 代理访问 `/v1`，无需填写接口地址。任务与幂等键持久化到 PostgreSQL，Redis + BullMQ 负责任务队列。所有生成模型统一走用户在前端绑定的供应商 Key（BYOK），服务端不保存平台级模型 Key。完整契约见 [docs/backend-api-plan.md](./docs/backend-api-plan.md)，后台管理方案见 [docs/admin-system-development-plan.md](./docs/admin-system-development-plan.md)，用户 API Key 托管方案见 [docs/byok-api-key-development-plan.md](./docs/byok-api-key-development-plan.md)。
 
 ## Quality
 

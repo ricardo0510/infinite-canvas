@@ -53,7 +53,6 @@ export async function setupAdmin(
       translations: {
         "zh-CN": {
           labels: {
-            ModelConfig: "模型配置",
             ProviderConfig: "Provider 配置",
             ProviderModel: "供应商模型",
             User: "用户",
@@ -63,32 +62,6 @@ export async function setupAdmin(
             Task: "任务",
           },
           resources: {
-            ModelConfig: {
-              properties: {
-                id: "ID",
-                name: "名称",
-                kind: "类型",
-                modes: "模式",
-                description: "描述",
-                logoUrl: "Logo",
-                limits: "限制",
-                output: "输出能力",
-                params: "参数",
-                pricing: "价格",
-                enabled: "启用",
-                sortOrder: "排序",
-                createdAt: "创建时间",
-                updatedAt: "更新时间",
-              },
-              actions: {
-                new: "新建模型",
-                list: "模型列表",
-                show: "查看模型",
-                edit: "编辑模型",
-                delete: "删除模型",
-                bulkDelete: "批量删除模型",
-              },
-            },
             ProviderConfig: {
               properties: {
                 id: "ID",
@@ -164,20 +137,6 @@ export async function setupAdmin(
       },
     },
     resources: [
-      {
-        resource: { model: getModelByName("ModelConfig"), client: prisma },
-        options: {
-          navigation: { name: "模型" },
-          properties: {
-            kind: { availableValues: KIND_OPTIONS },
-            modes: { type: "mixed" },
-            limits: { type: "mixed" },
-            output: { type: "mixed" },
-            params: { type: "mixed" },
-            pricing: { type: "mixed" },
-          },
-        },
-      },
       {
         resource: { model: getModelByName("ProviderConfig"), client: prisma },
         options: {

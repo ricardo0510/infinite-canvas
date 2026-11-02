@@ -137,7 +137,6 @@ async function main(): Promise<void> {
     create: { id: "default-user", name: "默认用户" },
   });
 
-  const deepseekModel = process.env.DEEPSEEK_MODEL?.trim() || "deepseek-flash";
   await prisma.providerConfig.upsert({
     where: { id: "deepseek" },
     update: {
@@ -154,7 +153,7 @@ async function main(): Promise<void> {
       authType: "bearer",
       docsUrl: "https://api-docs.deepseek.com",
       supportsModels: true,
-      baseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
+      baseUrl: "https://api.deepseek.com",
     },
   });
 
@@ -239,26 +238,7 @@ async function main(): Promise<void> {
     });
   }
 
-  await prisma.modelConfig.upsert({
-    where: { id: deepseekModel },
-    update: {},
-    create: {
-      id: deepseekModel,
-      name: "DeepSeek 4.1 Flash",
-      kind: "text",
-      modes: [],
-      description: "DeepSeek 4.1 Flash（OpenAI 兼容接口）",
-      limits: { maxPromptLength: 60000, maxImages: 0, maxVideos: 0 },
-      output: { image: null, video: null },
-      enabled: true,
-      sortOrder: -1,
-    },
-  });
-
   // 清理旧版本内置的模拟数据
-  await prisma.modelConfig.deleteMany({
-    where: { id: { in: ["mock-text", "mock-image", "mock-video"] } },
-  });
   await prisma.providerConfig.deleteMany({ where: { id: "mock" } });
 
   console.log("Seeded verified provider models; removed obsolete/fake model data");

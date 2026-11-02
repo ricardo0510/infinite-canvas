@@ -10,8 +10,7 @@ import {
   IMAGE_RESOLUTIONS,
 } from "../models/image-options";
 import type { AiModel } from "../models/model.types";
-import { ModelsService } from "../models/models.service";
-import { ProviderCatalogService } from "../byok/provider-catalog.service";
+import { ProviderCatalogService, type ResolvedUserModel } from "../byok/provider-catalog.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { TaskEvents } from "./task.events";
 import { TASK_REPOSITORY, type TaskRepository } from "./task.repository";
@@ -41,7 +40,6 @@ function isTerminal(status: TaskStatus): boolean {
 @Injectable()
 export class TasksService {
   constructor(
-    private readonly models: ModelsService,
     private readonly events: TaskEvents,
     @Inject(TASK_REPOSITORY) private readonly repo: TaskRepository,
     private readonly catalog: ProviderCatalogService,
@@ -187,27 +185,8 @@ export class TasksService {
     userId: string,
     modelId: string,
     kind: TaskKind,
-  ): Promise<{
-    model: AiModel;
-    providerId?: string;
-    providerModel?: string;
-    credentialId?: string;
-  }> {
-    const platform = await this.models.getById(modelId);
-    if (platform) {
-      if (platform.kind !== kind) {
-        throw new ApiException(20001, `模型 ${modelId} 不是 ${kind} 模型`, 422);
-      }
-      return { model: structuredClone(platform) };
-    }
-
-    const byok = await this.catalog.resolveGenerationModel(userId, modelId, kind);
-    return {
-      model: byok.model,
-      providerId: byok.providerId,
-      providerModel: byok.providerModel,
-      credentialId: byok.credentialId,
-    };
+  ): Promise<ResolvedUserModel> {
+    return this.catalog.resolveGenerationModel(userId, modelId, kind);
   }
 
   private validateReferences(

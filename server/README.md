@@ -5,24 +5,11 @@
 - NestJS + Fastify，统一 `{ code, message, data }` 响应。
 - 模型目录、图片上传、文本/图片/视频异步任务、任务查询/取消、WebSocket 实时推送。
 - 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘。
-- 文本模型支持 DeepSeek 4.1 Flash（OpenAI 兼容接口）；图片/视频生成待接入真实供应商。
+- 所有生成模型统一走用户在前端绑定的供应商 Key（BYOK），服务端不保存平台级模型 Key。
 - Redis + BullMQ 负责任务队列；`npm run dev` 默认在 API 进程内启动 Worker，生产可拆成独立 Worker 进程。
 - 任务事件通过 Redis Pub/Sub 跨进程广播；拆分 API 和 Worker 后实时推送仍然可用。
 
-后续替换点：S3/OSS、图片/视频真实 Provider、生产鉴权与限流。
-
-## DeepSeek 4.1 Flash
-
-在 `.env` 中配置：
-
-```bash
-DEEPSEEK_API_KEY=sk-...
-DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-flash
-DEEPSEEK_TIMEOUT_MS=120000
-```
-
-配置后 `GET /v1/models` 会自动返回 `DeepSeek 4.1 Flash`，并作为文本模型默认首选。`DEEPSEEK_MODEL` 必须与上游实际模型 ID 一致；如果网关使用别名，改这个值即可。
+后续替换点：S3/OSS、生产级限流。
 
 ## 运行
 
@@ -90,7 +77,7 @@ GET    /v1/user/models
 PUT    /v1/user/models
 ```
 
-第一版已打通 OpenAI 兼容文本模型（DeepSeek / OpenAI / SiliconFlow 等）；图片、视频生成待接入真实供应商。
+文本、图片、视频生成都通过用户绑定的供应商 Key 执行（OpenAI 兼容 / 智谱适配器）。
 
 ## 接口
 
@@ -120,11 +107,11 @@ npm run build
 
 ## 管理端
 
-`ash
+```bash
 npm run dev:admin   # http://localhost:8791/admin
 `
 
-- AdminJS：/admin，默认中文界面，管理 ModelConfig / ProviderConfig / ProviderModel / Task / 用户凭据（凭据只读且隐藏密文）。
+- AdminJS：/admin，默认中文界面，管理 ProviderConfig / ProviderModel / Task / 用户凭据 / API Token（凭据和 Token 只读且隐藏密文）。
 - Bull Board：/admin/queues，Basic Auth 使用 ADMIN_EMAIL / ADMIN_PASSWORD。
-- 模型目录已改为读取 ModelConfig 表；ProviderConfig 目前只做配置管理，DeepSeek 运行时仍读环境变量。
+- 模型目录由 ProviderModel 决定，每个用户再通过偏好选择启用哪些模型；ProviderConfig 管理供应商接入信息。
 - 管理端依赖 .env 中的 ADMIN_EMAIL、ADMIN_PASSWORD、ADMIN_COOKIE_SECRET、ADMIN_PORT。

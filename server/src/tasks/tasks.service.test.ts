@@ -2,7 +2,6 @@ import "reflect-metadata";
 import { describe, expect, it } from "vitest";
 import { ApiException } from "../common/api-exception";
 import type { AiModel } from "../models/model.types";
-import type { ModelsService } from "../models/models.service";
 import type { ProviderCatalogService } from "../byok/provider-catalog.service";
 import type { CreateGenerationDto } from "./dto/create-generation.dto";
 import { InMemoryTaskRepository } from "./task.repository";
@@ -59,22 +58,22 @@ const TEST_MODELS: AiModel[] = [
   },
 ];
 
-function fakeModels(): ModelsService {
-  return {
-    getById: async (id: string) => TEST_MODELS.find((model) => model.id === id),
-    list: async (kind?: string) =>
-      kind ? TEST_MODELS.filter((model) => model.kind === kind) : TEST_MODELS,
-  } as unknown as ModelsService;
-}
-
 function createService() {
   return new TasksService(
-    fakeModels(),
     new TaskEvents(),
     new InMemoryTaskRepository(),
     {
-      resolveGenerationModel: async () => {
-        throw new ApiException(10004, "模型不存在或未开通", 404);
+      resolveGenerationModel: async (_userId: string, modelId: string) => {
+        const model = TEST_MODELS.find((item) => item.id === modelId);
+        if (!model) {
+          throw new ApiException(10004, "模型不存在或未开通", 404);
+        }
+        return {
+          model,
+          providerId: "test-provider",
+          providerModel: model.id,
+          credentialId: "test-credential",
+        };
       },
     } as unknown as ProviderCatalogService,
   );

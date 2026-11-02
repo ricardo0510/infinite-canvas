@@ -45,7 +45,7 @@ server/prisma/schema.prisma  # ModelConfig / ProviderConfig
 - Bull Board：`http://localhost:8791/admin/queues`，Basic Auth 使用 `ADMIN_EMAIL` / `ADMIN_PASSWORD`。
 - 管理服务与业务 API 分离端口，避免 AdminJS 的 multipart/session 插件与 Fastify 上传解析冲突。
 - 管理端使用独立 Cookie 会话；业务端仍使用 `API_TOKEN`。
-- `ModelConfig` 已接入 `/v1/models`（10 秒缓存）；`ProviderConfig` 目前只做配置管理，DeepSeek 运行时仍读环境变量。
+- `/v1/models` 由 `ProviderModel` + 用户偏好决定；`ProviderConfig` 管理供应商接入信息，所有生成都使用用户绑定的 Key。
 - 自定义管理 API（用户、Token、审计、设置）后续按本文设计补到 `server/src/admin` 或独立 Nest 模块。
 
 ### 2.2 技术选型
@@ -198,7 +198,7 @@ model ModelConfig {
   - 接口永远只返回 `apiKeyMasked`，不返回明文。
   - 更新时留空表示“不修改”，不能把掩码写回。
 - 连通性测试：`POST /v1/admin/providers/:id/test`，发最小请求验证 key/base/model。
-- 当前 DeepSeek 走环境变量；管理端上线后改为读取 Provider 配置，环境变量作为 fallback。
+- 所有生成统一使用用户绑定的 Provider Key，不再读取平台环境变量。
 
 建议表：
 

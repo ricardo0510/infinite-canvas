@@ -34,11 +34,11 @@
 
 当前后端已有：
 
-- `ProviderConfig` / `ModelConfig` 表。
-- 平台级 DeepSeek Key 通过环境变量读取。
-- 单 `API_TOKEN` 鉴权，没有用户体系。
+- `ProviderConfig` / `ProviderModel` / `UserModelPreference` 表。
+- 所有生成都使用用户绑定的供应商 Key，不读取平台级模型 Key。
+- 多用户 API Token 鉴权（CLI 创建/撤销）。
 - 文本/图片/视频统一异步任务 + BullMQ + WebSocket。
-- AdminJS 管理 Provider/Model 配置。
+- AdminJS 管理 Provider/Model 配置和 API Token。
 
 要做 BYOK，必须先补：
 
