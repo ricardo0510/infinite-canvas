@@ -2,7 +2,15 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const PROVIDER_MODELS = [
+type SeedProviderModel = {
+  providerId: string;
+  modelId: string;
+  displayName: string;
+  kind: "text" | "image" | "video";
+  capabilities?: Record<string, unknown>;
+};
+
+const PROVIDER_MODELS: SeedProviderModel[] = [
   { providerId: "deepseek", modelId: "deepseek-flash", displayName: "DeepSeek Flash", kind: "text" },
   { providerId: "deepseek", modelId: "deepseek-chat", displayName: "DeepSeek Chat", kind: "text" },
   {
@@ -11,33 +19,129 @@ const PROVIDER_MODELS = [
     displayName: "DeepSeek Reasoner",
     kind: "text",
   },
-  { providerId: "openai", modelId: "gpt-image-1", displayName: "GPT Image 1", kind: "image" },
-  { providerId: "openai", modelId: "dall-e-3", displayName: "DALL·E 3", kind: "image" },
-  { providerId: "openai", modelId: "sora-2", displayName: "Sora 2", kind: "video" },
-  { providerId: "openai", modelId: "sora-2-pro", displayName: "Sora 2 Pro", kind: "video" },
+  {
+    providerId: "openai",
+    modelId: "gpt-image-1",
+    displayName: "GPT Image 1",
+    kind: "image",
+    capabilities: {
+      modes: ["textToImage", "imageToImage"],
+      aspectRatios: ["1:1", "3:2", "2:3"],
+      resolutions: ["1k", "1.5k", "2k"],
+      maxCount: 4,
+      maxPromptLength: 4000,
+    },
+  },
+  {
+    providerId: "openai",
+    modelId: "dall-e-3",
+    displayName: "DALL·E 3",
+    kind: "image",
+    capabilities: {
+      modes: ["textToImage"],
+      aspectRatios: ["1:1", "16:9", "9:16"],
+      resolutions: ["1k", "2k"],
+      maxCount: 1,
+      maxPromptLength: 4000,
+    },
+  },
+  {
+    providerId: "openai",
+    modelId: "sora-2",
+    displayName: "Sora 2",
+    kind: "video",
+    capabilities: {
+      modes: ["textToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p", "1080p"],
+      minDuration: 5,
+      maxDuration: 10,
+      supportsAudio: false,
+      maxPromptLength: 2000,
+    },
+  },
+  {
+    providerId: "openai",
+    modelId: "sora-2-pro",
+    displayName: "Sora 2 Pro",
+    kind: "video",
+    capabilities: {
+      modes: ["textToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p", "1080p"],
+      minDuration: 5,
+      maxDuration: 10,
+      supportsAudio: false,
+      maxPromptLength: 2000,
+    },
+  },
   {
     providerId: "siliconflow",
     modelId: "black-forest-labs/FLUX.1-schnell",
     displayName: "FLUX.1 Schnell",
     kind: "image",
+    capabilities: {
+      modes: ["textToImage", "imageToImage"],
+      aspectRatios: [
+        "1:1",
+        "3:2",
+        "2:3",
+        "4:3",
+        "3:4",
+        "5:4",
+        "4:5",
+        "16:9",
+        "9:16",
+        "21:9",
+      ],
+      resolutions: ["1k", "1.5k", "2k", "3k", "4k"],
+      maxCount: 4,
+      maxPromptLength: 4000,
+    },
   },
   {
     providerId: "siliconflow",
     modelId: "Kwai-Kolors/Kolors",
     displayName: "Kolors",
     kind: "image",
+    capabilities: {
+      modes: ["textToImage", "imageToImage"],
+      aspectRatios: ["1:1", "3:2", "2:3", "4:3", "3:4", "16:9", "9:16"],
+      resolutions: ["1k", "2k"],
+      maxCount: 4,
+      maxPromptLength: 4000,
+    },
   },
   {
     providerId: "siliconflow",
     modelId: "Wan-AI/Wan2.1-T2V-14B",
     displayName: "Wan2.1 T2V 14B",
     kind: "video",
+    capabilities: {
+      modes: ["textToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p"],
+      minDuration: 5,
+      maxDuration: 5,
+      supportsAudio: false,
+      maxPromptLength: 2000,
+    },
   },
   {
     providerId: "siliconflow",
     modelId: "Wan-AI/Wan2.1-I2V-14B-720P",
     displayName: "Wan2.1 I2V 14B",
     kind: "video",
+    capabilities: {
+      modes: ["imageToVideo", "firstLastFrame"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p"],
+      minDuration: 5,
+      maxDuration: 5,
+      supportsAudio: false,
+      maxImages: 2,
+      maxPromptLength: 2000,
+    },
   },
 ] as const;
 
@@ -106,6 +210,7 @@ async function main(): Promise<void> {
       update: {
         displayName: model.displayName,
         kind: model.kind,
+        capabilities: model.capabilities ?? {},
         enabled: true,
       },
       create: {
@@ -113,6 +218,7 @@ async function main(): Promise<void> {
         modelId: model.modelId,
         displayName: model.displayName,
         kind: model.kind,
+        capabilities: model.capabilities ?? {},
         source: "manual",
         enabled: true,
       },

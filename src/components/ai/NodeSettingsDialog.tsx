@@ -34,6 +34,29 @@ function ResultThumb({ item }: { item: GenerationResultItem }) {
   );
 }
 
+function formatResolution(value: string): string {
+  const lower = value.toLowerCase();
+  if (lower === "adaptive" || lower === "auto" || value === "自适应") return "自适应";
+  const match = lower.match(/^(\d+(?:\.\d+)?)k$/);
+  return match ? `${match[1]}K` : value;
+}
+
+function RatioShape({ ratio }: { ratio: string }) {
+  const [widthValue, heightValue] = ratio.split(":").map(Number);
+  const max = 22;
+  if (
+    !Number.isFinite(widthValue) ||
+    !Number.isFinite(heightValue) ||
+    widthValue <= 0 ||
+    heightValue <= 0
+  ) {
+    return <span className="ratio-shape" style={{ width: max, height: max }} />;
+  }
+  const width = widthValue >= heightValue ? max : (max * widthValue) / heightValue;
+  const height = widthValue >= heightValue ? (max * heightValue) / widthValue : max;
+  return <span className="ratio-shape" style={{ width, height }} />;
+}
+
 export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeSettingsDialogProps) {
   const imageOutput = model?.output.image ?? null;
   const videoOutput = model?.output.video ?? null;
@@ -41,6 +64,9 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
   const backgrounds = model?.params?.backgrounds ?? [];
   const extraParams = model?.params?.extra ?? [];
   const running = generation.status === "queued" || generation.status === "running";
+  const imageAspectRatio =
+    generation.params?.aspectRatio ?? imageOutput?.aspectRatios[0] ?? "";
+  const imageResolution = generation.params?.resolution ?? imageOutput?.resolutions[0] ?? "";
 
   const updateParams = (patch: Partial<GenerationParams>) => {
     patchGeneration(nodeId, { params: { ...(generation.params ?? {}), ...patch } });
@@ -52,20 +78,45 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
       <div className="node-settings-body">
         {imageOutput ? (
           <>
-            <SelectField
-              label="比例"
-              value={generation.params?.aspectRatio ?? imageOutput.aspectRatios[0] ?? ""}
-              options={imageOutput.aspectRatios}
-              disabled={running}
-              onChange={(value) => updateParams({ aspectRatio: value })}
-            />
-            <SelectField
-              label="分辨率"
-              value={generation.params?.resolution ?? imageOutput.resolutions[0] ?? ""}
-              options={imageOutput.resolutions}
-              disabled={running}
-              onChange={(value) => updateParams({ resolution: value })}
-            />
+            {imageOutput.resolutions.length > 0 ? (
+              <div className="settings-group">
+                <span className="settings-label">画质</span>
+                <div className="option-grid">
+                  {imageOutput.resolutions.map((resolution) => (
+                    <button
+                      key={resolution}
+                      type="button"
+                      className={`option-tile${imageResolution === resolution ? " is-active" : ""}`}
+                      aria-pressed={imageResolution === resolution}
+                      disabled={running}
+                      onClick={() => updateParams({ resolution })}
+                    >
+                      {formatResolution(resolution)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            {imageOutput.aspectRatios.length > 0 ? (
+              <div className="settings-group">
+                <span className="settings-label">宽高比</span>
+                <div className="option-grid option-grid--ratios">
+                  {imageOutput.aspectRatios.map((ratio) => (
+                    <button
+                      key={ratio}
+                      type="button"
+                      className={`ratio-tile${imageAspectRatio === ratio ? " is-active" : ""}`}
+                      aria-pressed={imageAspectRatio === ratio}
+                      disabled={running}
+                      onClick={() => updateParams({ aspectRatio: ratio })}
+                    >
+                      <RatioShape ratio={ratio} />
+                      <span>{ratio}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <Field label="数量">
               <Input
                 type="number"
@@ -112,7 +163,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
 
         {qualityTiers.length > 0 ? (
           <SelectField
-            label="画质档"
+            label="质量档位"
             value={generation.params?.qualityTier ?? qualityTiers[0].key}
             options={qualityTiers.map((tier) => ({ value: tier.key, label: tier.label }))}
             disabled={running}

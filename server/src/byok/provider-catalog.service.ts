@@ -82,15 +82,78 @@ function normalizeKind(value: string): ModelKind {
   return isModelKind(value) ? value : "text";
 }
 
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+function stringList(value: unknown): string[] | null {
+  if (!Array.isArray(value)) return null;
+  const items = value.filter(
+    (item): item is string => typeof item === "string" && item.trim().length > 0,
+  );
+  return items.length > 0 ? items : null;
+}
+
+function integer(value: unknown, fallback: number): number {
+  const parsed = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(parsed) ? Math.max(1, Math.floor(parsed)) : fallback;
+}
+
+function booleanValue(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+const DEFAULT_MODES: Record<ModelKind, string[]> = {
+  text: [],
+  image: ["textToImage", "imageToImage"],
+  video: ["textToVideo", "imageToVideo", "firstLastFrame", "referenceVideo"],
+};
+
 function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
+  const kind = normalizeKind(row.kind);
+  const capabilities = asRecord(row.capabilities);
+  const aspectRatios = stringList(capabilities.aspectRatios);
+  const resolutions = stringList(capabilities.resolutions);
+  const modes = stringList(capabilities.modes) ?? DEFAULT_MODES[kind];
+  const output: AiModel["output"] = { image: null, video: null };
+
+  if (kind === "image" && aspectRatios && resolutions) {
+    output.image = {
+      aspectRatios,
+      resolutions,
+      maxCount: integer(capabilities.maxCount, 1),
+    };
+  }
+  if (kind === "video" && aspectRatios && resolutions) {
+    output.video = {
+      aspectRatios,
+      resolutions,
+      minDuration: integer(capabilities.minDuration, 5),
+      maxDuration: integer(capabilities.maxDuration, 10),
+      supportsAudio: booleanValue(capabilities.supportsAudio, false),
+    };
+  }
+
   return {
     id: publicModelId(row.providerId, row.modelId),
     name: row.displayName || row.modelId,
-    kind: normalizeKind(row.kind),
-    modes: [],
+    kind,
+    modes,
     description: `${row.provider.name} · 使用你的 API Key`,
-    limits: { maxPromptLength: 60_000, maxImages: 0, maxVideos: 0 },
-    output: { image: null, video: null },
+    limits: {
+      maxPromptLength: integer(
+        capabilities.maxPromptLength,
+        kind === "text" ? 60_000 : 2_000,
+      ),
+      maxImages: integer(
+        capabilities.maxImages,
+        kind === "image" ? 4 : kind === "video" ? 2 : 0,
+      ),
+      maxVideos: integer(capabilities.maxVideos, kind === "video" ? 1 : 0),
+    },
+    output,
   };
 }
 
