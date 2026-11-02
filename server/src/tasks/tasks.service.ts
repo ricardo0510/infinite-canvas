@@ -341,21 +341,19 @@ export class TasksService {
     }
 
     if (kind === "image") {
-      if (
-        input.aspectRatio &&
-        !(IMAGE_ASPECT_RATIOS as readonly string[]).includes(input.aspectRatio)
-      ) {
-        throw new ApiException(20001, "aspectRatio 不在支持范围内", 422);
+      const output = model.output.image;
+      const aspectRatios: readonly string[] = output?.aspectRatios ?? IMAGE_ASPECT_RATIOS;
+      const resolutions: readonly string[] = output?.resolutions ?? IMAGE_RESOLUTIONS;
+      const maxCount = output?.maxCount ?? IMAGE_MAX_COUNT;
+      if (input.aspectRatio && !aspectRatios.includes(input.aspectRatio)) {
+        throw new ApiException(20001, "aspectRatio 不在模型能力范围内", 422);
       }
-      if (
-        input.resolution &&
-        !(IMAGE_RESOLUTIONS as readonly string[]).includes(input.resolution)
-      ) {
-        throw new ApiException(20001, "resolution 不在支持范围内", 422);
+      if (input.resolution && !resolutions.includes(input.resolution)) {
+        throw new ApiException(20001, "resolution 不在模型能力范围内", 422);
       }
-      params.aspectRatio = input.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO;
-      params.resolution = input.resolution ?? DEFAULT_IMAGE_RESOLUTION;
-      params.count = Math.min(IMAGE_MAX_COUNT, Math.max(1, input.count ?? 1));
+      params.aspectRatio = input.aspectRatio ?? output?.aspectRatios[0] ?? DEFAULT_IMAGE_ASPECT_RATIO;
+      params.resolution = input.resolution ?? output?.resolutions[0] ?? DEFAULT_IMAGE_RESOLUTION;
+      params.count = Math.min(maxCount, Math.max(1, input.count ?? 1));
       if (params.watermark === undefined) params.watermark = true;
       return params;
     }

@@ -25,7 +25,18 @@ const TEST_MODELS: AiModel[] = [
     modes: ["textToImage", "imageToImage"],
     limits: { maxPromptLength: 2000, maxImages: 4, maxVideos: 0 },
     output: {
-      image: { aspectRatios: ["1:1"], resolutions: ["1k"], maxCount: 4 },
+      image: { aspectRatios: ["1:1", "16:9"], resolutions: ["1k", "2k"], maxCount: 4 },
+      video: null,
+    },
+  },
+  {
+    id: "test-image-limited",
+    name: "测试图片（受限）",
+    kind: "image",
+    modes: ["textToImage"],
+    limits: { maxPromptLength: 2000, maxImages: 4, maxVideos: 0 },
+    output: {
+      image: { aspectRatios: ["3:2"], resolutions: ["2k"], maxCount: 2 },
       video: null,
     },
   },
@@ -104,6 +115,41 @@ describe("TasksService", () => {
 
     expect(task.status).toBe("queued");
     expect((await tasks.getInternal(task.taskId))?.request.params.count).toBe(4);
+  });
+
+  it("uses the per-model image capabilities and count limit", async () => {
+    const tasks = createService();
+    const { task } = await tasks.create("user-1", "image", {
+      modelId: "test-image-limited",
+      mode: "textToImage",
+      prompt: "雨夜霓虹",
+      params: { count: 99 },
+      clientRequestId: "node-1:req-image-limited",
+    } as CreateGenerationDto);
+
+    const stored = await tasks.getInternal(task.taskId);
+    expect(stored?.request.params.aspectRatio).toBe("3:2");
+    expect(stored?.request.params.resolution).toBe("2k");
+    expect(stored?.request.params.count).toBe(2);
+  });
+
+  it("rejects image params outside the model capabilities", async () => {
+    const tasks = createService();
+    let error: unknown;
+    try {
+      await tasks.create("user-1", "image", {
+        modelId: "test-image-limited",
+        mode: "textToImage",
+        prompt: "雨夜霓虹",
+        params: { aspectRatio: "16:9", resolution: "1k" },
+        clientRequestId: "node-1:req-image-invalid",
+      } as CreateGenerationDto);
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).code).toBe(20001);
   });
 
   it("appends image options to the upstream prompt", async () => {

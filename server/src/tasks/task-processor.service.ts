@@ -203,7 +203,7 @@ export class TaskProcessorService {
           prompt: task.request.prompt,
           aspectRatio: params.aspectRatio,
           resolution: params.resolution,
-          count: Math.min(4, Math.max(1, params.count ?? 1)),
+          count: Math.max(1, params.count ?? 1),
           ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
           ...(params.watermark !== undefined ? { watermark: params.watermark } : {}),
           ...(params.seed !== undefined ? { seed: params.seed } : {}),

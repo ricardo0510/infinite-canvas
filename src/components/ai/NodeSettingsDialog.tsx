@@ -60,15 +60,23 @@ function RatioShape({ ratio }: { ratio: string }) {
 
 export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeSettingsDialogProps) {
   const isImage = generation.kind === "image";
+  const imageOutput = model?.output.image ?? null;
+  const imageAspectRatios = imageOutput?.aspectRatios?.length
+    ? imageOutput.aspectRatios
+    : IMAGE_ASPECT_RATIOS;
+  const imageResolutions = imageOutput?.resolutions?.length
+    ? imageOutput.resolutions
+    : IMAGE_RESOLUTIONS;
+  const imageMaxCount = imageOutput?.maxCount ?? IMAGE_MAX_COUNT;
   const videoOutput = model?.output.video ?? null;
   const qualityTiers = model?.params?.qualityTiers ?? [];
   const backgrounds = model?.params?.backgrounds ?? [];
   const extraParams = model?.params?.extra ?? [];
   const running = generation.status === "queued" || generation.status === "running";
   const imageAspectRatio =
-    generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO;
+    generation.params?.aspectRatio ?? imageOutput?.aspectRatios[0] ?? DEFAULT_IMAGE_ASPECT_RATIO;
   const imageResolution =
-    generation.params?.resolution ?? DEFAULT_IMAGE_RESOLUTION;
+    generation.params?.resolution ?? imageOutput?.resolutions[0] ?? DEFAULT_IMAGE_RESOLUTION;
 
   const updateParams = (patch: Partial<GenerationParams>) => {
     patchGeneration(nodeId, { params: { ...(generation.params ?? {}), ...patch } });
@@ -83,7 +91,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
             <div className="settings-group">
               <span className="settings-label">画质</span>
               <div className="option-grid">
-                {IMAGE_RESOLUTIONS.map((resolution) => (
+                {imageResolutions.map((resolution) => (
                   <button
                     key={resolution}
                     type="button"
@@ -100,7 +108,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
             <div className="settings-group">
               <span className="settings-label">宽高比</span>
               <div className="option-grid option-grid--ratios">
-                {IMAGE_ASPECT_RATIOS.map((ratio) => (
+                {imageAspectRatios.map((ratio) => (
                   <button
                     key={ratio}
                     type="button"
@@ -119,7 +127,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
               <Input
                 type="number"
                 min={1}
-                max={IMAGE_MAX_COUNT}
+                max={imageMaxCount}
                 value={generation.params?.count ?? 1}
                 disabled={running}
                 onChange={(event) => updateParams({ count: Number(event.target.value) || 1 })}

@@ -71,9 +71,10 @@ export function defaultParams(model: AiModel | undefined): {
 } {
   if (!model) return { watermark: true };
   if (model.kind === "image") {
+    const image = model.output.image;
     return {
-      aspectRatio: DEFAULT_IMAGE_ASPECT_RATIO,
-      resolution: DEFAULT_IMAGE_RESOLUTION,
+      aspectRatio: image?.aspectRatios[0] ?? DEFAULT_IMAGE_ASPECT_RATIO,
+      resolution: image?.resolutions[0] ?? DEFAULT_IMAGE_RESOLUTION,
       count: 1,
       watermark: true,
     };

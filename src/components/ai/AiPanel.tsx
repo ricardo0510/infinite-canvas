@@ -31,9 +31,12 @@ function configSummary(
   model: AiModel | undefined,
 ): string[] {
   if (kind === "image") {
+    const output = model?.output.image;
     return [
-      formatImageResolution(generation.params?.resolution ?? DEFAULT_IMAGE_RESOLUTION),
-      generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO,
+      formatImageResolution(
+        generation.params?.resolution ?? output?.resolutions[0] ?? DEFAULT_IMAGE_RESOLUTION,
+      ),
+      generation.params?.aspectRatio ?? output?.aspectRatios[0] ?? DEFAULT_IMAGE_ASPECT_RATIO,
       `${generation.params?.count ?? 1}`,
     ];
   }
@@ -104,7 +107,7 @@ export function AiPanel() {
       kind,
       modelId: next.id,
       mode: undefined,
-      params: current?.params ?? defaultParams(next),
+      params: defaultParams(next),
     });
   }, [kind, models, node, nodeId]);
 
