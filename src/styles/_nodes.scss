@@ -7,37 +7,32 @@
   border: 2px solid var(--inset);
   background: var(--node-accent, var(--accent));
   cursor: crosshair;
-  transition: transform 0.15s;
+  transition: scale 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .react-flow__handle::after {
   content: "";
   position: absolute;
-  inset: -7px;
+  inset: -14px;
   border-radius: 50%;
   pointer-events: all;
 }
 
 .react-flow__handle:hover {
-  transform: scale(1.25);
+  scale: 1.35;
+  box-shadow: 0 0 0 5px rgb(139 92 246 / 16%), 0 0 14px rgb(139 92 246 / 40%);
 }
 
-.node-handle-zone {
-  position: absolute;
-  top: 50%;
-  z-index: calc(var(--z-handle) - 1);
-  width: 64px;
-  height: 120px;
-  transform: translateY(-50%);
-  cursor: crosshair;
+.react-flow__handle.connectingfrom {
+  scale: 1.35;
+  box-shadow: 0 0 0 5px rgb(139 92 246 / 18%), 0 0 14px rgb(139 92 246 / 45%);
 }
 
-.node-handle-zone.is-left {
-  left: -64px;
-}
-
-.node-handle-zone.is-right {
-  right: -64px;
+.react-flow__handle.connectingto,
+.react-flow__handle.valid {
+  scale: 1.6;
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 6px rgb(34 211 238 / 20%), 0 0 18px rgb(34 211 238 / 55%);
 }
 
 /* ---------- Shared node frame ---------- */

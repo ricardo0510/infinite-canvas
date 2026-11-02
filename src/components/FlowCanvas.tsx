@@ -271,6 +271,7 @@ export function FlowCanvas() {
         selectionMode={SelectionMode.Partial}
         selectionKeyCode={null}
         multiSelectionKeyCode={["Shift", "Control", "Meta"]}
+        connectionRadius={40}
         zoomOnDoubleClick={false}
         defaultEdgeOptions={edgeOptions}
         connectionLineStyle={{ stroke: NOTE_COLORS.violet, strokeWidth: 2 }}
