@@ -40,11 +40,11 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 ```bash
 VITE_AI_API_BASE_URL=https://your-api.example.com/v1
 VITE_AI_REALTIME_BASE_URL=wss://your-api.example.com
-# 仅当服务端配置了 API_TOKEN 时填写同一个值
+# 单用户引导令牌，或多用户创建的个人 token（server: npm run token:create）
 VITE_AI_TOKEN=
 ```
 
-工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
+工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。多用户部署用 `cd server && npm run token:create -- --user <id>` 为每个用户生成独立令牌，配置 `DEV_ALLOW_ANONYMOUS=false` 关闭匿名访问。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
 
 ## Run
 

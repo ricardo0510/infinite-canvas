@@ -155,7 +155,6 @@ async function main(): Promise<void> {
       docsUrl: "https://api-docs.deepseek.com",
       supportsModels: true,
       baseUrl: process.env.DEEPSEEK_BASE_URL ?? "https://api.deepseek.com",
-      model: deepseekModel,
     },
   });
 
@@ -251,8 +250,6 @@ async function main(): Promise<void> {
       description: "DeepSeek 4.1 Flash（OpenAI 兼容接口）",
       limits: { maxPromptLength: 60000, maxImages: 0, maxVideos: 0 },
       output: { image: null, video: null },
-      providerId: "deepseek",
-      providerModel: deepseekModel,
       enabled: true,
       sortOrder: -1,
     },

@@ -59,6 +59,7 @@ export async function setupAdmin(
             User: "用户",
             UserProviderCredential: "用户凭据",
             UserModelPreference: "用户模型偏好",
+            ApiToken: "API Token",
             Task: "任务",
           },
           resources: {
@@ -74,8 +75,6 @@ export async function setupAdmin(
                 output: "输出能力",
                 params: "参数",
                 pricing: "价格",
-                providerId: "Provider",
-                providerModel: "上游模型",
                 enabled: "启用",
                 sortOrder: "排序",
                 createdAt: "创建时间",
@@ -96,14 +95,11 @@ export async function setupAdmin(
                 name: "名称",
                 type: "类型",
                 baseUrl: "Base URL",
-                apiKeyEncrypted: "API Key（环境变量）",
                 adapter: "适配器",
                 authType: "鉴权方式",
                 docsUrl: "文档地址",
                 supportsModels: "支持模型同步",
-                model: "模型",
                 timeoutMs: "超时（毫秒）",
-                concurrency: "并发数",
                 extra: "扩展配置",
                 enabled: "启用",
                 createdAt: "创建时间",
@@ -187,7 +183,6 @@ export async function setupAdmin(
         options: {
           navigation: { name: "模型" },
           properties: {
-            apiKeyEncrypted: { isVisible: false },
             extra: { type: "mixed" },
           },
         },
@@ -215,6 +210,16 @@ export async function setupAdmin(
           properties: {
             apiKeyEncrypted: { isVisible: false },
             keyMask: { isVisible: { list: true, show: true, edit: false } },
+          },
+        },
+      },
+      {
+        resource: { model: getModelByName("ApiToken"), client: prisma },
+        options: {
+          navigation: { name: "用户" },
+          actions: { new: false, edit: false, delete: false, bulkDelete: false },
+          properties: {
+            tokenHash: { isVisible: false },
           },
         },
       },

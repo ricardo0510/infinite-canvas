@@ -55,6 +55,19 @@ npm run start:worker
 - 实时通道：`ws://localhost:8790`
 - 本地开发可不填 token；配置 `API_TOKEN` 后必须填写。
 
+## 多用户与 API Token
+
+每个用户使用自己的 bearer token，服务端只保存 SHA-256 哈希。用 CLI 创建、撤销和查看：
+
+```bash
+cd server
+npm run token:create -- --user alice --label laptop
+npm run token:list
+npm run token:revoke -- --id <tokenId>
+```
+
+`token:create` 会自动创建不存在的用户，并只显示一次明文 token。前端设置里的“访问令牌”填这个值即可。`API_TOKEN` 保留为单用户部署的引导令牌；多用户部署建议留空，并设置 `DEV_ALLOW_ANONYMOUS=false`。
+
 ## BYOK（用户自带 API Key）
 
 供应商目录由平台维护，用户在「AI 设置 → 我的供应商」绑定自己的 Key。Key 使用

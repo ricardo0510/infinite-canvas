@@ -35,7 +35,6 @@ model Task {
 model User {
   id        String   @id @default(uuid())
   name      String
-  email     String?  @unique
   status    String   @default("active")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -70,8 +69,6 @@ model ModelConfig {
   output        Json
   params        Json?
   pricing       Json?
-  providerId    String?
-  providerModel String?
   enabled       Boolean  @default(true)
   sortOrder     Int      @default(0)
   createdAt     DateTime @default(now())
@@ -87,10 +84,7 @@ model ProviderConfig {
   docsUrl         String?
   authType        String   @default("bearer")
   supportsModels  Boolean  @default(true)
-  apiKeyEncrypted String?
-  model           String?
   timeoutMs       Int      @default(120000)
-  concurrency     Int      @default(4)
   extra           Json?
   enabled         Boolean  @default(true)
   createdAt       DateTime @default(now())

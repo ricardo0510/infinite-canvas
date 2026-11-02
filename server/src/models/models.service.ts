@@ -27,6 +27,7 @@ export class ModelsService {
   private readonly fallback: AiModel[] = [];
   private readonly hasDatabase: boolean;
   private readonly hasDeepseekKey: boolean;
+  private readonly deepseekModelId: string;
   private cache: AiModel[] | null = null;
   private cachedAt = 0;
 
@@ -36,6 +37,7 @@ export class ModelsService {
   ) {
     this.hasDatabase = Boolean(config.get<string>("DATABASE_URL"));
     this.hasDeepseekKey = Boolean(config.get<string>("DEEPSEEK_API_KEY")?.trim());
+    this.deepseekModelId = config.get<string>("DEEPSEEK_MODEL")?.trim() || "deepseek-flash";
   }
 
   async list(kind?: ModelKind): Promise<AiModel[]> {
@@ -59,7 +61,7 @@ export class ModelsService {
         orderBy: [{ sortOrder: "asc" }, { createdAt: "asc" }],
       });
       const models = rows
-        .filter((row) => row.providerId !== "deepseek" || this.hasDeepseekKey)
+        .filter((row) => row.id !== this.deepseekModelId || this.hasDeepseekKey)
         .map(fromRow);
       this.cache = models;
       this.cachedAt = Date.now();

@@ -16,6 +16,9 @@
     "start:worker": "node dist/worker.js",
     "postinstall": "prisma generate",
     "prisma:seed": "prisma db seed",
+    "token:create": "tsx src/api-tokens.ts create",
+    "token:revoke": "tsx src/api-tokens.ts revoke",
+    "token:list": "tsx src/api-tokens.ts list",
     "dev:admin": "tsx watch src/admin-server.ts",
     "start:admin": "node dist/admin-server.js"
   },
