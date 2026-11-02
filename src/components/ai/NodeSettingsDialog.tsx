@@ -179,40 +179,6 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           />
         ) : null}
 
-        {generation.kind === "text" ? (
-          <>
-            <Field label="系统提示词">
-              <Textarea
-                rows={3}
-                value={generation.params?.systemPrompt ?? ""}
-                disabled={running}
-                onChange={(event) => updateParams({ systemPrompt: event.target.value })}
-              />
-            </Field>
-            <Field label="温度">
-              <Input
-                type="number"
-                min={0}
-                max={2}
-                step={0.1}
-                value={generation.params?.temperature ?? 0.7}
-                disabled={running}
-                onChange={(event) => updateParams({ temperature: Number(event.target.value) })}
-              />
-            </Field>
-            <Field label="最大输出长度">
-              <Input
-                type="number"
-                min={1}
-                max={32768}
-                value={generation.params?.maxOutputTokens ?? 2000}
-                disabled={running}
-                onChange={(event) => updateParams({ maxOutputTokens: Number(event.target.value) || 1 })}
-              />
-            </Field>
-          </>
-        ) : null}
-
         {isImage || videoOutput ? (
           <Field label="负向提示词">
             <Textarea

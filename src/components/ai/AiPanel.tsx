@@ -126,13 +126,15 @@ export function AiPanel() {
               disabled={modelsState.loading || running}
               onChange={changeModel}
             />
-            <Button
-              size="md"
-              disabled={running || !model}
-              onClick={() => setSettingsNodeId(nodeId)}
-            >
-              配置
-            </Button>
+            {kind !== "text" ? (
+              <Button
+                size="md"
+                disabled={running || !model}
+                onClick={() => setSettingsNodeId(nodeId)}
+              >
+                配置
+              </Button>
+            ) : null}
             <Button
               variant="primary"
               size="md"
