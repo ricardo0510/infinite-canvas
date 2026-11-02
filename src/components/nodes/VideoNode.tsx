@@ -42,9 +42,10 @@ function VideoNodeImpl({ id, data, selected }: NodeProps<VideoNodeModel>) {
     >
       {src ? (
         <video
-          className="node-video nodrag"
+          className="node-video"
           src={src}
           poster={poster || undefined}
+          draggable={false}
           preload="metadata"
           onLoadedMetadata={(event) => {
             videoSized.current = true;
