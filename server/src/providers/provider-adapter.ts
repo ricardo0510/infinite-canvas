@@ -29,6 +29,24 @@ export type TextOutput = {
   finishReason?: string;
 };
 
+export type ImageInput = {
+  model: string;
+  prompt: string;
+  aspectRatio?: string;
+  resolution?: string;
+  count: number;
+  negativePrompt?: string;
+  watermark?: boolean;
+  seed?: number;
+  referenceUrls?: string[];
+};
+
+export type ImageOutput = {
+  url: string;
+  width?: number;
+  height?: number;
+};
+
 export type ProviderTestResult = {
   ok: boolean;
   message?: string;
@@ -45,4 +63,5 @@ export interface ProviderAdapter {
   listModels(ctx: ProviderContext): Promise<ProviderModelInfo[]>;
   testKey(ctx: ProviderContext): Promise<ProviderTestResult>;
   generateText?(ctx: ProviderContext, input: TextInput): Promise<TextOutput>;
+  generateImage?(ctx: ProviderContext, input: ImageInput): Promise<ImageOutput[]>;
 }

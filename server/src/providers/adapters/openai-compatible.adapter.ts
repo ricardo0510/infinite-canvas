@@ -1,6 +1,8 @@
 import { Injectable } from "@nestjs/common";
 import {
   UpstreamAuthError,
+  type ImageInput,
+  type ImageOutput,
   type ProviderAdapter,
   type ProviderContext,
   type ProviderModelInfo,
@@ -13,6 +15,39 @@ import { inferModelKind, isSupportedUpstreamModel } from "../model-kind";
 type ModelsResponse = {
   data?: { id?: string }[];
 };
+
+type ImageResponse = {
+  images?: { url?: string }[];
+  data?: { url?: string; b64_json?: string }[];
+};
+
+export function resolveImageSize(
+  aspectRatio = "1:1",
+  resolution = "1k",
+): { width: number; height: number } {
+  const longSides: Record<string, number> = {
+    auto: 1024,
+    "1k": 1024,
+    "1.5k": 1536,
+    "2k": 2048,
+    "3k": 3072,
+    "4k": 4096,
+  };
+  const longSide = longSides[resolution.toLowerCase()] ?? 1024;
+  const [ratioWidth, ratioHeight] = aspectRatio.split(":").map(Number);
+  if (
+    !Number.isFinite(ratioWidth) ||
+    !Number.isFinite(ratioHeight) ||
+    ratioWidth <= 0 ||
+    ratioHeight <= 0
+  ) {
+    return { width: longSide, height: longSide };
+  }
+  const rawWidth = ratioWidth >= ratioHeight ? longSide : (longSide * ratioWidth) / ratioHeight;
+  const rawHeight = ratioWidth >= ratioHeight ? (longSide * ratioHeight) / ratioWidth : longSide;
+  const round = (value: number) => Math.max(256, Math.round(value / 16) * 16);
+  return { width: round(rawWidth), height: round(rawHeight) };
+}
 
 type ChatCompletion = {
   choices?: {
@@ -27,6 +62,21 @@ function authHeaders(ctx: ProviderContext): Record<string, string> {
     return { "x-api-key": ctx.apiKey };
   }
   return { Authorization: `Bearer ${ctx.apiKey}` };
+}
+
+async function assertOk(response: Response): Promise<void> {
+  if (response.status === 401) throw new UpstreamAuthError();
+  if (response.status === 403) {
+    const detail = (await response.text().catch(() => "")).slice(0, 300);
+    if (/invalid token|invalid[_\s-]?api[_\s-]?key|unauthorized|forbidden|api key/i.test(detail)) {
+      throw new UpstreamAuthError();
+    }
+    throw new Error(`供应商请求失败（HTTP 403）${detail ? `：${detail}` : ""}`);
+  }
+  if (!response.ok) {
+    const detail = (await response.text().catch(() => "")).slice(0, 300);
+    throw new Error(`供应商请求失败（HTTP ${response.status}）${detail ? `：${detail}` : ""}`);
+  }
 }
 
 @Injectable()
@@ -57,6 +107,51 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     return { ok: true };
   }
 
+  async generateImage(ctx: ProviderContext, input: ImageInput): Promise<ImageOutput[]> {
+    const size = resolveImageSize(input.aspectRatio, input.resolution);
+    const sizeField =
+      typeof ctx.extra?.imageSizeField === "string" ? ctx.extra.imageSizeField : "size";
+    const resultField = ctx.extra?.imageResponse === "images" ? "images" : "data";
+    const referenceUrls = input.referenceUrls ?? [];
+    const count = Math.min(4, Math.max(1, input.count));
+    const images: ImageOutput[] = [];
+
+    for (let index = 0; index < count; index += 1) {
+      const body: Record<string, unknown> = {
+        model: input.model,
+        prompt: input.prompt,
+        [sizeField]: `${size.width}x${size.height}`,
+      };
+      if (input.negativePrompt) body.negative_prompt = input.negativePrompt;
+      if (input.seed !== undefined) body.seed = input.seed + index;
+      if (referenceUrls[0]) body.image = referenceUrls[0];
+
+      const response = await this.request(ctx, "/images/generations", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(input.watermark === false ? { "X-Enable-Watermark": "0" } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+
+      await assertOk(response);
+
+      const data = (await response.json()) as ImageResponse;
+      const items: { url?: string; b64_json?: string }[] =
+        resultField === "images" ? (data.images ?? []) : (data.data ?? []);
+      for (const item of items) {
+        const url =
+          item.url ??
+          (item.b64_json ? `data:image/png;base64,${item.b64_json}` : undefined);
+        if (url) images.push({ url, width: size.width, height: size.height });
+      }
+    }
+
+    if (images.length === 0) throw new Error("供应商未返回图片");
+    return images;
+  }
+
   async generateText(ctx: ProviderContext, input: TextInput): Promise<TextOutput> {
     const messages: { role: "system" | "user"; content: string }[] = [];
     if (input.systemPrompt?.trim()) {
@@ -78,13 +173,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       body: JSON.stringify(body),
     });
 
-    if (response.status === 401 || response.status === 403) {
-      throw new UpstreamAuthError();
-    }
-    if (!response.ok) {
-      const detail = (await response.text().catch(() => "")).slice(0, 300);
-      throw new Error(`供应商请求失败（HTTP ${response.status}）${detail ? `：${detail}` : ""}`);
-    }
+    await assertOk(response);
 
     const data = (await response.json()) as ChatCompletion;
     const choice = data.choices?.[0];

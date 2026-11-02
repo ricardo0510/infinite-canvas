@@ -3,10 +3,10 @@ import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
 import { CredentialsService } from "../byok/credentials.service";
 import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
-import { UpstreamAuthError } from "../providers/provider-adapter";
+import { UpstreamAuthError, type ImageOutput } from "../providers/provider-adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
 import { TasksService } from "./tasks.service";
-import type { InternalTask } from "./task.types";
+import type { ImageResultItem, InternalTask } from "./task.types";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -174,11 +174,79 @@ export class TaskProcessorService {
   }
 
   private async runImage(task: InternalTask): Promise<void> {
-    throw new ApiException(
-      30001,
-      task.credentialId ? "图片 BYOK 暂未接入" : "图片生成暂未接入供应商",
-      400,
-    );
+    if (!task.credentialId) {
+      throw new ApiException(30001, "图片生成暂未接入供应商", 400);
+    }
+
+    await sleep(120);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 35);
+
+    let resolved;
+    try {
+      resolved = await this.credentials.resolve(task.credentialId);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        await this.tasks.fail(task.taskId, error.code, error.message);
+        return;
+      }
+      throw error;
+    }
+
+    const adapter = this.registry.get(resolved.provider.adapter);
+    if (!adapter.generateImage) {
+      throw new ApiException(30001, "当前供应商暂不支持图片生成", 400);
+    }
+
+    const params = task.request.params;
+    let images: ImageOutput[];
+    try {
+      images = await adapter.generateImage(
+        {
+          baseUrl: resolved.provider.baseUrl,
+          apiKey: resolved.apiKey,
+          authType: resolved.provider.authType,
+          timeoutMs: resolved.provider.timeoutMs,
+          ...(resolved.provider.extra &&
+          typeof resolved.provider.extra === "object" &&
+          !Array.isArray(resolved.provider.extra)
+            ? { extra: resolved.provider.extra as Record<string, unknown> }
+            : {}),
+        },
+        {
+          model: task.providerModel ?? task.modelId,
+          prompt: task.request.prompt,
+          aspectRatio: params.aspectRatio,
+          resolution: params.resolution,
+          count: Math.min(4, Math.max(1, params.count ?? 1)),
+          ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
+          ...(params.watermark !== undefined ? { watermark: params.watermark } : {}),
+          ...(params.seed !== undefined ? { seed: params.seed } : {}),
+          referenceUrls: task.request.references.map((reference) => reference.url),
+        },
+      );
+    } catch (error) {
+      if (error instanceof UpstreamAuthError) {
+        await this.credentials.markInvalid(task.credentialId);
+        await this.tasks.fail(task.taskId, 30001, "API Key 已失效，请重新绑定");
+        return;
+      }
+      throw error;
+    }
+
+    await this.credentials.touch(task.credentialId);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+
+    const items: ImageResultItem[] = images.map((image) => ({
+      id: `item_${randomUUID()}`,
+      kind: "image",
+      url: image.url,
+      ...(image.width ? { width: image.width } : {}),
+      ...(image.height ? { height: image.height } : {}),
+      modelId: task.modelId,
+      createdAt: new Date().toISOString(),
+    }));
+    await this.tasks.complete(task.taskId, items);
   }
 
   private async runVideo(task: InternalTask): Promise<void> {

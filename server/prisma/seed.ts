@@ -8,6 +8,7 @@ type SeedProviderModel = {
   displayName: string;
   kind: "text" | "image" | "video";
   capabilities?: Record<string, unknown>;
+  enabled?: boolean;
 };
 
 const PROVIDER_MODELS: SeedProviderModel[] = [
@@ -48,6 +49,7 @@ const PROVIDER_MODELS: SeedProviderModel[] = [
     modelId: "black-forest-labs/FLUX.1-schnell",
     displayName: "FLUX.1 Schnell",
     kind: "image",
+    enabled: false,
   },
   {
     providerId: "siliconflow",
@@ -120,7 +122,9 @@ async function main(): Promise<void> {
 
   await prisma.providerConfig.upsert({
     where: { id: "siliconflow" },
-    update: {},
+    update: {
+      extra: { imageSizeField: "image_size", imageResponse: "images" },
+    },
     create: {
       id: "siliconflow",
       name: "SiliconFlow",
@@ -130,6 +134,7 @@ async function main(): Promise<void> {
       docsUrl: "https://docs.siliconflow.cn",
       supportsModels: true,
       baseUrl: "https://api.siliconflow.cn/v1",
+      extra: { imageSizeField: "image_size", imageResponse: "images" },
     },
   });
 
@@ -140,7 +145,7 @@ async function main(): Promise<void> {
         displayName: model.displayName,
         kind: model.kind,
         capabilities: model.capabilities ?? {},
-        enabled: true,
+        enabled: model.enabled ?? true,
       },
       create: {
         providerId: model.providerId,
@@ -149,7 +154,7 @@ async function main(): Promise<void> {
         kind: model.kind,
         capabilities: model.capabilities ?? {},
         source: "manual",
-        enabled: true,
+        enabled: model.enabled ?? true,
       },
     });
   }
