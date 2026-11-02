@@ -8,6 +8,7 @@ import {
   type TextInput,
   type TextOutput,
 } from "../provider-adapter";
+import { inferModelKind, isSupportedUpstreamModel } from "../model-kind";
 
 type ModelsResponse = {
   data?: { id?: string }[];
@@ -20,25 +21,6 @@ type ChatCompletion = {
   }[];
   usage?: { prompt_tokens?: number; completion_tokens?: number };
 };
-
-const NON_TEXT_MARKERS = [
-  "embedding",
-  "embed-",
-  "whisper",
-  "tts",
-  "audio",
-  "moderation",
-  "dall-e",
-  "stable-diffusion",
-  "flux",
-  "video",
-  "rerank",
-];
-
-function isTextModel(modelId: string): boolean {
-  const lower = modelId.toLowerCase();
-  return !NON_TEXT_MARKERS.some((marker) => lower.includes(marker));
-}
 
 function authHeaders(ctx: ProviderContext): Record<string, string> {
   if (ctx.authType === "x-api-key") {
@@ -57,11 +39,11 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       .map((item) => item.id?.trim())
       .filter((id): id is string => Boolean(id));
     return ids
-      .filter((id) => isTextModel(id))
+      .filter((id) => isSupportedUpstreamModel(id))
       .map((id) => ({
         modelId: id,
         displayName: id,
-        kind: "text" as const,
+        kind: inferModelKind(id),
         capabilities: {},
       }));
   }

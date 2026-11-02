@@ -4,6 +4,7 @@ import { Prisma } from "@prisma/client";
 import { ApiException } from "../common/api-exception";
 import { PrismaService } from "../database/prisma.service";
 import type { AiModel, ModelKind } from "../models/model.types";
+import { isModelKind } from "../models/model.types";
 import { UpstreamAuthError } from "../providers/provider-adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
 import { CredentialsService } from "./credentials.service";
@@ -62,7 +63,7 @@ function toPublicModel(row: ProviderModel): PublicProviderModel {
     providerId: row.providerId,
     modelId: row.modelId,
     displayName: row.displayName,
-    kind: row.kind,
+    kind: normalizeKind(row.kind),
     capabilities:
       row.capabilities && typeof row.capabilities === "object" && !Array.isArray(row.capabilities)
         ? (row.capabilities as Record<string, unknown>)
@@ -77,11 +78,15 @@ export function publicModelId(providerId: string, modelId: string): string {
   return `${providerId}:${modelId}`;
 }
 
+function normalizeKind(value: string): ModelKind {
+  return isModelKind(value) ? value : "text";
+}
+
 function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
   return {
     id: publicModelId(row.providerId, row.modelId),
     name: row.displayName || row.modelId,
-    kind: row.kind as ModelKind,
+    kind: normalizeKind(row.kind),
     modes: [],
     description: `${row.provider.name} · 使用你的 API Key`,
     limits: { maxPromptLength: 60_000, maxImages: 0, maxVideos: 0 },
@@ -157,7 +162,7 @@ export class ProviderCatalogService {
     for (const model of models) {
       await this.prisma.providerModel.upsert({
         where: { providerId_modelId: { providerId, modelId: model.modelId } },
-        update: { displayName: model.displayName, lastSyncedAt: now },
+        update: { displayName: model.displayName, kind: model.kind, lastSyncedAt: now },
         create: {
           providerId,
           modelId: model.modelId,
@@ -299,7 +304,8 @@ export class ProviderCatalogService {
         throw new ApiException(20003, `请先为 ${row.provider.name} 绑定 API Key`, 400);
       }
       if (item.isDefault) {
-        defaults.set(row.kind, (defaults.get(row.kind) ?? 0) + 1);
+        const kind = normalizeKind(row.kind);
+        defaults.set(kind, (defaults.get(kind) ?? 0) + 1);
       }
     }
     for (const [kind, count] of defaults) {
@@ -372,7 +378,7 @@ export class ProviderCatalogService {
       providerName: row.provider.name,
       modelId: row.modelId,
       displayName: row.displayName,
-      kind: row.kind as ModelKind,
+      kind: normalizeKind(row.kind),
       enabled,
       isDefault,
     };

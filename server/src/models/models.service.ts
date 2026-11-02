@@ -3,6 +3,7 @@ import { ConfigService } from "@nestjs/config";
 import { PrismaClient, type ModelConfig } from "@prisma/client";
 import { ApiException } from "../common/api-exception";
 import type { AiModel, ModelKind } from "./model.types";
+import { isModelKind } from "./model.types";
 
 const CACHE_MS = 10_000;
 
@@ -10,7 +11,7 @@ function fromRow(row: ModelConfig): AiModel {
   return {
     id: row.id,
     name: row.name,
-    kind: row.kind as ModelKind,
+    kind: isModelKind(row.kind) ? row.kind : "text",
     modes: row.modes as string[],
     ...(row.description ? { description: row.description } : {}),
     ...(row.logoUrl ? { logoUrl: row.logoUrl } : {}),

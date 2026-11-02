@@ -3,10 +3,8 @@ import { ProviderCatalogService } from "../byok/provider-catalog.service";
 import { ApiException } from "../common/api-exception";
 import type { AuthUser } from "../common/auth.guard";
 import { CurrentUser } from "../common/current-user.decorator";
-import type { ModelKind } from "./model.types";
+import { isModelKind, MODEL_KINDS, type ModelKind } from "./model.types";
 import { ModelsService } from "./models.service";
-
-const KINDS: ModelKind[] = ["text", "image", "video"];
 
 @Controller("models")
 export class ModelsController {
@@ -17,10 +15,10 @@ export class ModelsController {
 
   @Get()
   async list(@CurrentUser() user: AuthUser, @Query("kind") kind?: string) {
-    if (kind !== undefined && !KINDS.includes(kind as ModelKind)) {
-      throw new ApiException(20001, "kind 必须为 text / image / video", 422);
+    if (kind !== undefined && !isModelKind(kind)) {
+      throw new ApiException(20001, `kind 必须为 ${MODEL_KINDS.join(" / ")}`, 422);
     }
-    const modelKind = kind as ModelKind | undefined;
+    const modelKind: ModelKind | undefined = isModelKind(kind) ? kind : undefined;
     const platform = await this.models.list(modelKind);
     const byok = await this.catalog.listUserAiModels(user.id, modelKind).catch(() => []);
 

@@ -2,6 +2,12 @@ import { timingSafeEqual } from "node:crypto";
 import type { ConfigService } from "@nestjs/config";
 import type { FastifyInstance } from "fastify";
 import { PrismaClient } from "@prisma/client";
+import { MODEL_KINDS, MODEL_KIND_LABELS } from "../models/model.types";
+
+const KIND_OPTIONS = MODEL_KINDS.map((value) => ({
+  value,
+  label: MODEL_KIND_LABELS[value],
+}));
 
 export type AdminCredentials = {
   email: string;
@@ -112,6 +118,29 @@ export async function setupAdmin(
                 bulkDelete: "批量删除 Provider",
               },
             },
+            ProviderModel: {
+              properties: {
+                id: "ID",
+                providerId: "供应商",
+                modelId: "模型 ID",
+                displayName: "显示名",
+                kind: "类型",
+                capabilities: "能力",
+                source: "来源",
+                enabled: "启用",
+                lastSyncedAt: "最后同步",
+                createdAt: "创建时间",
+                updatedAt: "更新时间",
+              },
+              actions: {
+                new: "新建供应商模型",
+                list: "供应商模型列表",
+                show: "查看供应商模型",
+                edit: "编辑供应商模型",
+                delete: "删除供应商模型",
+                bulkDelete: "批量删除供应商模型",
+              },
+            },
             Task: {
               properties: {
                 id: "任务 ID",
@@ -144,6 +173,7 @@ export async function setupAdmin(
         options: {
           navigation: { name: "模型" },
           properties: {
+            kind: { availableValues: KIND_OPTIONS },
             modes: { type: "mixed" },
             limits: { type: "mixed" },
             output: { type: "mixed" },
@@ -167,6 +197,7 @@ export async function setupAdmin(
         options: {
           navigation: { name: "模型" },
           properties: {
+            kind: { availableValues: KIND_OPTIONS },
             capabilities: { type: "mixed" },
           },
         },

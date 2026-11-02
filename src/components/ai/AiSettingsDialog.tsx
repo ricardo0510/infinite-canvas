@@ -40,6 +40,12 @@ const KIND_TABS: { kind: ModelKind; label: string }[] = [
   { kind: "video", label: "视频" },
 ];
 
+const KIND_LABELS: Record<ModelKind, string> = {
+  text: "文本",
+  image: "图片",
+  video: "视频",
+};
+
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试";
 }
@@ -548,7 +554,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
                                 onChange={() => toggleModel(model)}
                               />
                               <span className="ai-model-name">{model.displayName}</span>
-                              <span className="ai-model-kind">{model.kind}</span>
+                              <span className="ai-model-kind">{KIND_LABELS[model.kind]}</span>
                               {!model.enabled ? (
                                 <span className="ai-model-badge">未开通</span>
                               ) : null}

@@ -1,4 +1,16 @@
-export type ModelKind = "text" | "image" | "video";
+export const MODEL_KINDS = ["text", "image", "video"] as const;
+
+export type ModelKind = (typeof MODEL_KINDS)[number];
+
+export const MODEL_KIND_LABELS: Record<ModelKind, string> = {
+  text: "文本",
+  image: "图片",
+  video: "视频",
+};
+
+export function isModelKind(value: unknown): value is ModelKind {
+  return typeof value === "string" && (MODEL_KINDS as readonly string[]).includes(value);
+}
 
 export type ImageOutput = {
   aspectRatios: string[];
