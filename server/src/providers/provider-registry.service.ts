@@ -18,6 +18,10 @@ export class ProviderRegistry {
   }
 
   get(adapter: string): ProviderAdapter {
-    return this.adapters[adapter] ?? this.adapters["openai-compatible"];
+    const implementation = this.adapters[adapter];
+    if (!implementation) {
+      throw new Error(`未知的供应商适配器：${adapter}`);
+    }
+    return implementation;
   }
 }
