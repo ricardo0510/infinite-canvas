@@ -75,7 +75,7 @@ export function EmptyState() {
           ))}
         </div>
         <p className="empty-footnote">
-          按 <kbd>?</kbd> 查看快捷键 · <kbd>/</kbd> 打开命令面板。
+          按 <kbd>?</kbd> 查看快捷键。
         </p>
       </div>
     </div>

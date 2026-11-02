@@ -430,7 +430,7 @@ type GroupData = {
 | `Delete` / `Backspace` | 删除 |
 | 方向键 | 移动 1px；`Shift` 移动 10px |
 | `F` | 聚焦选中节点 |
-| `/` | 命令面板 |
+| `/` 按钮 | 命令面板 |
 | `?` | 快捷键面板 |
 | `Esc` | 清除选择 / 关闭预览 |
 | 浮窗内 `Ctrl/Cmd + Enter` | 触发生成 |

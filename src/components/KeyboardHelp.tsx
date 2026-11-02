@@ -42,7 +42,6 @@ const GROUPS: { title: string; items: { keys: string[]; action: string }[] }[] =
       { keys: ["Shift/Ctrl + 点击"], action: "追加选择" },
       { keys: ["拖拽节点到分组"], action: "加入 / 离开分组" },
       { keys: ["Ctrl/Cmd + 0"], action: "适应视图" },
-      { keys: ["/"], action: "命令面板" },
       { keys: ["?"], action: "快捷键面板" },
       { keys: ["Esc"], action: "清除选择 / 关闭面板" },
     ],

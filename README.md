@@ -124,7 +124,7 @@ src/
     FlowCanvas.tsx        # React Flow container, menus, guides, overlays
     Toolbar.tsx           # add nodes, undo, layout, snap, import/export
     CanvasControls.tsx    # zoom presets, fit view, minimap toggle
-    CommandPalette.tsx    # `/` command palette
+    CommandPalette.tsx    # command palette
     SelectionToolbar.tsx  # align / distribute / group
     EdgeToolbar.tsx       # edge label / color / dash / arrow
     ErrorBoundary.tsx     # render-crash fallback

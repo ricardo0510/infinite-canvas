@@ -3,7 +3,6 @@ import { getPasteAnchor } from "../lib/pasteAnchor";
 import { exportSnapshot, saveSnapshot } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
 import { useToastStore } from "../store/toastStore";
-import { useUiStore } from "../store/uiStore";
 
 function isEditable(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
@@ -59,12 +58,6 @@ export function useCanvasShortcuts(): void {
       }
 
       if (editable) return;
-
-      if (!mod && key === "/") {
-        event.preventDefault();
-        useUiStore.getState().setCommandOpen(true);
-        return;
-      }
 
       if (mod && key === "z") {
         event.preventDefault();

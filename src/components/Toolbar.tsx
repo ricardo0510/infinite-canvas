@@ -102,7 +102,7 @@ export function Toolbar() {
         <span aria-hidden="true">↑</span>
         <span className="tool-label">导入</span>
       </Button>
-      <Button size="lg" onClick={() => setCommandOpen(true)} title="命令面板（/）">
+      <Button size="lg" onClick={() => setCommandOpen(true)} title="打开命令面板">
         <span aria-hidden="true">/</span>
         <span className="tool-label">命令</span>
       </Button>
