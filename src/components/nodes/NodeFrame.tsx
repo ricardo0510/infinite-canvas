@@ -1,4 +1,4 @@
-import { Handle, Position, useUpdateNodeInternals } from "@xyflow/react";
+import { Handle, Position, useNodeConnections, useUpdateNodeInternals } from "@xyflow/react";
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { ErrorBanner } from "../ui/Feedback";
 import { NodeLoadingOverlay } from "./NodeLoadingOverlay";
@@ -40,47 +40,67 @@ export function NodeFrame({
 }: NodeFrameProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const updateNodeInternals = useUpdateNodeInternals();
+  const targetConnections = useNodeConnections({ id, handleType: "target" });
+  const sourceConnections = useNodeConnections({ id, handleType: "source" });
+  const leftFixed = targetConnections.length > 0;
+  const rightFixed = sourceConnections.length > 0;
   const [magnet, setMagnet] = useState<Magnet | null>(null);
   const magnetRef = useRef<Magnet | null>(null);
   const active = magnet !== null;
 
   useEffect(() => {
     updateNodeInternals(id);
-  }, [id, magnet, updateNodeInternals]);
+  }, [id, leftFixed, magnet, rightFixed, updateNodeInternals]);
 
-  const updateMagnet = useCallback((clientX: number, clientY: number, keepSide: boolean) => {
-    const apply = (next: Magnet | null) => {
-      magnetRef.current = next;
-      setMagnet(next);
-    };
-    const root = rootRef.current;
-    if (!root) return;
-    const rect = root.getBoundingClientRect();
-    if (rect.width === 0 || rect.height === 0) return;
-    const scale = root.offsetWidth > 0 ? rect.width / root.offsetWidth : 1;
-    const screenX = clientX - rect.left;
-    const screenY = clientY - rect.top;
-    const x = screenX / scale;
-    const y = screenY / scale;
-    const current = magnetRef.current;
+  const updateMagnet = useCallback(
+    (clientX: number, clientY: number, keepSide: boolean) => {
+      const apply = (next: Magnet | null) => {
+        magnetRef.current = next;
+        setMagnet(next);
+      };
+      const root = rootRef.current;
+      if (!root) return;
+      const rect = root.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      const scale = root.offsetWidth > 0 ? rect.width / root.offsetWidth : 1;
+      const screenX = clientX - rect.left;
+      const screenY = clientY - rect.top;
+      const x = screenX / scale;
+      const y = screenY / scale;
+      const current = magnetRef.current;
 
-    if (keepSide && current) {
-      const outsideX = Math.max(0, rect.left - clientX, clientX - rect.right);
-      const outsideY = Math.max(0, rect.top - clientY, clientY - rect.bottom);
-      if (Math.hypot(outsideX, outsideY) > RELEASE_RADIUS) {
-        apply(null);
+      if (keepSide && current) {
+        if ((current.side === "left" && leftFixed) || (current.side === "right" && rightFixed)) {
+          apply(null);
+          return;
+        }
+        const outsideX = Math.max(0, rect.left - clientX, clientX - rect.right);
+        const outsideY = Math.max(0, rect.top - clientY, clientY - rect.bottom);
+        if (Math.hypot(outsideX, outsideY) > RELEASE_RADIUS) {
+          apply(null);
+          return;
+        }
+        apply({ side: current.side, x, y });
         return;
       }
-      apply({ side: current.side, x, y });
-      return;
-    }
 
-    const centerY = rect.height / 2;
-    const leftDistance = Math.hypot(screenX, screenY - centerY);
-    const rightDistance = Math.hypot(screenX - rect.width, screenY - centerY);
-    if (Math.min(leftDistance, rightDistance) > MAGNET_RADIUS) return;
-    apply({ side: leftDistance <= rightDistance ? "left" : "right", x, y });
-  }, []);
+      const centerY = rect.height / 2;
+      const candidates: { side: "left" | "right"; distance: number }[] = [];
+      if (!leftFixed) {
+        candidates.push({ side: "left", distance: Math.hypot(screenX, screenY - centerY) });
+      }
+      if (!rightFixed) {
+        candidates.push({
+          side: "right",
+          distance: Math.hypot(screenX - rect.width, screenY - centerY),
+        });
+      }
+      const nearest = candidates.sort((left, right) => left.distance - right.distance)[0];
+      if (!nearest || nearest.distance > MAGNET_RADIUS) return;
+      apply({ side: nearest.side, x, y });
+    },
+    [leftFixed, rightFixed],
+  );
 
   useEffect(() => {
     if (!active) return;
@@ -105,15 +125,16 @@ export function NodeFrame({
     updateMagnet(event.clientX, event.clientY, Boolean(magnetRef.current));
   };
 
-  const handleStyle = (side: "left" | "right") =>
-    magnet?.side === side
-      ? {
-          left: magnet.x,
-          top: magnet.y,
-          right: "auto",
-          transform: "translate(-50%, -50%)",
-        }
-      : undefined;
+  const handleStyle = (side: "left" | "right") => {
+    if (!magnet || magnet.side !== side) return undefined;
+    if (side === "left" ? leftFixed : rightFixed) return undefined;
+    return {
+      left: magnet.x,
+      top: magnet.y,
+      right: "auto",
+      transform: "translate(-50%, -50%)",
+    };
+  };
 
   return (
     <div
