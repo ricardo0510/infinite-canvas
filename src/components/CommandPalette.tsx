@@ -3,6 +3,7 @@ import { useReactFlow } from "@xyflow/react";
 import { exportSnapshot } from "../lib/storage";
 import { TEMPLATES } from "../lib/templates";
 import { useCanvasStore } from "../store/canvasStore";
+import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 import { Button } from "./ui/Button";
@@ -146,7 +147,16 @@ function CommandPaletteSession() {
         group: "画布",
         hint: "Ctrl/Cmd E",
         run: () => {
-          void exportSnapshot(state().getSnapshot());
+          void exportSnapshot(state().getSnapshot()).then(({ skippedMedia }) => {
+            if (skippedMedia > 0) {
+              useToastStore
+                .getState()
+                .push(
+                  `已导出，但有 ${skippedMedia} 个本地媒体未内联，换设备后可能无法播放。`,
+                  "info",
+                );
+            }
+          });
         },
       },
     ];

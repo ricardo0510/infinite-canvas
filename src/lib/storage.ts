@@ -27,6 +27,7 @@ const MAX_ZOOM = 8;
 const MAX_GENERATION_RESULTS = 20;
 const MAX_GENERATION_PROMPT = 20_000;
 const MAX_ERROR_MESSAGE = 500;
+const MAX_INLINE_EXPORT_BYTES = 8 * 1024 * 1024;
 
 const NODE_KINDS: NodeKind[] = ["text", "image", "video", "group"];
 const COLORS: NoteColor[] = ["violet", "cyan", "amber", "emerald"];
@@ -456,8 +457,23 @@ export function saveSnapshot(snapshot: CanvasSnapshot): void {
   }
 }
 
-export async function exportSnapshot(snapshot: CanvasSnapshot): Promise<void> {
+export type ExportSnapshotResult = { skippedMedia: number };
+
+async function inlineIfSmall(ref: string): Promise<string | null> {
+  const blob = await getImageBlob(ref);
+  if (!blob || blob.size > MAX_INLINE_EXPORT_BYTES) return null;
+  try {
+    return await blobToDataUrl(blob);
+  } catch {
+    return null;
+  }
+}
+
+export async function exportSnapshot(
+  snapshot: CanvasSnapshot,
+): Promise<ExportSnapshotResult> {
   let nodes = snapshot.nodes;
+  let skippedMedia = 0;
   const hasLocalMedia = nodes.some(
     (node) =>
       (node.type === "image" && isIdbImageRef(node.data.src)) ||
@@ -468,37 +484,27 @@ export async function exportSnapshot(snapshot: CanvasSnapshot): Promise<void> {
     nodes = await Promise.all(
       nodes.map(async (node) => {
         if (node.type === "image" && isIdbImageRef(node.data.src)) {
-          const image = await getImageBlob(node.data.src);
-          if (!image) return node;
-          try {
-            const src = await blobToDataUrl(image);
-            return { ...node, data: { ...node.data, src } } as CanvasNode;
-          } catch {
+          const src = await inlineIfSmall(node.data.src);
+          if (!src) {
+            skippedMedia += 1;
             return node;
           }
+          return { ...node, data: { ...node.data, src } } as CanvasNode;
         }
         if (node.type === "video") {
           let data = node.data;
+          let skipped = false;
           if (isIdbImageRef(data.src)) {
-            const video = await getImageBlob(data.src);
-            if (video) {
-              try {
-                data = { ...data, src: await blobToDataUrl(video) };
-              } catch {
-                // Keep the local reference if the blob cannot be read.
-              }
-            }
+            const src = await inlineIfSmall(data.src);
+            if (src) data = { ...data, src };
+            else skipped = true;
           }
           if (isIdbImageRef(data.thumbnailUrl)) {
-            const poster = await getImageBlob(data.thumbnailUrl);
-            if (poster) {
-              try {
-                data = { ...data, thumbnailUrl: await blobToDataUrl(poster) };
-              } catch {
-                // Keep the local reference if the blob cannot be read.
-              }
-            }
+            const poster = await inlineIfSmall(data.thumbnailUrl);
+            if (poster) data = { ...data, thumbnailUrl: poster };
+            else skipped = true;
           }
+          if (skipped) skippedMedia += 1;
           return data === node.data ? node : ({ ...node, data } as CanvasNode);
         }
         return node;
@@ -519,4 +525,5 @@ export async function exportSnapshot(snapshot: CanvasSnapshot): Promise<void> {
   anchor.download = `infinite-canvas-${new Date().toISOString().slice(0, 10)}.json`;
   anchor.click();
   URL.revokeObjectURL(url);
+  return { skippedMedia };
 }

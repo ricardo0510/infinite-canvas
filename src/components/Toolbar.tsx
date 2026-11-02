@@ -38,6 +38,19 @@ export function Toolbar() {
     });
   };
 
+  const handleExport = () => {
+    void exportSnapshot(getSnapshot())
+      .then(({ skippedMedia }) => {
+        if (skippedMedia > 0) {
+          pushToast(
+            `已导出，但有 ${skippedMedia} 个本地媒体未内联，换设备后可能无法播放。`,
+            "info",
+          );
+        }
+      })
+      .catch(() => pushToast("导出失败。", "error"));
+  };
+
   const handleAdd = (kind: NodeKind) => {
     addNode(kind, centerPosition());
   };
@@ -87,7 +100,7 @@ export function Toolbar() {
         <span className="tool-label">重做</span>
       </Button>
       <span className="tool-divider" />
-      <Button size="lg" onClick={() => void exportSnapshot(getSnapshot())} title="导出 JSON">
+      <Button size="lg" onClick={handleExport} title="导出 JSON">
         <span aria-hidden="true">↓</span>
         <span className="tool-label">导出</span>
       </Button>

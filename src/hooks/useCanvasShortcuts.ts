@@ -98,7 +98,16 @@ export function useCanvasShortcuts(): void {
       }
       if (mod && key === "e") {
         event.preventDefault();
-        void exportSnapshot(store.getSnapshot());
+        void exportSnapshot(store.getSnapshot()).then(({ skippedMedia }) => {
+          if (skippedMedia > 0) {
+            useToastStore
+              .getState()
+              .push(
+                `已导出，但有 ${skippedMedia} 个本地媒体未内联，换设备后可能无法播放。`,
+                "info",
+              );
+          }
+        });
         return;
       }
       if (mod && key === "g") {
