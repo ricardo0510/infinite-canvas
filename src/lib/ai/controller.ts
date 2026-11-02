@@ -342,6 +342,8 @@ export function initAiController(): void {
   initialized = true;
   setTaskHandler(handleTaskUpdate);
   useCanvasStore.subscribe((state, previous) => {
+    // 拖拽和编辑都会产生新数组；只有节点数量减少时才可能删除了节点。
+    if (state.nodes === previous.nodes || state.nodes.length >= previous.nodes.length) return;
     const ids = new Set(state.nodes.map((node) => node.id));
     for (const node of previous.nodes) {
       if (ids.has(node.id)) continue;
