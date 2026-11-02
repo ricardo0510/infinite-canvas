@@ -19,6 +19,7 @@ import {
   type ProviderModelInfo,
 } from "../../lib/ai/byok";
 import { clearModelCache } from "../../lib/ai/models";
+import type { ModelKind } from "../../lib/ai/types";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Control";
 import { DialogHeader } from "../ui/DialogHeader";
@@ -32,6 +33,12 @@ type Binding = {
   providerId: string;
   credential?: CredentialInfo;
 };
+
+const KIND_TABS: { kind: ModelKind; label: string }[] = [
+  { kind: "text", label: "文本" },
+  { kind: "image", label: "图片" },
+  { kind: "video", label: "视频" },
+];
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试";
@@ -66,6 +73,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
   const [models, setModels] = useState<Record<string, ProviderModelInfo[]>>({});
   const [prefs, setPrefs] = useState<PrefState>({});
   const [prefsDirty, setPrefsDirty] = useState(false);
+  const [kind, setKind] = useState<ModelKind>("text");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [binding, setBinding] = useState<Binding | null>(null);
   const [bindLabel, setBindLabel] = useState("默认");
@@ -90,11 +98,18 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
     applyRuntime();
     const list = await listProviders();
     setProviders(list);
-    const pairs = await Promise.all(
-      list.map(async (provider) => [provider.id, await listCredentials(provider.id)] as const),
-    );
-    setCredentials(Object.fromEntries(pairs));
-    setPrefs(prefsFromUserModels(await listUserModels()));
+    const [credentialPairs, modelPairs, userModels] = await Promise.all([
+      Promise.all(
+        list.map(async (provider) => [provider.id, await listCredentials(provider.id)] as const),
+      ),
+      Promise.all(
+        list.map(async (provider) => [provider.id, await listProviderModels(provider.id)] as const),
+      ),
+      listUserModels(),
+    ]);
+    setCredentials(Object.fromEntries(credentialPairs));
+    setModels(Object.fromEntries(modelPairs));
+    setPrefs(prefsFromUserModels(userModels));
   }, [applyRuntime]);
 
   useEffect(() => {
@@ -283,6 +298,15 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
     }
   };
 
+  const kindModelCount = (target: ModelKind) =>
+    providers.reduce(
+      (total, provider) =>
+        total +
+        (models[provider.id] ?? []).filter((model) => model.kind === target && model.enabled)
+          .length,
+      0,
+    );
+
   const save = () => {
     applyRuntime();
     onClose();
@@ -344,13 +368,39 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
         {!byokReady ? (
           <p className="ai-settings-hint">填写接口地址并保存后，即可管理供应商 Key。</p>
         ) : (
-          <div className="ai-provider-list">
-            {providers.map((provider) => {
-              const providerCredentials = credentials[provider.id] ?? [];
-              const providerModels = models[provider.id] ?? [];
-              const bindingHere = binding?.providerId === provider.id;
-              const isBusy = busy?.endsWith(`:${provider.id}`) ?? false;
-              return (
+          <>
+            <div className="ai-kind-tabs" role="tablist" aria-label="模型类型">
+              {KIND_TABS.map((tab) => (
+                <button
+                  key={tab.kind}
+                  type="button"
+                  role="tab"
+                  aria-selected={kind === tab.kind}
+                  className={`ai-kind-tab${kind === tab.kind ? " is-active" : ""}`}
+                  onClick={() => {
+                    setKind(tab.kind);
+                    setExpanded(null);
+                  }}
+                >
+                  {tab.label}
+                  <span className="ai-kind-tab-count">{kindModelCount(tab.kind)}</span>
+                </button>
+              ))}
+            </div>
+            {kind !== "text" && kindModelCount(kind) === 0 ? (
+              <p className="ai-settings-hint">
+                当前版本暂未接入{KIND_TABS.find((tab) => tab.kind === kind)?.label}模型，绑定供应商
+                Key 后可在对应供应商下同步，或等待平台开通。
+              </p>
+            ) : null}
+            <div className="ai-provider-list">
+              {providers.map((provider) => {
+                const providerCredentials = credentials[provider.id] ?? [];
+                const allProviderModels = models[provider.id] ?? [];
+                const providerModels = allProviderModels.filter((model) => model.kind === kind);
+                const bindingHere = binding?.providerId === provider.id;
+                const isBusy = busy?.endsWith(`:${provider.id}`) ?? false;
+                return (
                 <div className="ai-provider-card" key={provider.id}>
                   <div className="ai-provider-head">
                     <div className="ai-provider-title">
@@ -478,7 +528,11 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
                   {expanded === provider.id ? (
                     <div className="ai-model-list">
                       {providerModels.length === 0 ? (
-                        <p className="ai-settings-hint">暂无模型，点击「同步」从供应商获取。</p>
+                        <p className="ai-settings-hint">
+                          {allProviderModels.length === 0
+                            ? "暂无模型，点击「同步」从供应商获取。"
+                            : "该供应商暂无此类型模型。"}
+                        </p>
                       ) : (
                         providerModels.map((model) => {
                           const pref = prefs[model.id] ?? { enabled: false, isDefault: false };
@@ -514,24 +568,26 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
                           );
                         })
                       )}
-                      {prefsDirty ? (
-                        <div className="ai-model-actions">
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            onClick={() => void savePrefs()}
-                            disabled={busy !== null}
-                          >
-                            保存模型选择
-                          </Button>
-                        </div>
-                      ) : null}
                     </div>
                   ) : null}
                 </div>
               );
             })}
-          </div>
+            </div>
+            {prefsDirty ? (
+              <div className="ai-model-actions ai-model-actions--global">
+                <span className="ai-settings-hint">模型选择有未保存的修改</span>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  onClick={() => void savePrefs()}
+                  disabled={busy !== null}
+                >
+                  保存模型选择
+                </Button>
+              </div>
+            ) : null}
+          </>
         )}
 
         {error ? <p className="ai-settings-error">{error}</p> : null}
