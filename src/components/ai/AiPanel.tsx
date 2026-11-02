@@ -6,6 +6,7 @@ import { useToastStore } from "../../store/toastStore";
 import { useUiStore } from "../../store/uiStore";
 import type { GenerationKind, GenerationMeta } from "../../types";
 import { cancelGeneration, defaultGeneration, generateNode, kindOfNode, patchGeneration } from "../../lib/ai/controller";
+import { byId, nodeRect } from "../../lib/geometry";
 import {
   DEFAULT_IMAGE_ASPECT_RATIO,
   DEFAULT_IMAGE_RESOLUTION,
@@ -107,10 +108,10 @@ function placePanel(
   const reserved: Box[] = [
     ...obstacles,
     {
-      x: viewport.width - 240,
-      y: viewport.height - 300,
-      width: 240,
-      height: 300,
+      x: 0,
+      y: viewport.height - 260,
+      width: 220,
+      height: 260,
     },
   ];
 
@@ -152,10 +153,12 @@ export function AiPanel() {
     width: Math.min(480, window.innerWidth - 24),
     height: 320,
   }));
-  const [viewportSize, setViewportSize] = useState<Size>(() => ({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  }));
+  const [canvasBox, setCanvasBox] = useState<Box>(() => {
+    const rect = document.querySelector<HTMLElement>(".canvas")?.getBoundingClientRect();
+    return rect
+      ? { x: rect.left, y: rect.top, width: rect.width, height: rect.height }
+      : { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
+  });
   const settingsOpen = settingsNodeId === nodeId;
 
   useLayoutEffect(() => {
@@ -177,9 +180,35 @@ export function AiPanel() {
   }, [nodeId, settingsOpen]);
 
   useEffect(() => {
-    const onResize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight });
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    const element = document.querySelector<HTMLElement>(".canvas");
+    if (!element) return;
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      const rect = element.getBoundingClientRect();
+      setCanvasBox((current) =>
+        current.x === rect.left &&
+        current.y === rect.top &&
+        current.width === rect.width &&
+        current.height === rect.height
+          ? current
+          : { x: rect.left, y: rect.top, width: rect.width, height: rect.height },
+      );
+    };
+    const schedule = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("resize", schedule);
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(schedule);
+    observer?.observe(element);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("resize", schedule);
+      observer?.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -218,6 +247,7 @@ export function AiPanel() {
     }
   };
 
+  const nodeIndex = byId(nodes);
   const nodeBox = internalNode
     ? {
         x: internalNode.internals.positionAbsolute.x * viewport.zoom + viewport.x,
@@ -227,14 +257,31 @@ export function AiPanel() {
       }
     : null;
   const obstacles = nodes
-    .filter((item) => item.id !== nodeId)
-    .map((item) => ({
-      x: item.position.x * viewport.zoom + viewport.x,
-      y: item.position.y * viewport.zoom + viewport.y,
-      width: (item.measured?.width ?? item.width ?? 280) * viewport.zoom,
-      height: (item.measured?.height ?? item.height ?? 160) * viewport.zoom,
-    }));
-  const panelPosition = placePanel(nodeBox, panelSize, viewportSize, obstacles);
+    .filter((item) => item.id !== nodeId && item.type !== "group")
+    .map((item) => {
+      const rect = nodeRect(item, nodeIndex);
+      return {
+        x: rect.x * viewport.zoom + viewport.x,
+        y: rect.y * viewport.zoom + viewport.y,
+        width: rect.width * viewport.zoom,
+        height: rect.height * viewport.zoom,
+      };
+    });
+  const panelWidth = Math.min(
+    480,
+    Math.max(260, canvasBox.width - 24),
+    Math.max(340, Math.round(canvasBox.width * 0.72)),
+  );
+  const localPosition = placePanel(
+    nodeBox,
+    { width: panelWidth, height: panelSize.height },
+    { width: canvasBox.width, height: canvasBox.height },
+    obstacles,
+  );
+  const panelPosition = {
+    left: canvasBox.x + localPosition.left,
+    top: canvasBox.y + localPosition.top,
+  };
 
   return (
     <>
@@ -244,7 +291,7 @@ export function AiPanel() {
           key={nodeId}
           className="ai-panel ai-panel-compact"
           data-ai-floating-editor
-          style={{ left: panelPosition.left, top: panelPosition.top }}
+          style={{ left: panelPosition.left, top: panelPosition.top, width: panelWidth }}
           onPointerDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
         >
