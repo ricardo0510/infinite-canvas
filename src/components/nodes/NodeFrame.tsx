@@ -49,6 +49,9 @@ export function NodeFrame({
   const active = magnet !== null;
 
   useEffect(() => {
+    const connectedSide =
+      (magnet?.side === "left" && leftFixed) || (magnet?.side === "right" && rightFixed);
+    if (connectedSide) return;
     updateNodeInternals(id);
   }, [id, leftFixed, magnet, rightFixed, updateNodeInternals]);
 
@@ -70,10 +73,6 @@ export function NodeFrame({
       const current = magnetRef.current;
 
       if (keepSide && current) {
-        if ((current.side === "left" && leftFixed) || (current.side === "right" && rightFixed)) {
-          apply(null);
-          return;
-        }
         const outsideX = Math.max(0, rect.left - clientX, clientX - rect.right);
         const outsideY = Math.max(0, rect.top - clientY, clientY - rect.bottom);
         if (Math.hypot(outsideX, outsideY) > RELEASE_RADIUS) {
@@ -85,21 +84,15 @@ export function NodeFrame({
       }
 
       const centerY = rect.height / 2;
-      const candidates: { side: "left" | "right"; distance: number }[] = [];
-      if (!leftFixed) {
-        candidates.push({ side: "left", distance: Math.hypot(screenX, screenY - centerY) });
-      }
-      if (!rightFixed) {
-        candidates.push({
-          side: "right",
-          distance: Math.hypot(screenX - rect.width, screenY - centerY),
-        });
-      }
+      const candidates: { side: "left" | "right"; distance: number }[] = [
+        { side: "left", distance: Math.hypot(screenX, screenY - centerY) },
+        { side: "right", distance: Math.hypot(screenX - rect.width, screenY - centerY) },
+      ];
       const nearest = candidates.sort((left, right) => left.distance - right.distance)[0];
       if (!nearest || nearest.distance > MAGNET_RADIUS) return;
       apply({ side: nearest.side, x, y });
     },
-    [leftFixed, rightFixed],
+    [],
   );
 
   useEffect(() => {
@@ -127,7 +120,6 @@ export function NodeFrame({
 
   const handleStyle = (side: "left" | "right") => {
     if (!magnet || magnet.side !== side) return undefined;
-    if (side === "left" ? leftFixed : rightFixed) return undefined;
     return {
       left: magnet.x,
       top: magnet.y,
