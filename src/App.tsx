@@ -8,6 +8,7 @@ import { ToastHost } from "./components/ToastHost";
 import { Toolbar } from "./components/Toolbar";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useCanvasShortcuts } from "./hooks/useCanvasShortcuts";
+import { useCanvasStore } from "./store/canvasStore";
 import { useUiStore } from "./store/uiStore";
 
 const AiSettingsDialog = lazy(async () => {
@@ -31,6 +32,22 @@ function App() {
       .catch(() => {
         // IndexedDB 不可用时继续使用 localStorage。
       });
+  }, []);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has("bench")) return;
+    let timer: number | undefined;
+    const unsubscribe = useCanvasStore.subscribe((state, previous) => {
+      if (state.nodes.length >= previous.nodes.length) return;
+      window.clearTimeout(timer);
+      timer = window.setTimeout(() => {
+        void pruneOrphanImages().catch(() => undefined);
+      }, 800);
+    });
+    return () => {
+      window.clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   return (
