@@ -1,6 +1,6 @@
-﻿import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { NodeToolbar, Position, useInternalNode, useViewport } from "@xyflow/react";
+import { useInternalNode, useViewport } from "@xyflow/react";
 import { useCanvasStore } from "../../store/canvasStore";
 import { useToastStore } from "../../store/toastStore";
 import { useUiStore } from "../../store/uiStore";
@@ -16,6 +16,7 @@ import { upstreamSourceNodes } from "../../lib/ai/refs";
 import type { AiModel } from "../../lib/ai/types";
 import { useAiModels } from "../../lib/ai/useModels";
 import { Button } from "../ui/Button";
+import { Icon } from "../ui/Icon";
 import { Select, Textarea } from "../ui/Control";
 import { ErrorBanner } from "../ui/Feedback";
 import { NodeSettingsDialog } from "./NodeSettingsDialog";
@@ -58,13 +59,72 @@ function configSummary(
   return items;
 }
 
-function GearIcon() {
-  return (
-    <svg className="ai-config-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" />
-    </svg>
+type Box = { x: number; y: number; width: number; height: number };
+type Size = { width: number; height: number };
+
+function overlapArea(a: Box, b: Box): number {
+  const width = Math.max(0, Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x));
+  const height = Math.max(0, Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y));
+  return width * height;
+}
+
+function placePanel(
+  node: Box | null,
+  panel: Size,
+  viewport: Size,
+  obstacles: Box[],
+): { left: number; top: number } {
+  const gap = 12;
+  const margin = 12;
+  const bottomInset = viewport.height > 700 ? 84 : 60;
+  const width = Math.min(panel.width, viewport.width - margin * 2);
+  const height = Math.min(panel.height, viewport.height - margin * 2);
+  if (!node) return { left: margin, top: margin };
+
+  const candidates = [
+    { left: node.x + node.width + gap, top: node.y },
+    { left: node.x - width - gap, top: node.y },
+    { left: node.x, top: node.y + node.height + gap },
+    { left: node.x, top: node.y - height - gap },
+  ].filter(
+    (candidate) =>
+      candidate.left >= margin &&
+      candidate.top >= margin &&
+      candidate.left + width <= viewport.width - margin &&
+      candidate.top + height <= viewport.height - margin - bottomInset,
   );
+
+  if (candidates.length === 0) {
+    return {
+      left: Math.min(Math.max(node.x, margin), Math.max(margin, viewport.width - width - margin)),
+      top: Math.min(
+        Math.max(node.y + node.height + gap, margin),
+        Math.max(margin, viewport.height - height - margin - bottomInset),
+      ),
+    };
+  }
+
+  const reserved: Box[] = [
+    ...obstacles,
+    {
+      x: viewport.width - 240,
+      y: viewport.height - 300,
+      width: 240,
+      height: 300,
+    },
+  ];
+
+  let best = candidates[0];
+  let bestScore = Number.POSITIVE_INFINITY;
+  for (const candidate of candidates) {
+    const box = { x: candidate.left, y: candidate.top, width, height };
+    const score = reserved.reduce((sum, item) => sum + overlapArea(box, item), 0);
+    if (score < bestScore) {
+      best = candidate;
+      bestScore = score;
+    }
+  }
+  return best;
 }
 
 export function AiPanel() {
@@ -87,15 +147,40 @@ export function AiPanel() {
   const [settingsNodeId, setSettingsNodeId] = useState<string | null>(null);
   const internalNode = useInternalNode(nodeId ?? "");
   const viewport = useViewport();
-  const panelPosition = (() => {
-    if (!internalNode) return Position.Bottom;
-    const top = internalNode.internals.positionAbsolute.y * viewport.zoom + viewport.y;
-    const height = (internalNode.measured.height ?? 0) * viewport.zoom;
-    const bottom = top + height;
-    const spaceBelow = (typeof window === "undefined" ? 900 : window.innerHeight) - bottom;
-    return spaceBelow < 300 && top > spaceBelow ? Position.Top : Position.Bottom;
-  })();
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelSize, setPanelSize] = useState<Size>(() => ({
+    width: Math.min(480, window.innerWidth - 24),
+    height: 320,
+  }));
+  const [viewportSize, setViewportSize] = useState<Size>(() => ({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  }));
   const settingsOpen = settingsNodeId === nodeId;
+
+  useLayoutEffect(() => {
+    const element = panelRef.current;
+    if (!element) return;
+    const update = () => {
+      const width = element.offsetWidth;
+      const height = element.offsetHeight;
+      if (!width || !height) return;
+      setPanelSize((current) =>
+        current.width === width && current.height === height ? current : { width, height },
+      );
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [nodeId, settingsOpen]);
+
+  useEffect(() => {
+    const onResize = () => setViewportSize({ width: window.innerWidth, height: window.innerHeight });
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   useEffect(() => {
     if (!nodeId || !kind || models.length === 0) return;
@@ -133,19 +218,33 @@ export function AiPanel() {
     }
   };
 
+  const nodeBox = internalNode
+    ? {
+        x: internalNode.internals.positionAbsolute.x * viewport.zoom + viewport.x,
+        y: internalNode.internals.positionAbsolute.y * viewport.zoom + viewport.y,
+        width: (internalNode.measured.width ?? 280) * viewport.zoom,
+        height: (internalNode.measured.height ?? 160) * viewport.zoom,
+      }
+    : null;
+  const obstacles = nodes
+    .filter((item) => item.id !== nodeId)
+    .map((item) => ({
+      x: item.position.x * viewport.zoom + viewport.x,
+      y: item.position.y * viewport.zoom + viewport.y,
+      width: (item.measured?.width ?? item.width ?? 280) * viewport.zoom,
+      height: (item.measured?.height ?? item.height ?? 160) * viewport.zoom,
+    }));
+  const panelPosition = placePanel(nodeBox, panelSize, viewportSize, obstacles);
+
   return (
     <>
-      <NodeToolbar
-        nodeId={nodeId}
-        position={panelPosition}
-        align="start"
-        offset={panelPosition === Position.Top ? 58 : 18}
-        isVisible
-      >
+      {createPortal(
         <div
+          ref={panelRef}
           key={nodeId}
           className="ai-panel ai-panel-compact"
           data-ai-floating-editor
+          style={{ left: panelPosition.left, top: panelPosition.top }}
           onPointerDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
         >
@@ -184,7 +283,7 @@ export function AiPanel() {
                 onClick={() => setSettingsNodeId(nodeId)}
                 title="生成设置"
               >
-                <GearIcon />
+                <Icon name="settings" size={13} className="ai-config-icon" />
                 <span className="ai-config-label">{config.join(" · ")}</span>
               </Button>
             ) : null}
@@ -206,8 +305,9 @@ export function AiPanel() {
           {modelsState.error ? (
             <ErrorBanner className="ai-error">{modelsState.error}</ErrorBanner>
           ) : null}
-        </div>
-      </NodeToolbar>
+        </div>,
+        document.body,
+      )}
 
       {settingsOpen
         ? createPortal(

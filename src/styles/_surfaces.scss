@@ -1,81 +1,83 @@
-/* 浮层表面：把重复的边框/背景/圆角/阴影收敛成可复用 mixin */
+/* 浮层表面：统一为实色 + 一条边线，阴影只用于真正浮起的层 */
+@mixin surface($radius: var(--r-panel), $bg: var(--surface-1), $border: var(--line)) {
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $bg;
+}
+
+@mixin overlay(
+  $radius: var(--r-panel),
+  $bg: var(--surface-1),
+  $border: var(--line-strong),
+  $shadow: var(--shadow-float)
+) {
+  border: 1px solid $border;
+  border-radius: $radius;
+  background: $bg;
+  box-shadow: $shadow;
+}
+
+@mixin focus-ring {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
 @mixin menu {
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--panel-raised);
-  box-shadow: var(--shadow-lg);
+  @include overlay(var(--r-panel), var(--surface-1), var(--line-strong));
 }
 
 @mixin dialog(
-  $radius: var(--radius-2xl),
-  $bg: var(--panel),
-  $shadow: 0 24px 60px rgb(0 0 0 / 55%)
+  $radius: var(--r-dialog),
+  $bg: var(--surface-1),
+  $shadow: var(--shadow-modal)
 ) {
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--line-strong);
   border-radius: $radius;
   background: $bg;
   box-shadow: $shadow;
 }
 
 @mixin palette(
-  $radius: var(--radius-2xl),
-  $bg: var(--panel-dialog),
-  $shadow: var(--shadow-xl)
+  $radius: var(--r-dialog),
+  $bg: var(--surface-1),
+  $shadow: var(--shadow-modal)
 ) {
-  border: 1px solid var(--border-strong);
+  border: 1px solid var(--line-strong);
   border-radius: $radius;
   background: $bg;
   box-shadow: $shadow;
 }
 
 @mixin glass {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: rgb(17 20 27 / 92%);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(12px);
+  @include surface(var(--r-panel), var(--surface-1), var(--line));
 }
 
 @mixin toast {
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--panel-raised);
-  box-shadow: 0 14px 40px rgb(0 0 0 / 45%);
+  @include overlay(var(--r-panel), var(--surface-1), var(--line));
 }
 
 @mixin node {
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-xl);
-  background: var(--gradient-node);
-  box-shadow: 0 10px 28px rgb(0 0 0 / 32%);
+  @include surface(var(--r-panel), var(--surface-2), var(--line));
 }
 
 @mixin floating(
-  $radius: var(--radius-lg),
-  $bg: rgb(15 18 24 / 96%),
-  $shadow: 0 10px 30px rgb(0 0 0 / 45%),
-  $blur: 10px
+  $radius: var(--r-panel),
+  $bg: var(--surface-1),
+  $shadow: var(--shadow-float),
+  $blur: 0
 ) {
-  border: 1px solid var(--border-strong);
-  border-radius: $radius;
-  background: $bg;
-  box-shadow: $shadow;
-  backdrop-filter: blur($blur);
+  @include overlay($radius, $bg, var(--line-strong), $shadow);
 }
 
 @mixin card(
-  $border: var(--border-strong),
-  $radius: var(--radius-3xl),
-  $bg: var(--panel),
-  $shadow: var(--shadow-xl),
+  $border: var(--line),
+  $radius: var(--r-dialog),
+  $bg: var(--surface-1),
+  $shadow: var(--shadow-float),
   $blur: null
 ) {
   border: 1px solid $border;
   border-radius: $radius;
   background: $bg;
   box-shadow: $shadow;
-
-  @if $blur != null {
-    backdrop-filter: blur($blur);
-  }
 }

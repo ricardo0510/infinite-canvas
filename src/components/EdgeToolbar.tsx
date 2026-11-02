@@ -4,15 +4,16 @@ import { NOTE_COLORS, DEFAULT_EDGE_STROKE } from "../lib/theme";
 import { useCanvasStore } from "../store/canvasStore";
 import type { NoteColor } from "../types";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 import { Input } from "./ui/Control";
 
 const DEFAULT_STROKE = DEFAULT_EDGE_STROKE;
 
 const COLOR_LABELS: Record<NoteColor, string> = {
-  violet: "紫罗兰",
-  cyan: "青色",
-  amber: "琥珀",
-  emerald: "翠绿",
+  violet: "灰蓝",
+  cyan: "青灰",
+  amber: "赭黄",
+  emerald: "苔绿",
 };
 
 const COLORS: { label: string; value: string }[] = [
@@ -23,10 +24,10 @@ const COLORS: { label: string; value: string }[] = [
   })),
 ];
 
-const DASHES: { label: string; value: string | undefined; glyph: string }[] = [
-  { label: "实线", value: undefined, glyph: "—" },
-  { label: "虚线", value: "6 4", glyph: "┄" },
-  { label: "点线", value: "2 4", glyph: "···" },
+const DASHES: { label: string; value: string | undefined; className: string }[] = [
+  { label: "实线", value: undefined, className: "dash-preview" },
+  { label: "虚线", value: "6 4", className: "dash-preview dash-preview--dashed" },
+  { label: "点线", value: "2 4", className: "dash-preview dash-preview--dotted" },
 ];
 
 export function EdgeToolbar() {
@@ -128,7 +129,7 @@ export function EdgeToolbar() {
           aria-label={`线条样式：${item.label}`}
           onClick={() => setStyle({ strokeDasharray: item.value })}
         >
-          {item.glyph}
+          <span className={item.className} />
         </Button>
       ))}
       <span className="selection-divider" />
@@ -141,7 +142,7 @@ export function EdgeToolbar() {
         aria-label={hasArrow ? "移除箭头" : "添加箭头"}
         onClick={toggleArrow}
       >
-        →
+        <Icon name="arrow-right" size={15} />
       </Button>
       <Button
         variant="danger"
@@ -151,7 +152,7 @@ export function EdgeToolbar() {
         aria-label="删除连线"
         onClick={() => removeEdge(edge.id)}
       >
-        ×
+        <Icon name="trash" size={15} />
       </Button>
     </div>
   );

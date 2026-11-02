@@ -4,21 +4,35 @@
 
 .ai-panel {
   @include surface.floating(
-    var(--radius-2xl),
-    rgb(15 18 24 / 98%),
-    0 24px 60px rgb(0 0 0 / 55%),
-    14px
+    var(--r-dialog),
+    var(--surface-1),
+    var(--shadow-modal),
+    0
   );
 
-  position: relative;
+  position: fixed;
+  z-index: var(--z-inspector);
   display: flex;
-  width: 560px;
+  width: 480px;
   max-width: calc(100vw - 24px);
   max-height: min(70vh, 680px);
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
   padding: var(--space-3);
+  animation: ai-panel-in var(--dur-2) var(--ease-out);
+}
+
+@keyframes ai-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .ai-panel-compact {
@@ -28,13 +42,14 @@
 .ai-prompt {
   min-height: 96px;
   padding: 10px;
-  border-radius: 9px;
-  background: var(--inset-3);
+  border-radius: var(--r-control);
+  background: var(--inset);
   font-size: var(--font-md);
 }
 
 .ai-prompt:focus {
-  box-shadow: 0 0 0 2px rgb(139 92 246 / 16%);
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
 }
 
 .ai-upstream {
@@ -53,9 +68,9 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: var(--radius-md);
-  background: var(--inset-3);
+  background: var(--inset);
 }
 
 .ai-upstream-clip img,
@@ -87,13 +102,17 @@
   right: 3px;
   bottom: 2px;
   display: grid;
-  width: 13px;
-  height: 13px;
+  width: 14px;
+  height: 14px;
   place-items: center;
   border-radius: 50%;
-  background: rgb(0 0 0 / 55%);
+  background: rgb(0 0 0 / 60%);
   color: #fff;
-  font-size: 7px;
+}
+
+.ai-upstream-play .icon {
+  width: 8px;
+  height: 8px;
 }
 
 .ai-panel-bottom {
@@ -105,8 +124,8 @@
 .ai-config-button {
   min-width: 0;
   max-width: 240px;
-  border-radius: 999px;
-  color: var(--muted);
+  border-radius: var(--r-control);
+  color: var(--text-3);
 }
 
 .ai-config-button:hover:not(:disabled) {
@@ -279,10 +298,10 @@
 .ai-settings-error {
   margin: 0;
   padding: 8px var(--space-2);
-  border-radius: var(--radius-md);
-  background: rgb(239 68 68 / 12%);
-  color: var(--danger, #f87171);
-  font-size: var(--font-xs);
+  border-radius: var(--r-control);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger-soft);
+  font-size: var(--font-2xs);
   line-height: 1.5;
 }
 
@@ -326,8 +345,8 @@
 }
 
 .ai-provider-state.is-bound {
-  background: rgb(34 197 94 / 14%);
-  color: var(--success, #4ade80);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success-soft);
 }
 
 .ai-provider-actions {
@@ -379,13 +398,13 @@
 }
 
 .ai-credential-status.is-active {
-  background: rgb(34 197 94 / 14%);
-  color: var(--success, #4ade80);
+  background: color-mix(in srgb, var(--success) 14%, transparent);
+  color: var(--success-soft);
 }
 
 .ai-credential-status.is-invalid {
-  background: rgb(239 68 68 / 14%);
-  color: var(--danger, #f87171);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  color: var(--danger-soft);
 }
 
 .ai-credential-actions {
@@ -458,8 +477,8 @@
 }
 
 .ai-model-badge.is-default {
-  background: rgb(139 92 246 / 18%);
-  color: var(--accent, #a78bfa);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent-soft);
 }
 
 .ai-model-actions {

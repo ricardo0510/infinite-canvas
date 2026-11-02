@@ -4,6 +4,7 @@ import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useCanvasStore } from "../store/canvasStore";
 import { useUiStore } from "../store/uiStore";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 
 const ZOOM_PRESETS = [0.25, 0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -65,7 +66,7 @@ export function CanvasControls() {
                 }}
               >
                 <span>{Math.round(preset * 100)}%</span>
-                {active ? <span aria-hidden="true">✓</span> : null}
+                {active ? <Icon name="check" size={12} /> : null}
               </Button>
             );
           })}
@@ -80,13 +81,13 @@ export function CanvasControls() {
             }}
           >
             <span>适应视图</span>
-            <span aria-hidden="true">⛶</span>
+            <Icon name="fullscreen" size={12} />
           </Button>
         </div>
       ) : null}
       <div className="canvas-control-group">
         <Button variant="ghost" size="sm" icon onClick={() => zoomOut({ duration: 200 })} title="缩小" aria-label="缩小">
-          −
+          <Icon name="zoom-out" size={15} />
         </Button>
         <Button
           variant="ghost"
@@ -101,7 +102,7 @@ export function CanvasControls() {
           {percent}%
         </Button>
         <Button variant="ghost" size="sm" icon onClick={() => zoomIn({ duration: 200 })} title="放大" aria-label="放大">
-          +
+          <Icon name="zoom-in" size={15} />
         </Button>
         <span className="canvas-divider" />
         <Button
@@ -113,7 +114,7 @@ export function CanvasControls() {
           title="自动布局（Ctrl/Cmd + L）"
           aria-label="自动布局"
         >
-          ⤢
+          <Icon name="layout" size={15} />
         </Button>
         <Button
           variant="ghost"
@@ -125,7 +126,7 @@ export function CanvasControls() {
           aria-label={snapToGrid ? "关闭网格吸附" : "开启网格吸附"}
           aria-pressed={snapToGrid}
         >
-          ⌗
+          <Icon name="magnet" size={15} />
         </Button>
         <Button
           variant="ghost"
@@ -135,7 +136,7 @@ export function CanvasControls() {
           title="适应视图"
           aria-label="适应视图"
         >
-          ⛶
+          <Icon name="fit" size={15} />
         </Button>
         <Button
           variant="ghost"
@@ -147,7 +148,7 @@ export function CanvasControls() {
           aria-label={showMiniMap ? "隐藏小地图" : "显示小地图"}
           aria-pressed={showMiniMap}
         >
-          ▦
+          <Icon name="map" size={15} />
         </Button>
       </div>
     </div>

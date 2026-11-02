@@ -1,6 +1,7 @@
 import { useResolvedImageSrc } from "../hooks/useResolvedImageSrc";
 import { useUiStore } from "../store/uiStore";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 import { Modal } from "./ui/Modal";
 
 export function MediaPreviewModal() {
@@ -34,7 +35,7 @@ export function MediaPreviewModal() {
           onClick={() => setPreview(null)}
           aria-label="关闭预览"
         >
-          ×
+          <Icon name="close" size={16} />
         </Button>
       </div>
       <div className={`media-preview-body${preview.kind === "text" ? " is-text" : ""}`}>

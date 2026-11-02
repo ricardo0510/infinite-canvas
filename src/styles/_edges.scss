@@ -1,14 +1,14 @@
 @use "surfaces" as surface;
 
 .edge-label {
-  @include surface.card(var(--border), var(--radius-full), rgb(17 20 27 / 88%), none, 6px);
+  @include surface.card(var(--line), var(--radius-sm), var(--surface-1), none);
 
   position: absolute;
   max-width: 200px;
-  padding: 2px 7px;
+  padding: 2px 6px;
   overflow: hidden;
   color: var(--text-2);
-  font-size: var(--font-xs);
+  font-size: var(--font-2xs);
   line-height: 1.4;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -42,8 +42,19 @@
   box-shadow: inset 0 0 0 1px var(--accent);
 }
 
-.react-flow__edge.selected .react-flow__edge-path {
-  filter: drop-shadow(0 0 3px rgb(255 255 255 / 30%));
+.dash-preview {
+  display: block;
+  width: 16px;
+  height: 0;
+  border-top: 1.5px solid currentColor;
+}
+
+.dash-preview--dashed {
+  border-top-style: dashed;
+}
+
+.dash-preview--dotted {
+  border-top-style: dotted;
 }
 
 /* ---------- Edge actions ---------- */
@@ -59,21 +70,21 @@
   width: 22px;
   height: 22px;
   padding: 0;
-  border: 1px solid rgb(248 113 113 / 45%);
+  border: 1px solid var(--line-strong);
   border-radius: 50%;
-  background: #1b1418;
+  background: var(--surface-1);
   color: var(--danger-soft);
   font-size: var(--font-md);
   line-height: 1;
   box-shadow: var(--shadow-sm);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, transform 0.15s;
+  transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
 }
 
 .edge-delete:hover {
-  background: rgb(248 113 113 / 22%);
+  background: color-mix(in srgb, var(--danger) 18%, var(--surface-1));
   color: var(--text-strong);
-  transform: scale(1.08);
+  transform: scale(1.06);
 }
 
 /* ---------- Alignment guides ---------- */
@@ -89,7 +100,7 @@
   width: 1px;
   background: repeating-linear-gradient(
     to bottom,
-    rgb(244 114 182 / 85%) 0 4px,
+    color-mix(in srgb, var(--accent) 80%, transparent) 0 4px,
     transparent 4px 8px
   );
 }
@@ -98,7 +109,7 @@
   height: 1px;
   background: repeating-linear-gradient(
     to right,
-    rgb(244 114 182 / 85%) 0 4px,
+    color-mix(in srgb, var(--accent) 80%, transparent) 0 4px,
     transparent 4px 8px
   );
 }

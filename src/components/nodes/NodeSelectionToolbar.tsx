@@ -3,6 +3,7 @@ import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import { useUiStore } from "../../store/uiStore";
 import type { CanvasNode } from "../../types";
 import { Button } from "../ui/Button";
+import { Icon } from "../ui/Icon";
 
 type NodeSelectionToolbarProps = {
   node: CanvasNode;
@@ -31,7 +32,7 @@ export function NodeSelectionToolbar({ node }: NodeSelectionToolbarProps) {
               })
             }
           >
-            <span aria-hidden="true">⛶</span>
+            <Icon name="fullscreen" size={14} />
           </Button>
         </div>
       </NodeToolbar>
@@ -59,7 +60,7 @@ export function NodeSelectionToolbar({ node }: NodeSelectionToolbarProps) {
             })
           }
         >
-          <span aria-hidden="true">⛶</span>
+          <Icon name="fullscreen" size={14} />
         </Button>
       </div>
     </NodeToolbar>

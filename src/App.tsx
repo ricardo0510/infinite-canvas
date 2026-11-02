@@ -6,6 +6,7 @@ import { KeyboardHelp } from "./components/KeyboardHelp";
 import { StatusBar } from "./components/StatusBar";
 import { ToastHost } from "./components/ToastHost";
 import { Toolbar } from "./components/Toolbar";
+import { Icon } from "./components/ui/Icon";
 import { useAutoSave } from "./hooks/useAutoSave";
 import { useCanvasShortcuts } from "./hooks/useCanvasShortcuts";
 import { useCanvasStore } from "./store/canvasStore";
@@ -56,11 +57,11 @@ function App() {
         <div className="brand-dock">
           <div className="brand">
             <span className="brand-mark" aria-hidden="true">
-              ✦
+              <Icon name="logo" size={18} />
             </span>
             <div className="brand-copy">
               <h1>无限画布</h1>
-              <p>React Flow · Zustand · 本地优先</p>
+              <p>未命名画布 · 本地保存</p>
             </div>
           </div>
         </div>

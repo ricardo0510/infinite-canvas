@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Button } from "./Button";
+import { Icon } from "./Icon";
 
 type DialogHeaderProps = {
   id?: string;
@@ -26,8 +27,8 @@ export function DialogHeader({
       </div>
       {actions}
       {onClose ? (
-        <Button size="sm" icon aria-label="关闭" onClick={onClose}>
-          ×
+        <Button variant="ghost" size="sm" icon aria-label="关闭" onClick={onClose}>
+          <Icon name="close" size={14} />
         </Button>
       ) : null}
     </header>

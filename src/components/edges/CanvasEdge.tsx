@@ -8,6 +8,7 @@ import {
 import { useCallback, useState, type CSSProperties, type MouseEvent } from "react";
 import { useCanvasStore } from "../../store/canvasStore";
 import { Button } from "../ui/Button";
+import { Icon } from "../ui/Icon";
 
 type Point = { x: number; y: number };
 
@@ -138,7 +139,7 @@ export function CanvasEdge({
                 removeEdge(id);
               }}
             >
-              ×
+              <Icon name="trash" size={11} />
             </Button>
           </div>
         </EdgeLabelRenderer>

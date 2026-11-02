@@ -5,10 +5,11 @@ import type { NoteColor } from "../types";
  * CSS 侧通过 --node-accent 注入，TS 侧直接读取这里。
  */
 export const NOTE_COLORS: Record<NoteColor, string> = {
-  violet: "#8b5cf6",
-  cyan: "#22d3ee",
-  amber: "#f59e0b",
-  emerald: "#34d399",
+  violet: "#8a94a6",
+  cyan: "#7f9f9c",
+  amber: "#c39a5a",
+  emerald: "#8a9a72",
 };
 
-export const DEFAULT_EDGE_STROKE = "#5b6478";
+export const DEFAULT_EDGE_STROKE = "#7a766c";
+export const ACCENT = "#d2a13f";

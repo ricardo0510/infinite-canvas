@@ -1,5 +1,3 @@
-@use "surfaces" as surface;
-
 .canvas-controls {
   position: absolute;
   bottom: var(--space-3);
@@ -11,12 +9,14 @@
 }
 
 .canvas-control-group {
-  @include surface.glass;
-
   display: flex;
   align-items: center;
   gap: 1px;
   padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-float);
 }
 
 .canvas-zoom-value {
@@ -29,7 +29,7 @@
   width: 1px;
   height: var(--space-4);
   margin: 0 3px;
-  background: var(--border);
+  background: var(--line);
 }
 
 .zoom-menu {
@@ -40,19 +40,17 @@
   flex-direction: column;
   min-width: 122px;
   padding: var(--space-1);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  background: var(--panel-raised);
-  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-panel);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-float);
 }
 
 .zoom-menu .is-current {
-  color: var(--accent-2);
+  color: var(--accent-soft);
 }
 
 .selection-toolbar {
-  @include surface.glass;
-
   position: absolute;
   top: var(--space-3);
   left: 50%;
@@ -60,15 +58,19 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  padding: var(--space-1) 6px;
-  box-shadow: 0 12px 34px rgb(0 0 0 / 45%);
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-float);
   transform: translateX(-50%);
 }
 
 .selection-count {
   padding: 0 var(--space-1);
-  color: var(--muted);
-  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-size: var(--font-2xs);
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
 
@@ -76,5 +78,5 @@
   width: 1px;
   height: var(--space-4);
   margin: 0 2px;
-  background: var(--border);
+  background: var(--line);
 }

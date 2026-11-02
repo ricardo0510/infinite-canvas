@@ -8,10 +8,10 @@ type NodeColorsProps = {
 };
 
 const COLOR_LABELS: Record<NoteColor, string> = {
-  violet: "紫罗兰",
-  cyan: "青色",
-  amber: "琥珀",
-  emerald: "翠绿",
+  violet: "灰蓝",
+  cyan: "青灰",
+  amber: "赭黄",
+  emerald: "苔绿",
 };
 
 export function NodeColors({ value, onChange }: NodeColorsProps) {
@@ -25,8 +25,8 @@ export function NodeColors({ value, onChange }: NodeColorsProps) {
           active={value === color}
           className="nodrag"
           style={{ background: NOTE_COLORS[color] }}
-          aria-label={`使用${COLOR_LABELS[color]}强调色`}
-          title={COLOR_LABELS[color]}
+          aria-label={`使用${COLOR_LABELS[color]}标记色`}
+          title={`${COLOR_LABELS[color]}标记色`}
           onClick={(event) => {
             event.stopPropagation();
             onChange(color);

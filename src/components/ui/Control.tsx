@@ -6,6 +6,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
 import { createPortal } from "react-dom";
+import { Icon } from "./Icon";
 
 type ControlSize = "xs" | "sm" | "md" | "lg";
 type ControlVariant = "default" | "bare";
@@ -306,7 +307,9 @@ export function Select({
                     onClick={() => choose(option)}
                   >
                     <span className="select-option-label">{option.label}</span>
-                    <span className="select-check">{option.value === value ? "✓" : ""}</span>
+                    <span className="select-check">
+                      {option.value === value ? <Icon name="check" size={12} /> : null}
+                    </span>
                   </button>
                 ))
               )}

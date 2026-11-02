@@ -18,7 +18,7 @@ import { GRID_SIZE } from "../lib/geometry";
 import { setPasteAnchor } from "../lib/pasteAnchor";
 import { buildStressSnapshot } from "../lib/stress";
 import { snapDragChanges } from "../lib/guides";
-import { DEFAULT_EDGE_STROKE, NOTE_COLORS } from "../lib/theme";
+import { DEFAULT_EDGE_STROKE, NOTE_COLORS, ACCENT } from "../lib/theme";
 import { useCanvasKeys } from "../hooks/useCanvasKeys";
 import { useImageDrop } from "../hooks/useImageDrop";
 import { useNodeGrouping } from "../hooks/useNodeGrouping";
@@ -39,6 +39,7 @@ import { ImageNode } from "./nodes/ImageNode";
 import { TextNode } from "./nodes/TextNode";
 import { NodeSelectionToolbar } from "./nodes/NodeSelectionToolbar";
 import { VideoNode } from "./nodes/VideoNode";
+import { Icon } from "./ui/Icon";
 
 const AiPanel = lazy(async () => {
   const module = await import("./ai/AiPanel");
@@ -257,7 +258,7 @@ export function FlowCanvas() {
         onMoveEnd={(_event, viewport) => setViewport(viewport)}
         deleteKeyCode={null}
         colorMode="dark"
-        defaultMarkerColor="#7c8598"
+        defaultMarkerColor="#7a766c"
         defaultViewport={initialViewport ?? undefined}
         fitView={!initialViewport && benchCount === 0}
         fitViewOptions={{ padding: 0.25, maxZoom: 1.25 }}
@@ -274,19 +275,19 @@ export function FlowCanvas() {
         connectionRadius={40}
         zoomOnDoubleClick={false}
         defaultEdgeOptions={edgeOptions}
-        connectionLineStyle={{ stroke: NOTE_COLORS.violet, strokeWidth: 2 }}
+        connectionLineStyle={{ stroke: ACCENT, strokeWidth: 1.75 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2a3040" />
-        {showMiniMap ? (
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2f2f2a" />
+        {showMiniMap && nodes.length > 0 ? (
           <MiniMap
             position="bottom-right"
             pannable
             zoomable
-            maskColor="rgba(8, 10, 15, 0.72)"
+            maskColor="rgba(10, 10, 9, 0.72)"
             nodeStrokeWidth={2}
             nodeColor={(node) => {
-              if (node.type === "group") return "#2c2518";
-              if (node.type === "video") return "#f59e0b";
+              if (node.type === "group") return "#2b2b27";
+              if (node.type === "video") return NOTE_COLORS.amber;
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
               return color ? NOTE_COLORS[color] : DEFAULT_EDGE_STROKE;
             }}
@@ -310,7 +311,7 @@ export function FlowCanvas() {
         <div className="drop-overlay">
           <div className="drop-card">
             <span className="drop-plus" aria-hidden="true">
-              +
+              <Icon name="plus" size={20} />
             </span>
             <strong>拖入图片以添加节点</strong>
             <span>PNG、JPG、GIF 或 WebP · 每张不超过 4 MB</span>

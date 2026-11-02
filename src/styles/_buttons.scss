@@ -6,27 +6,28 @@
   justify-content: center;
   gap: 5px;
   border: 1px solid transparent;
+  border-radius: var(--r-control);
   background: transparent;
   color: var(--text-2);
   font: inherit;
   line-height: 1;
   white-space: nowrap;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.15s, filter 0.15s;
+  transition: border-color var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), opacity var(--dur-1) var(--ease-out);
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
   outline-offset: 2px;
 }
 
 .btn:disabled {
-  opacity: 0.35;
+  opacity: 0.4;
   cursor: not-allowed;
 }
 
 .btn:active:not(:disabled) {
-  transform: translateY(1px);
+  opacity: 0.82;
 }
 
 .btn--block {
@@ -88,57 +89,57 @@
 }
 
 .btn--secondary {
-  border-color: var(--border);
-  background: var(--panel-2);
+  border-color: var(--line);
+  background: var(--surface-2);
 }
 
 .btn--secondary:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: var(--panel-3);
+  border-color: var(--line-strong);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
 .btn--secondary.is-on {
-  border-color: rgb(34 211 238 / 55%);
-  background: rgb(34 211 238 / 12%);
-  color: var(--cyan-soft);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-soft);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--panel-4);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
 .btn--ghost.is-on {
-  background: rgb(34 211 238 / 12%);
-  color: var(--cyan-soft);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent-soft);
 }
 
 .btn--ghost.is-active {
-  background: rgb(139 92 246 / 16%);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
   color: var(--accent-soft);
 }
 
 .btn--accent {
-  border-color: rgb(139 92 246 / 55%);
-  background: rgb(139 92 246 / 14%);
+  border-color: color-mix(in srgb, var(--accent) 48%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
   color: var(--accent-soft);
 }
 
 .btn--accent:hover:not(:disabled) {
   border-color: var(--accent);
-  background: rgb(139 92 246 / 22%);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .btn--primary {
-  border-color: rgb(139 92 246 / 65%);
-  background: linear-gradient(180deg, var(--accent), #6d3fe0);
-  color: var(--text-strong);
-  font-weight: 650;
+  border-color: var(--accent-press);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 
 .btn--primary:hover:not(:disabled) {
-  filter: brightness(1.08);
+  background: var(--accent-press);
 }
 
 .btn--danger {
@@ -146,9 +147,9 @@
 }
 
 .btn--danger:hover:not(:disabled) {
-  border-color: rgb(248 113 113 / 50%);
-  background: rgb(248 113 113 / 14%);
-  color: var(--danger-soft-2);
+  border-color: color-mix(in srgb, var(--danger) 45%, transparent);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger-soft);
 }
 
 .btn--menu {
@@ -161,7 +162,7 @@
 
 .btn--menu:hover:not(:disabled),
 .btn--menu.is-active {
-  background: var(--panel-4);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
@@ -180,26 +181,26 @@
   gap: 3px;
   height: auto;
   padding: 10px var(--space-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--panel-2);
-  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--surface-2);
+  color: var(--text-1);
   text-align: left;
   white-space: normal;
 }
 
 .btn--card:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: rgb(139 92 246 / 10%);
+  border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, var(--surface-2));
 }
 
 .btn--card strong {
   font-size: var(--font-sm);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .btn--card span {
-  color: var(--muted);
+  color: var(--text-3);
   font-size: var(--font-2xs);
 }
 
@@ -211,13 +212,13 @@
   min-width: 0;
   padding: 0;
   overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: 7px;
-  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--inset);
 }
 
 .btn--tile:hover:not(:disabled) {
-  border-color: var(--border-strong);
+  border-color: var(--line-strong);
 }
 
 .btn--tile.is-active {
@@ -238,19 +239,21 @@
   padding: 0;
   border: 1px solid transparent;
   border-radius: 50%;
-  opacity: 0.5;
+  opacity: 0.45;
+  transition: opacity var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out);
 }
 
 .btn--swatch:hover:not(:disabled) {
-  background: transparent;
-  transform: scale(1.2);
+  background-clip: padding-box;
+  opacity: 0.9;
+  transform: scale(1.18);
 }
 
 .btn--swatch:active:not(:disabled) {
-  transform: scale(1.1);
+  transform: scale(1.08);
 }
 
 .btn--swatch.is-active {
-  border-color: var(--text-strong);
   opacity: 1;
+  box-shadow: 0 0 0 1px var(--text-strong), 0 0 0 2.5px var(--canvas);
 }

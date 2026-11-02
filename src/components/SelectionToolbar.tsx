@@ -1,14 +1,15 @@
 ﻿import { useCanvasStore } from "../store/canvasStore";
 import type { AlignKind } from "../types";
 import { Button } from "./ui/Button";
+import { Icon, type IconName } from "./ui/Icon";
 
-const ALIGN: { kind: AlignKind; label: string; icon: string }[] = [
-  { kind: "left", label: "左对齐", icon: "⇤" },
-  { kind: "centerX", label: "水平居中", icon: "↔" },
-  { kind: "right", label: "右对齐", icon: "⇥" },
-  { kind: "top", label: "顶部对齐", icon: "⇡" },
-  { kind: "centerY", label: "垂直居中", icon: "↕" },
-  { kind: "bottom", label: "底部对齐", icon: "⇣" },
+const ALIGN: { kind: AlignKind; label: string; icon: IconName }[] = [
+  { kind: "left", label: "左对齐", icon: "align-left" },
+  { kind: "centerX", label: "水平居中", icon: "align-center-x" },
+  { kind: "right", label: "右对齐", icon: "align-right" },
+  { kind: "top", label: "顶部对齐", icon: "align-top" },
+  { kind: "centerY", label: "垂直居中", icon: "align-center-y" },
+  { kind: "bottom", label: "底部对齐", icon: "align-bottom" },
 ];
 
 export function SelectionToolbar() {
@@ -40,7 +41,7 @@ export function SelectionToolbar() {
               aria-label={item.label}
               onClick={() => alignSelected(item.kind)}
             >
-              {item.icon}
+              <Icon name={item.icon} size={15} />
             </Button>
           ))}
           <span className="selection-divider" />
@@ -53,7 +54,7 @@ export function SelectionToolbar() {
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("x")}
           >
-            ≡
+            <Icon name="distribute-x" size={15} />
           </Button>
           <Button
             variant="ghost"
@@ -64,7 +65,7 @@ export function SelectionToolbar() {
             disabled={selectedCount < 3}
             onClick={() => distributeSelected("y")}
           >
-            ⋮
+            <Icon name="distribute-y" size={15} />
           </Button>
           <span className="selection-divider" />
           <Button
@@ -75,7 +76,7 @@ export function SelectionToolbar() {
             aria-label="合并分组"
             onClick={() => groupSelected()}
           >
-            ▣
+            <Icon name="group" size={15} />
           </Button>
         </>
       ) : null}
@@ -88,7 +89,7 @@ export function SelectionToolbar() {
           aria-label="取消分组"
           onClick={ungroupSelected}
         >
-          ▢
+          <Icon name="ungroup" size={15} />
         </Button>
       ) : null}
       <span className="selection-divider" />
@@ -100,7 +101,7 @@ export function SelectionToolbar() {
         aria-label="删除选中节点"
         onClick={removeSelected}
       >
-        ×
+        <Icon name="trash" size={15} />
       </Button>
     </div>
   );

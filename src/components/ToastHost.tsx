@@ -1,5 +1,6 @@
 import { useToastStore } from "../store/toastStore";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 
 export function ToastHost() {
   const toasts = useToastStore((state) => state.toasts);
@@ -19,7 +20,7 @@ export function ToastHost() {
             aria-label="关闭通知"
             onClick={() => dismiss(toast.id)}
           >
-            ×
+            <Icon name="close" size={12} />
           </Button>
         </div>
       ))}

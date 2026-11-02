@@ -1,48 +1,58 @@
-@use "surfaces" as surface;
-
 .toolbar {
-  @include surface.glass;
-
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 100%;
-  padding: 5px 6px;
-  border-radius: var(--radius-xl);
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-panel);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-float);
 }
 
 .tool-divider {
   width: 1px;
-  height: var(--space-5);
-  margin: 0 2px;
-  background: var(--border);
+  height: var(--space-4);
+  margin: 0 3px;
+  background: var(--line);
+}
+
+.toolbar .btn {
+  gap: 6px;
+}
+
+.toolbar .btn .icon {
+  width: 15px;
+  height: 15px;
 }
 
 .new-node-select {
   width: auto;
-  min-width: 132px;
+  min-width: 120px;
 }
 
 .new-node-select .select-trigger {
   justify-content: flex-start;
-  border-color: rgb(139 92 246 / 45%);
-  background: rgb(139 92 246 / 12%);
-  color: var(--accent-soft);
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 600;
 }
 
 .new-node-select .select-trigger:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: rgb(139 92 246 / 18%);
+  border-color: var(--accent-press);
+  background: var(--accent-press);
+  color: var(--accent-ink);
 }
 
 .new-node-select .select-trigger .select-chevron {
-  color: var(--accent-soft-2);
+  color: var(--accent-ink);
+  opacity: 0.8;
 }
 
-.toolbar .btn [aria-hidden] {
-  font-size: var(--font-md);
-  line-height: 1;
-  opacity: 0.9;
+.new-node-select .select-trigger.is-open {
+  border-color: var(--accent-press);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
 }

@@ -7,6 +7,7 @@ import { useToastStore } from "../store/toastStore";
 import { useUiStore } from "../store/uiStore";
 import type { NodeKind } from "../types";
 import { Button } from "./ui/Button";
+import { Icon } from "./ui/Icon";
 import { Input, Select } from "./ui/Control";
 
 const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
@@ -86,38 +87,38 @@ export function Toolbar() {
         controlSize="lg"
         value=""
         options={ADD_ITEMS.map((item) => ({ value: item.kind, label: item.label }))}
-        placeholder="＋ 新建节点"
+        placeholder="新建节点"
         ariaLabel="新建节点"
         onChange={(kind) => handleAdd(kind as NodeKind)}
       />
       <span className="tool-divider" />
       <Button size="lg" onClick={undo} disabled={!canUndo} title="撤销（Ctrl/Cmd + Z）">
-        <span aria-hidden="true">↶</span>
+        <Icon name="undo" size={15} />
         <span className="tool-label">撤销</span>
       </Button>
       <Button size="lg" onClick={redo} disabled={!canRedo} title="重做（Ctrl/Cmd + Shift + Z）">
-        <span aria-hidden="true">↷</span>
+        <Icon name="redo" size={15} />
         <span className="tool-label">重做</span>
       </Button>
       <span className="tool-divider" />
       <Button size="lg" onClick={handleExport} title="导出 JSON">
-        <span aria-hidden="true">↓</span>
+        <Icon name="download" size={15} />
         <span className="tool-label">导出</span>
       </Button>
       <Button size="lg" onClick={() => fileInput.current?.click()} title="导入 JSON">
-        <span aria-hidden="true">↑</span>
+        <Icon name="upload" size={15} />
         <span className="tool-label">导入</span>
       </Button>
       <Button size="lg" onClick={() => setCommandOpen(true)} title="打开命令面板">
-        <span aria-hidden="true">/</span>
+        <Icon name="command" size={15} />
         <span className="tool-label">命令</span>
       </Button>
       <Button size="lg" onClick={() => setAiSettingsOpen(true)} title="AI 设置">
-        <span aria-hidden="true">⚙</span>
+        <Icon name="settings" size={15} />
         <span className="tool-label">AI 设置</span>
       </Button>
       <Button size="lg" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
-        <span aria-hidden="true">?</span>
+        <Icon name="help" size={15} />
         <span className="tool-label">快捷键</span>
       </Button>
       <Input

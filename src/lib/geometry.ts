@@ -2,7 +2,7 @@ import type { XYPosition } from "@xyflow/react";
 import type { CanvasNode, NodeKind } from "../types";
 
 export const AI_NODE_WIDTH = 280;
-export const NODE_HEADER_HEIGHT = 34;
+export const NODE_HEADER_HEIGHT = 36;
 export const EMPTY_NODE_HEIGHT = 160;
 
 export const MIN_SIZE: Record<NodeKind, { width: number; height: number }> = {

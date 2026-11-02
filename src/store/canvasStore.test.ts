@@ -84,7 +84,7 @@ describe("images", () => {
     expect(state.nodes.every((item) => item.type === "image" && item.selected)).toBe(true);
     expect(node(ids[0]).data).toMatchObject({ src: "data:image/png;base64,AAAA", alt: "a.png", static: true });
     expect(node(ids[0]).width).toBe(280);
-    expect(node(ids[0]).height).toBe(244);
+    expect(node(ids[0]).height).toBe(246);
     expect(state.past).toHaveLength(1);
 
     useCanvasStore.getState().undo();

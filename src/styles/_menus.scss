@@ -8,18 +8,14 @@
   display: flex;
   flex-direction: column;
   min-width: 208px;
-  padding: 6px;
-  border-radius: var(--radius-xl);
-  background: rgb(18 22 31 / 97%);
-  box-shadow: 0 20px 54px rgb(0 0 0 / 58%);
-  backdrop-filter: blur(14px);
-  animation: context-menu-in 0.12s ease-out;
+  padding: 4px;
+  animation: menu-in var(--dur-1) var(--ease-out);
 }
 
-@keyframes context-menu-in {
+@keyframes menu-in {
   from {
     opacity: 0;
-    transform: translateY(-3px) scale(0.985);
+    transform: translateY(-3px) scale(0.99);
   }
 
   to {
@@ -30,31 +26,31 @@
 
 .context-menu .btn--menu {
   height: 30px;
-  padding: 0 10px;
-  border-radius: 7px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
 }
 
 .context-menu .btn--menu:hover:not(:disabled),
 .context-menu .btn--menu.is-active {
-  background: rgb(139 92 246 / 12%);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
 .context-menu .btn--menu kbd {
-  opacity: 0.55;
+  opacity: 0.6;
   font-size: var(--font-2xs);
 }
 
 .context-menu .select-option {
   height: 30px;
-  padding: 0 10px;
-  border-radius: 7px;
+  padding: 0 8px;
+  border-radius: var(--radius-sm);
   font-size: var(--font-xs);
 }
 
 .context-menu .select-option.is-active {
-  background: rgb(139 92 246 / 12%);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
@@ -67,22 +63,21 @@
 }
 
 .context-menu .context-danger:hover:not(:disabled) {
-  background: rgb(248 113 113 / 12%);
-  color: var(--danger-soft-2);
+  background: color-mix(in srgb, var(--danger) 12%, transparent);
+  color: var(--danger-soft);
 }
 
 .context-label {
-  padding: 8px 10px 4px;
-  color: var(--faint);
+  padding: 7px 8px 4px;
+  color: var(--text-4);
   font-size: var(--font-2xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .context-divider {
   height: 1px;
-  margin: 6px 4px;
-  background: var(--border);
+  margin: 4px;
+  background: var(--line);
 }
 
 .command-backdrop {
@@ -93,47 +88,61 @@
   align-items: flex-start;
   justify-content: center;
   padding: 12vh var(--space-4) var(--space-4);
-  background: rgb(5 7 11 / 55%);
-  backdrop-filter: blur(6px);
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(3px);
 }
 
 .command-palette {
   @include surface.palette;
 
-  width: min(560px, 100%);
+  width: min(480px, 100%);
   overflow: hidden;
+  animation: pop-in var(--dur-2) var(--ease-out);
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.995);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 .command-input {
-  height: 48px;
+  height: 44px;
   padding: 0 var(--space-4);
   border: 0;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--line);
   border-radius: 0;
+  background: transparent;
   font-size: var(--font-md);
 }
 
 .command-list {
   max-height: min(52vh, 420px);
   overflow: auto;
-  padding: 6px;
+  padding: 4px;
 }
 
 .command-group-label {
-  padding: var(--space-2) 10px var(--space-1);
-  color: var(--muted);
+  padding: var(--space-2) 8px var(--space-1);
+  color: var(--text-4);
   font-size: var(--font-2xs);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .command-list .btn {
   margin-bottom: 1px;
+  font-size: var(--font-sm);
 }
 
 .command-empty {
   margin: var(--space-4);
-  color: var(--muted);
+  color: var(--text-3);
   font-size: var(--font-sm);
   text-align: center;
 }
@@ -141,8 +150,8 @@
 .command-footer {
   display: flex;
   gap: 14px;
-  padding: var(--space-2) 14px;
-  border-top: 1px solid var(--border);
-  color: var(--muted);
+  padding: var(--space-2) 12px;
+  border-top: 1px solid var(--line);
+  color: var(--text-4);
   font-size: var(--font-2xs);
 }

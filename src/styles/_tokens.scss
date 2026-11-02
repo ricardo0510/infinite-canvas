@@ -1,98 +1,128 @@
 :root {
-  /* 基础色板 */
-  --bg: #0b0d12;
-  --panel: #11141b;
-  --panel-2: #151922;
-  --panel-3: #1b2130;
-  --panel-4: #1e2534;
-  --panel-raised: #141821;
-  --panel-dialog: #12161f;
-  --inset: #0f1218;
-  --inset-2: #0d1017;
-  --inset-3: #0a0d13;
-  --border: #232838;
-  --border-strong: #2f3647;
-  --text: #e5e7eb;
-  --text-strong: #fff;
-  --text-2: #cbd2e1;
-  --text-3: #9aa3b7;
-  --muted: #8b93a7;
-  --faint: #5b6478;
-  --faint-2: #4b5563;
-  --faint-3: #3b4254;
+  /* ---------- 表面：暖石墨，三级足够 ---------- */
+  --canvas: #121210;
+  --surface-1: #171715;
+  --surface-2: #1d1d1b;
+  --surface-3: #242421;
+  --surface-4: #2b2b27;
+  --inset: #141412;
+  --inset-2: #10100f;
+  --line: #2b2b27;
+  --line-strong: #3a3a34;
 
-  /* 强调色 */
-  --accent: #8b5cf6;
-  --accent-2: #22d3ee;
-  --accent-deep: #4f46e5;
-  --accent-soft: #ddd6fe;
-  --accent-soft-2: #c4b5fd;
-  --accent-soft-3: #e9d5ff;
-  --cyan-soft: #a5f3fc;
-  --danger: #f87171;
-  --danger-soft: #fca5a5;
-  --danger-soft-2: #fecaca;
-  --success: #34d399;
-  --success-soft: #6ee7b7;
+  /* ---------- 文字 ---------- */
+  --text-1: #ecebe6;
+  --text-2: #b8b4aa;
+  --text-3: #a09b90;
+  --text-4: #66635a;
 
-  /* 节点强调色，与 src/lib/theme.ts 保持一致 */
-  --node-violet: #8b5cf6;
-  --node-cyan: #22d3ee;
-  --node-amber: #f59e0b;
-  --node-emerald: #34d399;
+  /* ---------- 唯一强调色：黄铜 ---------- */
+  --accent: #d2a13f;
+  --accent-press: #b98a30;
+  --accent-soft: #f0d9a0;
+  --accent-ink: #1a1a17;
+  --danger: #d26457;
+  --danger-soft: #e39a91;
+  --success: #7fa37a;
+  --success-soft: #a8c3a2;
 
-  /* 间距 */
+  /* ---------- 节点色：低饱和，只做标记，不做界面强调 ---------- */
+  --node-violet: #8a94a6;
+  --node-cyan: #7f9f9c;
+  --node-amber: #c39a5a;
+  --node-emerald: #8a9a72;
+
+  /* ---------- 间距 ---------- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
+  --space-5: 24px;
+  --space-6: 32px;
 
-  /* 圆角 */
-  --radius-xs: 4px;
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 10px;
-  --radius-xl: 12px;
-  --radius-2xl: 14px;
-  --radius-3xl: 16px;
+  /* ---------- 圆角：三档 ---------- */
+  --r-control: 4px;
+  --r-panel: 8px;
+  --r-dialog: 12px;
+  --radius-xs: 3px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 8px;
+  --radius-2xl: 10px;
+  --radius-3xl: 12px;
   --radius-full: 999px;
 
-  /* 字号 */
-  --font-2xs: 10px;
-  --font-xs: 11px;
-  --font-sm: 12px;
+  /* ---------- 字号：最小 11，正文 13 ---------- */
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --font-2xs: 11px;
+  --font-xs: 12px;
+  --font-sm: 13px;
   --font-md: 13px;
   --font-lg: 15px;
   --font-xl: 17px;
-  --font-2xl: 18px;
+  --font-2xl: 20px;
   --font-3xl: 24px;
 
-  /* 层级 */
+  /* ---------- 层级 ---------- */
   --z-guide: 4;
   --z-status: 5;
   --z-float: 6;
   --z-drop: 8;
   --z-toolbar: 10;
   --z-handle: 20;
+  --z-inspector: 45;
   --z-menu: 60;
   --z-modal: 100;
   --z-preview: 120;
   --z-toast: 130;
   --z-crash: 200;
 
-  /* 阴影 */
-  --shadow-sm: 0 6px 18px rgb(0 0 0 / 30%);
-  --shadow-md: 0 10px 30px rgb(0 0 0 / 35%);
-  --shadow-lg: 0 18px 50px rgb(0 0 0 / 55%);
-  --shadow-xl: 0 28px 90px rgb(0 0 0 / 60%);
+  /* ---------- 阴影：两档 ---------- */
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 32%);
+  --shadow-modal: 0 24px 64px rgb(0 0 0 / 45%);
+  --shadow-sm: 0 4px 12px rgb(0 0 0 / 28%);
+  --shadow-md: 0 8px 24px rgb(0 0 0 / 32%);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 36%);
+  --shadow-xl: 0 24px 64px rgb(0 0 0 / 45%);
 
-  /* 渐变 */
-  --gradient-brand: linear-gradient(135deg, var(--accent), var(--accent-deep));
-  --gradient-progress: linear-gradient(90deg, var(--accent), var(--accent-2));
-  --gradient-node: linear-gradient(180deg, var(--panel-raised) 0%, var(--inset) 100%);
+  /* ---------- 动效 ---------- */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur-1: 100ms;
+  --dur-2: 160ms;
+  --dur-3: 220ms;
 
-  font-family: Inter, "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  /* ---------- 兼容旧变量（逐步移除） ---------- */
+  --bg: var(--canvas);
+  --panel: var(--surface-1);
+  --panel-2: var(--surface-2);
+  --panel-3: var(--surface-3);
+  --panel-4: var(--surface-4);
+  --panel-raised: var(--surface-2);
+  --panel-dialog: var(--surface-1);
+  --inset-3: var(--inset-2);
+  --border: var(--line);
+  --border-strong: var(--line-strong);
+  --text: var(--text-1);
+  --text-strong: #f7f5ef;
+  --muted: #908b80;
+  --faint: #6f6b61;
+  --faint-2: #5d5a52;
+  --faint-3: #4a4740;
+  --accent-2: var(--accent);
+  --accent-deep: var(--accent-press);
+  --accent-soft-2: #e8c77f;
+  --accent-soft-3: #f5e6c4;
+  --cyan-soft: #e8c77f;
+  --danger-soft-2: #f0b5ad;
+  --gradient-brand: var(--accent);
+  --gradient-progress: var(--accent);
+  --gradient-node: var(--surface-2);
+
+  font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
   color-scheme: dark;
 }

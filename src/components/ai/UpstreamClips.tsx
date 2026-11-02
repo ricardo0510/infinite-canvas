@@ -2,6 +2,7 @@ import { useResolvedImageSrc } from "../../hooks/useResolvedImageSrc";
 import { previewOf, type NodePreview } from "../../lib/ai/refs";
 import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import type { CanvasNode } from "../../types";
+import { Icon } from "../ui/Icon";
 
 function Clip({ preview }: { preview: NodePreview }) {
   const imageSrc = useResolvedImageSrc(
@@ -29,7 +30,7 @@ function Clip({ preview }: { preview: NodePreview }) {
       ) : null}
       {preview.kind === "video" && (imageSrc || videoSrc) ? (
         <span className="ai-upstream-play" aria-hidden="true">
-          ▶
+          <Icon name="play" size={8} />
         </span>
       ) : null}
       {!hasText && !imageSrc && !videoSrc ? (

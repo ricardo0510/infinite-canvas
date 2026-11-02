@@ -13,6 +13,7 @@ import { Button } from "../ui/Button";
 import { Input, Textarea } from "../ui/Control";
 import { DialogHeader } from "../ui/DialogHeader";
 import { Field, SelectField } from "../ui/Field";
+import { Icon } from "../ui/Icon";
 import { Modal } from "../ui/Modal";
 
 type NodeSettingsDialogProps = {
@@ -37,7 +38,9 @@ function ResultThumb({ item }: { item: GenerationResultItem }) {
   return (
     <span className="ai-result-video">
       {item.thumbnailUrl ? <img src={item.thumbnailUrl} alt={resultLabel(item)} /> : null}
-      <span aria-hidden="true">▶</span>
+      <span aria-hidden="true">
+        <Icon name="play" size={14} />
+      </span>
     </span>
   );
 }

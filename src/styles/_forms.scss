@@ -6,29 +6,30 @@
 }
 
 .field > span {
-  color: var(--muted);
-  font-size: var(--font-xs);
+  color: var(--text-3);
+  font-size: var(--font-2xs);
   font-weight: 600;
 }
 
 .control {
   width: 100%;
   min-width: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  border-radius: var(--r-control);
   outline: none;
-  background: var(--inset-2);
-  color: var(--text);
+  background: var(--inset);
+  color: var(--text-1);
   font: inherit;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color var(--dur-1) var(--ease-out), box-shadow var(--dur-1) var(--ease-out), background-color var(--dur-1) var(--ease-out);
 }
 
 .control::placeholder {
-  color: var(--muted);
+  color: var(--text-4);
 }
 
 .control:focus {
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .control:disabled {
@@ -57,7 +58,7 @@
 .control--lg {
   height: 32px;
   padding: 0 12px;
-  font-size: var(--font-md);
+  font-size: var(--font-sm);
 }
 
 .control--area {
@@ -76,6 +77,7 @@
 
 .control--bare:focus {
   border-color: transparent;
+  box-shadow: none;
 }
 
 .select {
@@ -106,15 +108,15 @@
 }
 
 .select-trigger.is-placeholder .select-value {
-  color: var(--muted);
+  color: var(--text-4);
 }
 
 .select-chevron {
   width: 12px;
   height: 12px;
   flex: none;
-  color: var(--muted);
-  transition: transform 0.18s ease, color 0.18s ease;
+  color: var(--text-4);
+  transition: transform var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
 }
 
 .select-trigger:hover:not(:disabled) .select-chevron {
@@ -122,12 +124,12 @@
 }
 
 .select-trigger.is-open {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgb(139 92 246 / 16%);
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent);
 }
 
 .select-trigger.is-open .select-chevron {
-  color: var(--accent-2);
+  color: var(--accent-soft);
   transform: rotate(180deg);
 }
 
@@ -136,14 +138,14 @@
   z-index: var(--z-preview);
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 1px;
   padding: 4px;
   overflow-y: auto;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-panel);
   outline: none;
-  background: var(--panel-raised);
-  box-shadow: var(--shadow-lg);
+  background: var(--surface-1);
+  box-shadow: var(--shadow-float);
 }
 
 .select-option {
@@ -163,17 +165,17 @@
 }
 
 .select-option.is-active {
-  background: var(--inset);
+  background: var(--surface-3);
   color: var(--text-strong);
 }
 
 .select-option.is-selected {
-  color: var(--accent-soft-2);
+  color: var(--accent-soft);
   font-weight: 500;
 }
 
 .select-option.is-selected.is-active {
-  background: rgb(139 92 246 / 14%);
+  background: color-mix(in srgb, var(--accent) 12%, var(--surface-3));
 }
 
 .select-option:disabled {
@@ -190,15 +192,22 @@
 }
 
 .select-check {
+  display: flex;
   width: 12px;
   flex: none;
-  color: var(--accent-2);
-  font-size: var(--font-xs);
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-soft);
+}
+
+.select-check .icon {
+  width: 12px;
+  height: 12px;
 }
 
 .select-empty {
   padding: 10px 8px;
-  color: var(--muted);
+  color: var(--text-3);
   font-size: var(--font-sm);
   text-align: center;
 }
