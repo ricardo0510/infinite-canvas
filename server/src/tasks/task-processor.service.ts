@@ -1,11 +1,12 @@
 import { Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
-import { CredentialsService } from "../byok/credentials.service";
+import { CredentialsService, type ResolvedCredential } from "../byok/credentials.service";
 import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
 import {
   UpstreamAuthError,
   type ImageOutput,
+  type ProviderContext,
   type VideoPollResult,
 } from "../providers/provider-adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
@@ -127,17 +128,7 @@ export class TaskProcessorService {
     let result;
     try {
       result = await adapter.generateText(
-        {
-          baseUrl: resolved.provider.baseUrl,
-          apiKey: resolved.apiKey,
-          authType: resolved.provider.authType,
-          timeoutMs: resolved.provider.timeoutMs,
-          ...(resolved.provider.extra &&
-          typeof resolved.provider.extra === "object" &&
-          !Array.isArray(resolved.provider.extra)
-            ? { extra: resolved.provider.extra as Record<string, unknown> }
-            : {}),
-        },
+        this.context(resolved),
         {
           model: task.providerModel ?? task.modelId,
           prompt: task.request.prompt,
@@ -206,17 +197,7 @@ export class TaskProcessorService {
     let images: ImageOutput[];
     try {
       images = await adapter.generateImage(
-        {
-          baseUrl: resolved.provider.baseUrl,
-          apiKey: resolved.apiKey,
-          authType: resolved.provider.authType,
-          timeoutMs: resolved.provider.timeoutMs,
-          ...(resolved.provider.extra &&
-          typeof resolved.provider.extra === "object" &&
-          !Array.isArray(resolved.provider.extra)
-            ? { extra: resolved.provider.extra as Record<string, unknown> }
-            : {}),
-        },
+        this.context(resolved),
         {
           model: task.providerModel ?? task.modelId,
           prompt: task.request.prompt,
@@ -291,23 +272,13 @@ export class TaskProcessorService {
       task.mode === "firstLastFrame"
         ? references.find((reference) => reference.type === "lastFrame")
         : undefined;
-    const context = {
-      baseUrl: resolved.provider.baseUrl,
-      apiKey: resolved.apiKey,
-      authType: resolved.provider.authType,
-      timeoutMs: resolved.provider.timeoutMs,
-      ...(resolved.provider.extra &&
-      typeof resolved.provider.extra === "object" &&
-      !Array.isArray(resolved.provider.extra)
-        ? { extra: resolved.provider.extra as Record<string, unknown> }
-        : {}),
-    };
+    const providerContext = this.context(resolved);
 
     let providerTaskId = "";
     let videoWidth: number | undefined;
     let videoHeight: number | undefined;
     try {
-      const submitted = await adapter.submitVideo(context, {
+      const submitted = await adapter.submitVideo(providerContext, {
         model: task.providerModel ?? task.modelId,
         prompt: task.request.prompt,
         aspectRatio: params.aspectRatio,
@@ -346,7 +317,7 @@ export class TaskProcessorService {
       await sleep(4000);
       if (!(await this.tasks.isActive(task.taskId))) return;
       try {
-        result = await adapter.pollVideo(context, providerTaskId);
+        result = await adapter.pollVideo(providerContext, providerTaskId);
       } catch (error) {
         if (error instanceof UpstreamAuthError) {
           await this.credentials.markInvalid(task.credentialId);
@@ -385,5 +356,18 @@ export class TaskProcessorService {
       createdAt: new Date().toISOString(),
     };
     await this.tasks.complete(task.taskId, [item]);
+  }
+
+  private context(resolved: ResolvedCredential): ProviderContext {
+    const { provider, apiKey } = resolved;
+    return {
+      baseUrl: provider.baseUrl,
+      apiKey,
+      authType: provider.authType,
+      timeoutMs: provider.timeoutMs,
+      ...(provider.extra && typeof provider.extra === "object" && !Array.isArray(provider.extra)
+        ? { extra: provider.extra as Record<string, unknown> }
+        : {}),
+    };
   }
 }
