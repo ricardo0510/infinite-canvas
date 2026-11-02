@@ -101,6 +101,13 @@ const PATHS = {
       <path d="M14 3v4h4M9 12h6M9 16h4" />
     </>
   ),
+  folder: (
+    <>
+      <path d="M3 6h6l2 2h10v11H3z" />
+      <path d="M3 6v13" />
+    </>
+  ),
+  "chevron-right": <path d="m9 5 7 7-7 7" />,
   image: (
     <>
       <rect x="3" y="5" width="18" height="14" rx="2" />
