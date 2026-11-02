@@ -81,7 +81,7 @@
   transition: background-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out), transform var(--dur-1) var(--ease-out);
 }
 
-.edge-delete:hover {
+.edge-delete:hover:not(:disabled) {
   background: color-mix(in srgb, var(--danger) 18%, var(--surface-1));
   color: var(--text-strong);
   transform: scale(1.06);
