@@ -257,8 +257,8 @@ export function FlowCanvas() {
         }}
         onMoveEnd={(_event, viewport) => setViewport(viewport)}
         deleteKeyCode={null}
-        colorMode="dark"
-        defaultMarkerColor="#7a766c"
+        colorMode="light"
+        defaultMarkerColor="#6f6f66"
         defaultViewport={initialViewport ?? undefined}
         fitView={!initialViewport && benchCount === 0}
         fitViewOptions={{ padding: 0.25, maxZoom: 1.25 }}
@@ -277,16 +277,16 @@ export function FlowCanvas() {
         defaultEdgeOptions={edgeOptions}
         connectionLineStyle={{ stroke: ACCENT, strokeWidth: 1.75 }}
       >
-        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#2f2f2a" />
+        <Background variant={BackgroundVariant.Dots} gap={20} size={1} color="#d9d9d0" />
         {showMiniMap && nodes.length > 0 ? (
           <MiniMap
             position="bottom-right"
             pannable
             zoomable
-            maskColor="rgba(10, 10, 9, 0.72)"
+            maskColor="rgba(245, 245, 241, 0.75)"
             nodeStrokeWidth={2}
             nodeColor={(node) => {
-              if (node.type === "group") return "#2b2b27";
+              if (node.type === "group") return "#d9d9d0";
               if (node.type === "video") return NOTE_COLORS.amber;
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
               return color ? NOTE_COLORS[color] : DEFAULT_EDGE_STROKE;

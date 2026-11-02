@@ -1,36 +1,36 @@
 :root {
-  /* ---------- 表面：暖石墨，三级足够 ---------- */
-  --canvas: #121210;
-  --surface-1: #171715;
-  --surface-2: #1d1d1b;
-  --surface-3: #242421;
-  --surface-4: #2b2b27;
-  --inset: #141412;
-  --inset-2: #10100f;
-  --line: #2b2b27;
-  --line-strong: #3a3a34;
+  /* ---------- 表面：中性纸白，三级足够 ---------- */
+  --canvas: #f5f5f1;
+  --surface-1: #fcfcf9;
+  --surface-2: #f0f0eb;
+  --surface-3: #e7e7e1;
+  --surface-4: #ddddd6;
+  --inset: #efefea;
+  --inset-2: #e9e9e3;
+  --line: #ddddd5;
+  --line-strong: #c9c9c0;
 
-  /* ---------- 文字 ---------- */
-  --text-1: #ecebe6;
-  --text-2: #b8b4aa;
-  --text-3: #a09b90;
-  --text-4: #66635a;
+  /* ---------- 文字：墨黑 ---------- */
+  --text-1: #1f1f1c;
+  --text-2: #4c4c46;
+  --text-3: #6b6b63;
+  --text-4: #8b8b82;
 
-  /* ---------- 唯一强调色：黄铜 ---------- */
-  --accent: #d2a13f;
-  --accent-press: #b98a30;
-  --accent-soft: #f0d9a0;
-  --accent-ink: #1a1a17;
-  --danger: #d26457;
-  --danger-soft: #e39a91;
-  --success: #7fa37a;
-  --success-soft: #a8c3a2;
+  /* ---------- 唯一强调色：墨黑 ---------- */
+  --accent: #1f1f1c;
+  --accent-press: #000;
+  --accent-soft: #3b3b35;
+  --accent-ink: #f7f7f2;
+  --danger: #a93f35;
+  --danger-soft: #8c342b;
+  --success: #4a6b4e;
+  --success-soft: #3f5c43;
 
-  /* ---------- 节点色：低饱和，只做标记，不做界面强调 ---------- */
-  --node-violet: #8a94a6;
-  --node-cyan: #7f9f9c;
-  --node-amber: #c39a5a;
-  --node-emerald: #8a9a72;
+  /* ---------- 节点色：低饱和，只做标记 ---------- */
+  --node-violet: #5f6c7c;
+  --node-cyan: #4f7773;
+  --node-amber: #9a6c2f;
+  --node-emerald: #5c6f47;
 
   /* ---------- 间距 ---------- */
   --space-1: 4px;
@@ -82,13 +82,13 @@
   --z-toast: 130;
   --z-crash: 200;
 
-  /* ---------- 阴影：两档 ---------- */
-  --shadow-float: 0 12px 32px rgb(0 0 0 / 32%);
-  --shadow-modal: 0 24px 64px rgb(0 0 0 / 45%);
-  --shadow-sm: 0 4px 12px rgb(0 0 0 / 28%);
-  --shadow-md: 0 8px 24px rgb(0 0 0 / 32%);
-  --shadow-lg: 0 12px 32px rgb(0 0 0 / 36%);
-  --shadow-xl: 0 24px 64px rgb(0 0 0 / 45%);
+  /* ---------- 阴影：两档，浅色下更轻 ---------- */
+  --shadow-float: 0 10px 30px rgb(40 40 36 / 12%);
+  --shadow-modal: 0 24px 64px rgb(40 40 36 / 18%);
+  --shadow-sm: 0 3px 10px rgb(40 40 36 / 10%);
+  --shadow-md: 0 6px 18px rgb(40 40 36 / 12%);
+  --shadow-lg: 0 10px 28px rgb(40 40 36 / 15%);
+  --shadow-xl: 0 24px 64px rgb(40 40 36 / 18%);
 
   /* ---------- 动效 ---------- */
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -102,27 +102,27 @@
   --panel-2: var(--surface-2);
   --panel-3: var(--surface-3);
   --panel-4: var(--surface-4);
-  --panel-raised: var(--surface-2);
+  --panel-raised: var(--surface-1);
   --panel-dialog: var(--surface-1);
   --inset-3: var(--inset-2);
   --border: var(--line);
   --border-strong: var(--line-strong);
   --text: var(--text-1);
-  --text-strong: #f7f5ef;
-  --muted: #908b80;
-  --faint: #6f6b61;
-  --faint-2: #5d5a52;
-  --faint-3: #4a4740;
+  --text-strong: #11110e;
+  --muted: #6f6f66;
+  --faint: #96968d;
+  --faint-2: #a6a69d;
+  --faint-3: #b8b8ae;
   --accent-2: var(--accent);
   --accent-deep: var(--accent-press);
-  --accent-soft-2: #e8c77f;
-  --accent-soft-3: #f5e6c4;
-  --cyan-soft: #e8c77f;
-  --danger-soft-2: #f0b5ad;
+  --accent-soft-2: #5a564c;
+  --accent-soft-3: #6e695e;
+  --cyan-soft: #5a564c;
+  --danger-soft-2: #6f2a23;
   --gradient-brand: var(--accent);
   --gradient-progress: var(--accent);
   --gradient-node: var(--surface-2);
 
   font-family: "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", system-ui, -apple-system, sans-serif;
-  color-scheme: dark;
+  color-scheme: light;
 }

@@ -38,7 +38,7 @@
   display: grid;
   place-items: center;
   padding: var(--space-5);
-  background: rgb(0 0 0 / 55%);
+  background: rgb(28 28 25 / 32%);
   backdrop-filter: blur(3px);
 }
 
@@ -286,7 +286,7 @@
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  color: var(--text-strong);
+  color: #fff;
   font-size: var(--font-md);
   font-weight: 600;
   text-overflow: ellipsis;
@@ -303,7 +303,7 @@
   border: 0;
   border-radius: var(--radius-full);
   background: rgb(0 0 0 / 55%);
-  color: var(--text-strong);
+  color: #fff;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -313,7 +313,7 @@
 }
 
 .media-preview-close:focus-visible {
-  outline: 2px solid var(--text-strong);
+  outline: 2px solid #fff;
   outline-offset: 2px;
 }
 
@@ -344,7 +344,26 @@
 }
 
 .media-preview.text-preview .media-preview-head {
-  background: linear-gradient(180deg, rgb(18 18 16 / 90%), transparent);
+  background: linear-gradient(180deg, rgb(245 245 241 / 92%), transparent);
+}
+
+.media-preview.text-preview .media-preview-head strong {
+  color: var(--text-1);
+  text-shadow: none;
+}
+
+.media-preview.text-preview .media-preview-close {
+  border: 1px solid var(--line);
+  background: var(--surface-1);
+  color: var(--text-1);
+}
+
+.media-preview.text-preview .media-preview-close:hover {
+  background: var(--surface-3);
+}
+
+.media-preview.text-preview .media-preview-close:focus-visible {
+  outline-color: var(--text-1);
 }
 
 .text-preview-count {
@@ -352,7 +371,7 @@
   color: var(--text-3);
   font-size: var(--font-2xs);
   pointer-events: none;
-  text-shadow: 0 1px 6px rgb(0 0 0 / 70%);
+  text-shadow: none;
 }
 
 .media-preview-body.is-text {
