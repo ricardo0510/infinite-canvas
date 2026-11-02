@@ -52,6 +52,10 @@
   opacity: 0.8;
 }
 
+.new-node-select .select-trigger.is-placeholder .select-value {
+  color: var(--accent-ink);
+}
+
 .new-node-select .select-trigger.is-open {
   border-color: var(--accent-press);
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);

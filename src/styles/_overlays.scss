@@ -68,9 +68,8 @@
 
   display: flex;
   align-items: flex-start;
-  gap: var(--space-3);
+  gap: 10px;
   padding: 10px 8px 10px var(--space-3);
-  border-left-width: 3px;
   color: var(--text-2);
   font-size: var(--font-xs);
   line-height: 1.45;
@@ -78,16 +77,26 @@
   animation: toast-in var(--dur-2) var(--ease-out);
 }
 
-.toast-info {
-  border-left-color: var(--accent);
+.toast::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: 0 0 auto;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--line-strong);
 }
 
-.toast-success {
-  border-left-color: var(--success);
+.toast-info::before {
+  background: var(--accent);
 }
 
-.toast-error {
-  border-left-color: var(--danger);
+.toast-success::before {
+  background: var(--success);
+}
+
+.toast-error::before {
+  background: var(--danger);
 }
 
 .toast-message {

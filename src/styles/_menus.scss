@@ -69,7 +69,7 @@
 
 .context-label {
   padding: 7px 8px 4px;
-  color: var(--text-4);
+  color: var(--text-3);
   font-size: var(--font-2xs);
   letter-spacing: 0.04em;
 }
@@ -130,7 +130,7 @@
 
 .command-group-label {
   padding: var(--space-2) 8px var(--space-1);
-  color: var(--text-4);
+  color: var(--text-3);
   font-size: var(--font-2xs);
   letter-spacing: 0.04em;
 }
@@ -152,6 +152,6 @@
   gap: 14px;
   padding: var(--space-2) 12px;
   border-top: 1px solid var(--line);
-  color: var(--text-4);
+  color: var(--text-3);
   font-size: var(--font-2xs);
 }
