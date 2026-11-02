@@ -71,6 +71,8 @@ export function useCanvasShortcuts(): void {
         return;
       }
       if (mod && key === "v") {
+        // 没有内部节点剪贴板时放行，避免拦截浏览器粘贴图片/文件的事件。
+        if (!store.clipboard || store.clipboard.nodes.length === 0) return;
         event.preventDefault();
         store.paste(getPasteAnchor() ?? undefined);
         return;
