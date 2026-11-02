@@ -2,6 +2,45 @@ import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
+const PROVIDER_MODELS = [
+  { providerId: "deepseek", modelId: "deepseek-flash", displayName: "DeepSeek Flash", kind: "text" },
+  { providerId: "deepseek", modelId: "deepseek-chat", displayName: "DeepSeek Chat", kind: "text" },
+  {
+    providerId: "deepseek",
+    modelId: "deepseek-reasoner",
+    displayName: "DeepSeek Reasoner",
+    kind: "text",
+  },
+  { providerId: "openai", modelId: "gpt-image-1", displayName: "GPT Image 1", kind: "image" },
+  { providerId: "openai", modelId: "dall-e-3", displayName: "DALL·E 3", kind: "image" },
+  { providerId: "openai", modelId: "sora-2", displayName: "Sora 2", kind: "video" },
+  { providerId: "openai", modelId: "sora-2-pro", displayName: "Sora 2 Pro", kind: "video" },
+  {
+    providerId: "siliconflow",
+    modelId: "black-forest-labs/FLUX.1-schnell",
+    displayName: "FLUX.1 Schnell",
+    kind: "image",
+  },
+  {
+    providerId: "siliconflow",
+    modelId: "Kwai-Kolors/Kolors",
+    displayName: "Kolors",
+    kind: "image",
+  },
+  {
+    providerId: "siliconflow",
+    modelId: "Wan-AI/Wan2.1-T2V-14B",
+    displayName: "Wan2.1 T2V 14B",
+    kind: "video",
+  },
+  {
+    providerId: "siliconflow",
+    modelId: "Wan-AI/Wan2.1-I2V-14B-720P",
+    displayName: "Wan2.1 I2V 14B",
+    kind: "video",
+  },
+] as const;
+
 async function main(): Promise<void> {
   await prisma.user.upsert({
     where: { id: "default-user" },
@@ -61,15 +100,19 @@ async function main(): Promise<void> {
     },
   });
 
-  for (const modelId of ["deepseek-flash", "deepseek-chat", "deepseek-reasoner"]) {
+  for (const model of PROVIDER_MODELS) {
     await prisma.providerModel.upsert({
-      where: { providerId_modelId: { providerId: "deepseek", modelId } },
-      update: { enabled: true },
+      where: { providerId_modelId: { providerId: model.providerId, modelId: model.modelId } },
+      update: {
+        displayName: model.displayName,
+        kind: model.kind,
+        enabled: true,
+      },
       create: {
-        providerId: "deepseek",
-        modelId,
-        displayName: modelId,
-        kind: "text",
+        providerId: model.providerId,
+        modelId: model.modelId,
+        displayName: model.displayName,
+        kind: model.kind,
         source: "manual",
         enabled: true,
       },
@@ -100,7 +143,7 @@ async function main(): Promise<void> {
   });
   await prisma.providerConfig.deleteMany({ where: { id: "mock" } });
 
-  console.log("Seeded providers and DeepSeek model");
+  console.log("Seeded providers and text/image/video provider models");
 }
 
 main()
