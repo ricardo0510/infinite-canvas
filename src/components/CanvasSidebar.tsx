@@ -1,12 +1,25 @@
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent as ReactMouseEvent,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
 import { useReactFlow } from "@xyflow/react";
+import { useMenuKeyboard } from "../hooks/useMenuKeyboard";
 import { useResolvedImageSrc } from "../hooks/useResolvedImageSrc";
 import { byId, nodeRect } from "../lib/geometry";
 import { sanitizeImageSrc } from "../lib/storage";
 import { useCanvasStore } from "../store/canvasStore";
 import type { CanvasNode } from "../types";
+import { Button } from "./ui/Button";
 import { Input } from "./ui/Control";
 import { Icon } from "./ui/Icon";
+
+type SidebarMenuState = { x: number; y: number; nodeId: string };
 
 function nodeTitle(node: CanvasNode): string {
   if (node.type === "group") return node.data.label || "分组";
@@ -54,11 +67,142 @@ function NodeThumb({ node }: { node: CanvasNode }) {
   );
 }
 
+function SidebarContextMenu({
+  menu,
+  node,
+  onLocate,
+  onClose,
+}: {
+  menu: SidebarMenuState;
+  node: CanvasNode;
+  onLocate: (node: CanvasNode) => void;
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  useMenuKeyboard(ref, true);
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) onClose();
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    const dismiss = () => onClose();
+
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("blur", dismiss);
+    window.addEventListener("resize", dismiss);
+    document.addEventListener("scroll", dismiss, true);
+    return () => {
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("blur", dismiss);
+      window.removeEventListener("resize", dismiss);
+      document.removeEventListener("scroll", dismiss, true);
+    };
+  }, [onClose]);
+
+  const run = (action: () => void) => {
+    action();
+    onClose();
+  };
+  const store = () => useCanvasStore.getState();
+  const width = 208;
+  const left = Math.max(8, Math.min(menu.x, window.innerWidth - width - 8));
+  const top = Math.max(8, Math.min(menu.y, window.innerHeight - 300));
+
+  return createPortal(
+    <div
+      ref={ref}
+      className="context-menu"
+      role="menu"
+      aria-label={`${nodeTitle(node)} 操作`}
+      style={{ left, top }}
+      onContextMenu={(event) => event.preventDefault()}
+    >
+      <div className="context-label">{nodeTitle(node)}</div>
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        onClick={() => run(() => onLocate(node))}
+      >
+        定位到节点
+      </Button>
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        onClick={() => run(() => store().duplicateSelected())}
+      >
+        创建副本
+      </Button>
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        onClick={() => run(() => store().copySelected())}
+      >
+        复制
+      </Button>
+      <div className="context-divider" />
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        onClick={() => run(() => store().bringToFront([node.id]))}
+      >
+        置于顶层
+      </Button>
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        onClick={() => run(() => store().sendToBack([node.id]))}
+      >
+        置于底层
+      </Button>
+      {node.type === "group" ? (
+        <Button
+          variant="menu"
+          size="sm"
+          block
+          role="menuitem"
+          onClick={() => run(() => store().ungroupSelected())}
+        >
+          取消分组
+        </Button>
+      ) : null}
+      <div className="context-divider" />
+      <Button
+        variant="menu"
+        size="sm"
+        block
+        role="menuitem"
+        className="context-danger"
+        onClick={() => run(() => store().removeSelected())}
+      >
+        删除
+      </Button>
+    </div>,
+    document.body,
+  );
+}
+
 export function CanvasSidebar() {
   const nodes = useCanvasStore((state) => state.nodes);
   const { setCenter, getZoom } = useReactFlow();
   const [query, setQuery] = useState("");
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const [menu, setMenu] = useState<SidebarMenuState | null>(null);
+  const closeMenu = useCallback(() => setMenu(null), []);
 
   const index = useMemo(() => byId(nodes), [nodes]);
 
@@ -110,6 +254,15 @@ export function CanvasSidebar() {
     });
   }, []);
 
+  const openMenu = useCallback((event: ReactMouseEvent, node: CanvasNode) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const state = useCanvasStore.getState();
+    state.clearSelection();
+    state.selectNodes([node.id]);
+    setMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
+  }, []);
+
   const focusNode = useCallback(
     (node: CanvasNode) => {
       const state = useCanvasStore.getState();
@@ -134,20 +287,11 @@ export function CanvasSidebar() {
 
     return (
       <div key={node.id} className="sidebar-tree-node">
-        <div className="sidebar-row" style={{ paddingLeft: depth * 14 }}>
-          {isGroup ? (
-            <button
-              type="button"
-              className={`sidebar-twisty${expanded ? " is-open" : ""}`}
-              aria-label={expanded ? `收起${title}` : `展开${title}`}
-              aria-expanded={expanded}
-              onClick={() => toggle(node.id)}
-            >
-              <Icon name="chevron-right" size={12} />
-            </button>
-          ) : (
-            <span className="sidebar-twisty-placeholder" />
-          )}
+        <div
+          className="sidebar-row"
+          style={{ paddingLeft: depth * 14 }}
+          onContextMenu={(event) => openMenu(event, node)}
+        >
           <button
             type="button"
             className={`sidebar-item${node.selected ? " is-active" : ""}`}
@@ -161,13 +305,27 @@ export function CanvasSidebar() {
               <span className="sidebar-folder-count">{children.length}</span>
             ) : null}
           </button>
+          {isGroup ? (
+            <button
+              type="button"
+              className={`sidebar-twisty${expanded ? " is-open" : ""}`}
+              aria-label={expanded ? `收起${title}` : `展开${title}`}
+              aria-expanded={expanded}
+              onClick={() => toggle(node.id)}
+            >
+              <Icon name="chevron-right" size={12} />
+            </button>
+          ) : null}
         </div>
         {isGroup && expanded ? children.map((child) => renderNode(child, depth + 1)) : null}
       </div>
     );
   };
 
+  const menuNode = menu ? (nodes.find((node) => node.id === menu.nodeId) ?? null) : null;
+
   return (
+    <>
     <aside className="canvas-sidebar" aria-label="画布元素">
       <div className="sidebar-brand">
         <div className="brand">
@@ -214,5 +372,14 @@ export function CanvasSidebar() {
         {visibleIds ? ` / ${nodes.length}` : ""} 节点
       </div>
     </aside>
+    {menu && menuNode ? (
+      <SidebarContextMenu
+        menu={menu}
+        node={menuNode}
+        onLocate={focusNode}
+        onClose={closeMenu}
+      />
+    ) : null}
+    </>
   );
 }
