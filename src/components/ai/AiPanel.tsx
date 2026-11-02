@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { NodeToolbar, Position, useInternalNode, useViewport } from "@xyflow/react";
 import { useCanvasStore } from "../../store/canvasStore";
@@ -7,11 +7,13 @@ import { useUiStore } from "../../store/uiStore";
 import type { GenerationMeta } from "../../types";
 import { cancelGeneration, defaultGeneration, generateNode, kindOfNode, patchGeneration } from "../../lib/ai/controller";
 import { defaultParams } from "../../lib/ai/models";
+import { upstreamSourceNodes } from "../../lib/ai/refs";
 import { useAiModels } from "../../lib/ai/useModels";
 import { Button } from "../ui/Button";
 import { Select, Textarea } from "../ui/Control";
 import { ErrorBanner } from "../ui/Feedback";
 import { NodeSettingsDialog } from "./NodeSettingsDialog";
+import { UpstreamClips } from "./UpstreamClips";
 
 function isRunning(generation: GenerationMeta): boolean {
   return generation.status === "queued" || generation.status === "running";
@@ -20,6 +22,12 @@ function isRunning(generation: GenerationMeta): boolean {
 export function AiPanel() {
   const nodeId = useUiStore((state) => state.aiPanelNodeId);
   const node = useCanvasStore((state) => state.nodes.find((item) => item.id === nodeId));
+  const nodes = useCanvasStore((state) => state.nodes);
+  const edges = useCanvasStore((state) => state.edges);
+  const upstream = useMemo(
+    () => (nodeId ? upstreamSourceNodes(nodeId, nodes, edges) : []),
+    [nodeId, nodes, edges],
+  );
   const kind = kindOfNode(node);
   const modelsState = useAiModels(kind ?? "text");
   const models = modelsState.models;
@@ -92,6 +100,7 @@ export function AiPanel() {
           onPointerDown={(event) => event.stopPropagation()}
           onDoubleClick={(event) => event.stopPropagation()}
         >
+          <UpstreamClips nodes={upstream} />
           <Textarea
             className="ai-prompt"
             value={generation.prompt}

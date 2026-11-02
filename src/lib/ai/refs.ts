@@ -1,13 +1,20 @@
 import type { CanvasEdge, CanvasNode, GenerationKind } from "../../types";
 import type { ReferenceInput, UpstreamReference } from "./types";
 
-function activeResult(node: CanvasNode) {
+type ActiveResult = {
+  kind?: string;
+  url?: string;
+  text?: string;
+  thumbnailUrl?: string;
+};
+
+function activeResult(node: CanvasNode): ActiveResult | undefined {
   const generation = (node.data as { generation?: { results?: unknown[]; activeResultId?: string } }).generation;
   if (!generation || !Array.isArray(generation.results)) return undefined;
   return (
     generation.results.find((item) => (item as { id?: string }).id === generation.activeResultId) ??
     generation.results[0]
-  ) as { kind?: string; url?: string; text?: string } | undefined;
+  ) as ActiveResult | undefined;
 }
 
 function textOf(node: CanvasNode): string {
@@ -67,6 +74,63 @@ export function collectUpstream(
   }
 
   return { texts, references };
+}
+
+export type NodePreview = {
+  kind: "text" | "image" | "video";
+  title: string;
+  url?: string;
+  poster?: string;
+  text?: string;
+};
+
+function previewTitle(node: CanvasNode): string {
+  const title = typeof node.data.title === "string" ? node.data.title.trim() : "";
+  if (title) return title;
+  if (node.type === "image") return "图片";
+  if (node.type === "video") return "视频";
+  return "文本";
+}
+
+/** Immediate upstream nodes that feed generated content into `nodeId`. */
+export function upstreamSourceNodes(
+  nodeId: string,
+  nodes: CanvasNode[],
+  edges: CanvasEdge[],
+): CanvasNode[] {
+  const index = new Map(nodes.map((node) => [node.id, node]));
+  const seen = new Set<string>();
+  const result: CanvasNode[] = [];
+  for (const edge of edges) {
+    if (edge.target !== nodeId || seen.has(edge.source)) continue;
+    const source = index.get(edge.source);
+    if (!source || source.type === "group") continue;
+    seen.add(edge.source);
+    result.push(source);
+  }
+  return result;
+}
+
+export function previewOf(node: CanvasNode): NodePreview | null {
+  const title = previewTitle(node);
+  if (node.type === "text") {
+    return { kind: "text", title, text: textOf(node) };
+  }
+  if (node.type === "image") {
+    return { kind: "image", title, url: imageOf(node) };
+  }
+  if (node.type === "video") {
+    const result = activeResult(node);
+    const dataThumb = typeof node.data.thumbnailUrl === "string" ? node.data.thumbnailUrl : "";
+    const resultThumb = result?.kind === "video" ? (result.thumbnailUrl ?? "") : "";
+    return {
+      kind: "video",
+      title,
+      url: videoOf(node),
+      poster: dataThumb || resultThumb,
+    };
+  }
+  return null;
 }
 
 export function composePrompt(prompt: string, texts: string[]): string {
