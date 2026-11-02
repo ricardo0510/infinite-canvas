@@ -245,7 +245,12 @@ export class ProviderCatalogService {
     for (const model of models) {
       await this.prisma.providerModel.upsert({
         where: { providerId_modelId: { providerId, modelId: model.modelId } },
-        update: { displayName: model.displayName, kind: model.kind, lastSyncedAt: now },
+        update: {
+          displayName: model.displayName,
+          kind: model.kind,
+          capabilities: (model.capabilities ?? {}) as Prisma.InputJsonValue,
+          lastSyncedAt: now,
+        },
         create: {
           providerId,
           modelId: model.modelId,
