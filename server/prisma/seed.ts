@@ -43,16 +43,35 @@ const PROVIDER_MODELS: SeedProviderModel[] = [
     displayName: "Kolors",
     kind: "image",
   },
+  {
+    providerId: "siliconflow",
+    modelId: "black-forest-labs/FLUX.1-schnell",
+    displayName: "FLUX.1 Schnell",
+    kind: "image",
+  },
+  {
+    providerId: "siliconflow",
+    modelId: "Wan-AI/Wan2.2-T2V-A14B",
+    displayName: "Wan2.2 T2V A14B",
+    kind: "video",
+    capabilities: {
+      source: "SiliconFlow Video Generation API docs",
+      verifiedAt: "2026-11-02",
+      modes: ["textToVideo"],
+      aspectRatios: ["16:9", "9:16", "1:1"],
+      resolutions: ["720p"],
+      minDuration: 5,
+      maxDuration: 5,
+      supportsAudio: false,
+      maxPromptLength: 2000,
+    },
+  },
 ];
 
 // 旧版估算/已下线的数据，执行 seed 时一并清理。
 const OBSOLETE_PROVIDER_MODELS = {
   openai: ["gpt-image-1", "dall-e-3", "sora-2", "sora-2-pro"],
-  siliconflow: [
-    "black-forest-labs/FLUX.1-schnell",
-    "Wan-AI/Wan2.1-T2V-14B",
-    "Wan-AI/Wan2.1-I2V-14B-720P",
-  ],
+  siliconflow: ["Wan-AI/Wan2.1-T2V-14B", "Wan-AI/Wan2.1-I2V-14B-720P"],
 } as const;
 
 async function main(): Promise<void> {
