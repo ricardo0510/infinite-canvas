@@ -339,11 +339,12 @@ type GroupData = {
 
 ### 模式自动识别
 
-- 不再提供模式选择。
+- 模式仍以自动识别为主，首尾帧可在生成设置中显式选择。
 - Image：
   - 有上游图片 → `imageToImage`。
   - 无上游图片 → `textToImage`。
 - Video：
+  - 在生成设置中可选择“首尾帧”，把前两张上游图片作为首帧和尾帧（需模型支持）。
   - 有上游视频 → `referenceVideo`。
   - 有上游图片 → `imageToVideo`。
   - 无图片/视频 → `textToVideo`。

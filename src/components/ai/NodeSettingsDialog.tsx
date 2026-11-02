@@ -136,6 +136,23 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           </>
         ) : null}
 
+        {generation.kind === "video" && model?.modes.includes("firstLastFrame") ? (
+          <SelectField
+            label="生成模式"
+            value={generation.mode === "firstLastFrame" ? "firstLastFrame" : "auto"}
+            options={[
+              { value: "auto", label: "自动识别" },
+              { value: "firstLastFrame", label: "首尾帧（前两张上游图片）" },
+            ]}
+            disabled={running}
+            onChange={(value) =>
+              patchGeneration(nodeId, {
+                mode: value === "firstLastFrame" ? "firstLastFrame" : undefined,
+              })
+            }
+          />
+        ) : null}
+
         {videoOutput ? (
           <>
             <SelectField

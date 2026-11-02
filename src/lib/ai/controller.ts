@@ -246,7 +246,17 @@ export async function generateNode(nodeId: string): Promise<void> {
   } else if (kind === "video") {
     const hasVideo = upstream.references.some((item) => item.kind === "video");
     const images = upstream.references.filter((item) => item.kind === "image");
-    mode = hasVideo ? "referenceVideo" : images.length > 0 ? "imageToVideo" : "textToVideo";
+    const firstLastFrame =
+      current.mode === "firstLastFrame" &&
+      images.length >= 2 &&
+      model.modes.includes("firstLastFrame");
+    mode = firstLastFrame
+      ? "firstLastFrame"
+      : hasVideo
+        ? "referenceVideo"
+        : images.length > 0
+          ? "imageToVideo"
+          : "textToVideo";
   }
 
   const references = mapUpstreamReferences(kind, mode, upstream.references);
