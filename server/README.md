@@ -7,6 +7,7 @@
 - 任务与幂等键持久化到 PostgreSQL（Prisma）；实时票据在内存，上传文件落本地磁盘。
 - 文本模型支持 DeepSeek 4.1 Flash（OpenAI 兼容接口）；图片/视频生成待接入真实供应商。
 - Redis + BullMQ 负责任务队列；`npm run dev` 默认在 API 进程内启动 Worker，生产可拆成独立 Worker 进程。
+- 任务事件通过 Redis Pub/Sub 跨进程广播；拆分 API 和 Worker 后实时推送仍然可用。
 
 后续替换点：S3/OSS、图片/视频真实 Provider、生产鉴权与限流。
 
