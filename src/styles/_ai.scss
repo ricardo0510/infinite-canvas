@@ -102,26 +102,27 @@
   gap: 7px;
 }
 
-.ai-config-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.ai-config-chips {
-  display: flex;
+.ai-config-button {
   min-width: 0;
-  flex: 1;
-  flex-wrap: wrap;
-  gap: 4px;
+  max-width: 240px;
+  border-radius: 999px;
+  color: var(--muted);
 }
 
-.ai-config-chip {
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: var(--inset-3);
-  color: var(--muted);
-  font-size: var(--font-2xs);
+.ai-config-button:hover:not(:disabled) {
+  color: var(--text-strong);
+}
+
+.ai-config-icon {
+  width: 13px;
+  height: 13px;
+  flex: 0 0 auto;
+}
+
+.ai-config-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 

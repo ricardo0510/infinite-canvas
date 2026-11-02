@@ -32,19 +32,19 @@ function configSummary(
 ): string[] {
   if (kind === "image") {
     return [
-      generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO,
       formatImageResolution(generation.params?.resolution ?? DEFAULT_IMAGE_RESOLUTION),
-      `${generation.params?.count ?? 1} 张`,
+      generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO,
+      `${generation.params?.count ?? 1}`,
     ];
   }
   if (kind !== "video") return [];
 
   const output = model?.output.video;
   const items: string[] = [];
-  const ratio = generation.params?.aspectRatio ?? output?.aspectRatios[0];
-  if (ratio) items.push(ratio);
   const resolution = generation.params?.resolution ?? output?.resolutions[0];
   if (resolution) items.push(resolution);
+  const ratio = generation.params?.aspectRatio ?? output?.aspectRatios[0];
+  if (ratio) items.push(ratio);
   const duration = generation.params?.duration ?? output?.minDuration;
   if (duration !== undefined) items.push(`${duration}s`);
   const tiers = model?.params?.qualityTiers ?? [];
@@ -53,6 +53,15 @@ function configSummary(
   if (tier) items.push(tier.label);
   if (output?.supportsAudio && generation.params?.generateAudio) items.push("音频");
   return items;
+}
+
+function GearIcon() {
+  return (
+    <svg className="ai-config-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1" />
+    </svg>
+  );
 }
 
 export function AiPanel() {
@@ -153,26 +162,6 @@ export function AiPanel() {
             }}
           />
 
-          {config.length > 0 ? (
-            <div className="ai-config-row">
-              <div className="ai-config-chips">
-                {config.map((item) => (
-                  <span key={item} className="ai-config-chip">
-                    {item}
-                  </span>
-                ))}
-              </div>
-              <Button
-                size="xs"
-                variant="ghost"
-                disabled={running || !model}
-                onClick={() => setSettingsNodeId(nodeId)}
-              >
-                配置
-              </Button>
-            </div>
-          ) : null}
-
           <div className="ai-panel-bottom">
             <Select
               className="ai-model-select"
@@ -183,6 +172,19 @@ export function AiPanel() {
               disabled={modelsState.loading || running}
               onChange={changeModel}
             />
+            {config.length > 0 ? (
+              <Button
+                variant="secondary"
+                size="md"
+                className="ai-config-button"
+                disabled={running || !model}
+                onClick={() => setSettingsNodeId(nodeId)}
+                title="生成设置"
+              >
+                <GearIcon />
+                <span className="ai-config-label">{config.join(" · ")}</span>
+              </Button>
+            ) : null}
             <Button
               variant="primary"
               size="md"
