@@ -322,7 +322,6 @@ type CanvasState = {
   paste: (anchor?: { x: number; y: number }) => void;
   undo: () => void;
   redo: () => void;
-  clear: () => void;
   importSnapshot: (snapshot: CanvasSnapshot) => void;
   getSnapshot: () => CanvasSnapshot;
   bringToFront: (ids: string[]) => void;
@@ -700,12 +699,6 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       past: [...past, { version: SCHEMA_VERSION, nodes, edges }].slice(-HISTORY_LIMIT),
       future: future.slice(1),
     });
-  },
-
-  clear: () => {
-    if (get().nodes.length === 0 && get().edges.length === 0) return;
-    get().commit();
-    set({ nodes: [], edges: [] });
   },
 
   importSnapshot: (snapshot) => {

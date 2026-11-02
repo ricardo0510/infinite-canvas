@@ -21,7 +21,6 @@ export function Toolbar() {
   const addNode = useCanvasStore((state) => state.addNode);
   const undo = useCanvasStore((state) => state.undo);
   const redo = useCanvasStore((state) => state.redo);
-  const clear = useCanvasStore((state) => state.clear);
   const importSnapshot = useCanvasStore((state) => state.importSnapshot);
   const getSnapshot = useCanvasStore((state) => state.getSnapshot);
   const setHelpOpen = useUiStore((state) => state.setHelpOpen);
@@ -30,7 +29,6 @@ export function Toolbar() {
   const pushToast = useToastStore((state) => state.push);
   const canUndo = useCanvasStore((state) => state.past.length > 0);
   const canRedo = useCanvasStore((state) => state.future.length > 0);
-  const hasNodes = useCanvasStore((state) => state.nodes.length > 0);
 
   const centerPosition = () => {
     const rect = document.querySelector<HTMLElement>(".canvas")?.getBoundingClientRect();
@@ -65,11 +63,6 @@ export function Toolbar() {
     } catch {
       pushToast("无法读取该 JSON 文件。", "error");
     }
-  };
-
-  const handleClear = () => {
-    if (!hasNodes) return;
-    if (window.confirm("清空画布？可以使用 Ctrl/Cmd + Z 撤销。")) clear();
   };
 
   return (
@@ -113,10 +106,6 @@ export function Toolbar() {
       <Button size="lg" onClick={() => setHelpOpen(true)} title="快捷键面板（?）">
         <span aria-hidden="true">?</span>
         <span className="tool-label">快捷键</span>
-      </Button>
-      <Button variant="danger" size="lg" onClick={handleClear} disabled={!hasNodes} title="清空画布">
-        <span aria-hidden="true">×</span>
-        <span className="tool-label">清空</span>
       </Button>
       <Input
         ref={fileInput}

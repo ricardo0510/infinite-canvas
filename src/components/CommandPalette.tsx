@@ -149,16 +149,6 @@ function CommandPaletteSession() {
           void exportSnapshot(state().getSnapshot());
         },
       },
-      {
-        id: "clear",
-        label: "清空画布",
-        group: "画布",
-        keywords: "删除 全部 重置",
-        run: () => {
-          if (state().nodes.length === 0) return;
-          if (window.confirm("清空画布？此操作可以撤销。")) state().clear();
-        },
-      },
     ];
   }, [fitView, screenToFlowPosition, selectedCount, snapToGrid, showMiniMap]);
 
