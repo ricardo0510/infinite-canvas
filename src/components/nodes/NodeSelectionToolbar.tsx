@@ -11,6 +11,33 @@ type NodeSelectionToolbarProps = {
 export function NodeSelectionToolbar({ node }: NodeSelectionToolbarProps) {
   const setMediaPreview = useUiStore((state) => state.setMediaPreview);
 
+  if (node.type === "text") {
+    const text = node.data.text.trim();
+    if (!text) return null;
+    return (
+      <NodeToolbar nodeId={node.id} position={Position.Top} align="center" offset={10} isVisible>
+        <div className="node-selection-toolbar">
+          <Button
+            variant="ghost"
+            size="sm"
+            icon
+            title="大屏预览"
+            aria-label="打开文本大屏预览"
+            onClick={() =>
+              setMediaPreview({
+                kind: "text",
+                text: node.data.text,
+                title: node.data.title || "文本",
+              })
+            }
+          >
+            <span aria-hidden="true">⛶</span>
+          </Button>
+        </div>
+      </NodeToolbar>
+    );
+  }
+
   if (node.type !== "image" && node.type !== "video") return null;
   const src = node.type === "image" ? sanitizeImageSrc(node.data.src) : sanitizeVideoSrc(node.data.src);
   if (!src) return null;

@@ -1,10 +1,8 @@
 import { create } from "zustand";
 
-export type MediaPreviewState = {
-  kind: "image" | "video";
-  src: string;
-  title: string;
-};
+export type MediaPreviewState =
+  | { kind: "image" | "video"; src: string; title: string }
+  | { kind: "text"; text: string; title: string };
 
 type UiState = {
   snapToGrid: boolean;
