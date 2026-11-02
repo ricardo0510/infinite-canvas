@@ -60,7 +60,13 @@ export class ZhipuVideoAdapter implements ProviderAdapter {
 
   async testKey(ctx: ProviderContext): Promise<ProviderTestResult> {
     const response = await this.request(ctx, "/async-result/connectivity-check", "GET");
-    await this.assertOk(response);
+    // 400/404 表示鉴权已通过，只是这个探测任务不存在；401/403 才是 Key 有问题。
+    if (response.status === 401 || response.status === 403) {
+      throw new UpstreamAuthError();
+    }
+    if (response.status >= 500) {
+      throw new Error(`智谱服务异常（HTTP ${response.status}）`);
+    }
     return { ok: true };
   }
 

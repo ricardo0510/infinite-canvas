@@ -176,10 +176,16 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
       setBusy("verify");
       try {
         await testCredential(binding.providerId, saved.id);
-        const list = await syncProviderModels(binding.providerId);
+        const provider = providers.find((item) => item.id === binding.providerId);
+        const list = provider?.supportsModels
+          ? await syncProviderModels(binding.providerId)
+          : await listProviderModels(binding.providerId);
         setModels((current) => ({ ...current, [binding.providerId]: list }));
         setExpanded(binding.providerId);
-        pushToast("Key 校验通过，模型已同步", "success");
+        pushToast(
+          provider?.supportsModels ? "Key 校验通过，模型已同步" : "Key 校验通过",
+          "success",
+        );
       } catch (reason) {
         setError(errorText(reason));
       }
