@@ -177,58 +177,6 @@
   font-weight: 600;
 }
 
-.ai-kind-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 3px;
-  border-radius: var(--radius-lg);
-  background: var(--inset-2);
-}
-
-.ai-kind-tab {
-  display: inline-flex;
-  flex: 1;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  height: 30px;
-  border: 1px solid transparent;
-  border-radius: 7px;
-  background: transparent;
-  color: var(--muted);
-  font: inherit;
-  font-size: var(--font-xs);
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-}
-
-.ai-kind-tab:hover {
-  background: rgb(255 255 255 / 4%);
-  color: var(--text-strong);
-}
-
-.ai-kind-tab.is-active {
-  border-color: rgb(139 92 246 / 40%);
-  background: rgb(139 92 246 / 14%);
-  color: var(--accent-soft);
-}
-
-.ai-kind-tab-count {
-  min-width: 16px;
-  padding: 0 5px;
-  border-radius: var(--radius-full);
-  background: rgb(255 255 255 / 7%);
-  color: var(--muted);
-  font-size: var(--font-2xs);
-  line-height: 16px;
-  text-align: center;
-}
-
-.ai-kind-tab.is-active .ai-kind-tab-count {
-  background: rgb(139 92 246 / 22%);
-  color: var(--accent-soft);
-}
-
 .ai-model-actions--global {
   align-items: center;
   justify-content: space-between;

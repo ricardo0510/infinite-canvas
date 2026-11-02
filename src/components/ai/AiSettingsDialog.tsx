@@ -34,17 +34,13 @@ type Binding = {
   credential?: CredentialInfo;
 };
 
-const KIND_TABS: { kind: ModelKind; label: string }[] = [
-  { kind: "text", label: "文本" },
-  { kind: "image", label: "图片" },
-  { kind: "video", label: "视频" },
-];
-
 const KIND_LABELS: Record<ModelKind, string> = {
   text: "文本",
   image: "图片",
   video: "视频",
 };
+
+const KIND_ORDER: Record<ModelKind, number> = { text: 0, image: 1, video: 2 };
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试";
@@ -79,7 +75,6 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
   const [models, setModels] = useState<Record<string, ProviderModelInfo[]>>({});
   const [prefs, setPrefs] = useState<PrefState>({});
   const [prefsDirty, setPrefsDirty] = useState(false);
-  const [kind, setKind] = useState<ModelKind>("text");
   const [expanded, setExpanded] = useState<string | null>(null);
   const [binding, setBinding] = useState<Binding | null>(null);
   const [bindLabel, setBindLabel] = useState("默认");
@@ -304,15 +299,6 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
     }
   };
 
-  const kindModelCount = (target: ModelKind) =>
-    providers.reduce(
-      (total, provider) =>
-        total +
-        (models[provider.id] ?? []).filter((model) => model.kind === target && model.enabled)
-          .length,
-      0,
-    );
-
   const save = () => {
     applyRuntime();
     onClose();
@@ -375,35 +361,14 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
           <p className="ai-settings-hint">填写接口地址并保存后，即可管理供应商 Key。</p>
         ) : (
           <>
-            <div className="ai-kind-tabs" role="tablist" aria-label="模型类型">
-              {KIND_TABS.map((tab) => (
-                <button
-                  key={tab.kind}
-                  type="button"
-                  role="tab"
-                  aria-selected={kind === tab.kind}
-                  className={`ai-kind-tab${kind === tab.kind ? " is-active" : ""}`}
-                  onClick={() => {
-                    setKind(tab.kind);
-                    setExpanded(null);
-                  }}
-                >
-                  {tab.label}
-                  <span className="ai-kind-tab-count">{kindModelCount(tab.kind)}</span>
-                </button>
-              ))}
-            </div>
-            {kind !== "text" && kindModelCount(kind) === 0 ? (
-              <p className="ai-settings-hint">
-                当前版本暂未接入{KIND_TABS.find((tab) => tab.kind === kind)?.label}模型，绑定供应商
-                Key 后可在对应供应商下同步，或等待平台开通。
-              </p>
-            ) : null}
             <div className="ai-provider-list">
               {providers.map((provider) => {
                 const providerCredentials = credentials[provider.id] ?? [];
-                const allProviderModels = models[provider.id] ?? [];
-                const providerModels = allProviderModels.filter((model) => model.kind === kind);
+                const providerModels = [...(models[provider.id] ?? [])].sort(
+                  (left, right) =>
+                    KIND_ORDER[left.kind] - KIND_ORDER[right.kind] ||
+                    left.displayName.localeCompare(right.displayName),
+                );
                 const bindingHere = binding?.providerId === provider.id;
                 const isBusy = busy?.endsWith(`:${provider.id}`) ?? false;
                 return (
@@ -535,9 +500,7 @@ function AiSettingsForm({ onClose }: { onClose: () => void }) {
                     <div className="ai-model-list">
                       {providerModels.length === 0 ? (
                         <p className="ai-settings-hint">
-                          {allProviderModels.length === 0
-                            ? "暂无模型，点击「同步」从供应商获取。"
-                            : "该供应商暂无此类型模型。"}
+                          暂无模型，点击「同步」从供应商获取。
                         </p>
                       ) : (
                         providerModels.map((model) => {
