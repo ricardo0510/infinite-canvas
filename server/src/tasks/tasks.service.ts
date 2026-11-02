@@ -1,6 +1,14 @@
 import { Inject, Injectable } from "@nestjs/common";
 import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
+import {
+  appendImageOptions,
+  DEFAULT_IMAGE_ASPECT_RATIO,
+  DEFAULT_IMAGE_RESOLUTION,
+  IMAGE_ASPECT_RATIOS,
+  IMAGE_MAX_COUNT,
+  IMAGE_RESOLUTIONS,
+} from "../models/image-options";
 import type { AiModel } from "../models/model.types";
 import { ModelsService } from "../models/models.service";
 import { ProviderCatalogService } from "../byok/provider-catalog.service";
@@ -78,7 +86,11 @@ export class TasksService {
       ...(resolved.providerId ? { providerId: resolved.providerId } : {}),
       ...(resolved.providerModel ? { providerModel: resolved.providerModel } : {}),
       ...(resolved.credentialId ? { credentialId: resolved.credentialId } : {}),
-      request: { prompt: dto.prompt, params, references },
+      request: {
+        prompt: kind === "image" ? appendImageOptions(dto.prompt, params) : dto.prompt,
+        params,
+        references,
+      },
     };
 
     try {
@@ -319,7 +331,6 @@ export class TasksService {
       ...(dto.negativePrompt ? { negativePrompt: dto.negativePrompt } : {}),
       ...(input.watermark !== undefined ? { watermark: input.watermark } : {}),
       ...(input.seed !== undefined ? { seed: input.seed } : {}),
-      ...(input.extra ? { extra: input.extra } : {}),
     };
 
     if (kind === "text") {
@@ -330,29 +341,21 @@ export class TasksService {
     }
 
     if (kind === "image") {
-      const output = model.output.image;
-      if (!output) throw new ApiException(20001, "模型不支持图片输出", 422);
-      if (input.aspectRatio && !output.aspectRatios.includes(input.aspectRatio)) {
-        throw new ApiException(20001, "aspectRatio 不在模型能力范围内", 422);
-      }
-      if (input.resolution && !output.resolutions.includes(input.resolution)) {
-        throw new ApiException(20001, "resolution 不在模型能力范围内", 422);
+      if (
+        input.aspectRatio &&
+        !(IMAGE_ASPECT_RATIOS as readonly string[]).includes(input.aspectRatio)
+      ) {
+        throw new ApiException(20001, "aspectRatio 不在支持范围内", 422);
       }
       if (
-        input.qualityTier &&
-        !model.params?.qualityTiers?.some((tier) => tier.key === input.qualityTier)
+        input.resolution &&
+        !(IMAGE_RESOLUTIONS as readonly string[]).includes(input.resolution)
       ) {
-        throw new ApiException(20001, "qualityTier 不可用", 422);
+        throw new ApiException(20001, "resolution 不在支持范围内", 422);
       }
-      if (input.background && !model.params?.backgrounds?.includes(input.background)) {
-        throw new ApiException(20001, "background 不可用", 422);
-      }
-      this.validateExtra(model, input.extra);
-      params.aspectRatio = input.aspectRatio ?? output.aspectRatios[0];
-      params.resolution = input.resolution ?? output.resolutions[0];
-      params.count = Math.min(output.maxCount, Math.max(1, input.count ?? 1));
-      if (input.qualityTier) params.qualityTier = input.qualityTier;
-      if (input.background) params.background = input.background;
+      params.aspectRatio = input.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO;
+      params.resolution = input.resolution ?? DEFAULT_IMAGE_RESOLUTION;
+      params.count = Math.min(IMAGE_MAX_COUNT, Math.max(1, input.count ?? 1));
       if (params.watermark === undefined) params.watermark = true;
       return params;
     }
@@ -383,6 +386,7 @@ export class TasksService {
       throw new ApiException(20001, "qualityTier 不可用", 422);
     }
     this.validateExtra(model, input.extra);
+    if (input.extra) params.extra = input.extra;
     params.aspectRatio = input.aspectRatio ?? output.aspectRatios[0];
     params.resolution = input.resolution ?? output.resolutions[0];
     params.duration = duration;

@@ -1,5 +1,13 @@
 import type { GenerationMeta, GenerationParams, GenerationResultItem } from "../../types";
 import { activateResult, patchGeneration } from "../../lib/ai/controller";
+import {
+  DEFAULT_IMAGE_ASPECT_RATIO,
+  DEFAULT_IMAGE_RESOLUTION,
+  formatImageResolution,
+  IMAGE_ASPECT_RATIOS,
+  IMAGE_MAX_COUNT,
+  IMAGE_RESOLUTIONS,
+} from "../../lib/ai/imageOptions";
 import type { AiModel } from "../../lib/ai/types";
 import { Button } from "../ui/Button";
 import { Input, Textarea } from "../ui/Control";
@@ -34,13 +42,6 @@ function ResultThumb({ item }: { item: GenerationResultItem }) {
   );
 }
 
-function formatResolution(value: string): string {
-  const lower = value.toLowerCase();
-  if (lower === "adaptive" || lower === "auto" || value === "自适应") return "自适应";
-  const match = lower.match(/^(\d+(?:\.\d+)?)k$/);
-  return match ? `${match[1]}K` : value;
-}
-
 function RatioShape({ ratio }: { ratio: string }) {
   const [widthValue, heightValue] = ratio.split(":").map(Number);
   const max = 22;
@@ -58,15 +59,16 @@ function RatioShape({ ratio }: { ratio: string }) {
 }
 
 export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeSettingsDialogProps) {
-  const imageOutput = model?.output.image ?? null;
+  const isImage = generation.kind === "image";
   const videoOutput = model?.output.video ?? null;
   const qualityTiers = model?.params?.qualityTiers ?? [];
   const backgrounds = model?.params?.backgrounds ?? [];
   const extraParams = model?.params?.extra ?? [];
   const running = generation.status === "queued" || generation.status === "running";
   const imageAspectRatio =
-    generation.params?.aspectRatio ?? imageOutput?.aspectRatios[0] ?? "";
-  const imageResolution = generation.params?.resolution ?? imageOutput?.resolutions[0] ?? "";
+    generation.params?.aspectRatio ?? DEFAULT_IMAGE_ASPECT_RATIO;
+  const imageResolution =
+    generation.params?.resolution ?? DEFAULT_IMAGE_RESOLUTION;
 
   const updateParams = (patch: Partial<GenerationParams>) => {
     patchGeneration(nodeId, { params: { ...(generation.params ?? {}), ...patch } });
@@ -76,52 +78,48 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
     <Modal onClose={onClose} className="modal node-settings" labelledBy="node-settings-title">
       <DialogHeader id="node-settings-title" title="生成设置" onClose={onClose} />
       <div className="node-settings-body">
-        {imageOutput ? (
+        {isImage ? (
           <>
-            {imageOutput.resolutions.length > 0 ? (
-              <div className="settings-group">
-                <span className="settings-label">画质</span>
-                <div className="option-grid">
-                  {imageOutput.resolutions.map((resolution) => (
-                    <button
-                      key={resolution}
-                      type="button"
-                      className={`option-tile${imageResolution === resolution ? " is-active" : ""}`}
-                      aria-pressed={imageResolution === resolution}
-                      disabled={running}
-                      onClick={() => updateParams({ resolution })}
-                    >
-                      {formatResolution(resolution)}
-                    </button>
-                  ))}
-                </div>
+            <div className="settings-group">
+              <span className="settings-label">画质</span>
+              <div className="option-grid">
+                {IMAGE_RESOLUTIONS.map((resolution) => (
+                  <button
+                    key={resolution}
+                    type="button"
+                    className={`option-tile${imageResolution === resolution ? " is-active" : ""}`}
+                    aria-pressed={imageResolution === resolution}
+                    disabled={running}
+                    onClick={() => updateParams({ resolution })}
+                  >
+                    {formatImageResolution(resolution)}
+                  </button>
+                ))}
               </div>
-            ) : null}
-            {imageOutput.aspectRatios.length > 0 ? (
-              <div className="settings-group">
-                <span className="settings-label">宽高比</span>
-                <div className="option-grid option-grid--ratios">
-                  {imageOutput.aspectRatios.map((ratio) => (
-                    <button
-                      key={ratio}
-                      type="button"
-                      className={`ratio-tile${imageAspectRatio === ratio ? " is-active" : ""}`}
-                      aria-pressed={imageAspectRatio === ratio}
-                      disabled={running}
-                      onClick={() => updateParams({ aspectRatio: ratio })}
-                    >
-                      <RatioShape ratio={ratio} />
-                      <span>{ratio}</span>
-                    </button>
-                  ))}
-                </div>
+            </div>
+            <div className="settings-group">
+              <span className="settings-label">宽高比</span>
+              <div className="option-grid option-grid--ratios">
+                {IMAGE_ASPECT_RATIOS.map((ratio) => (
+                  <button
+                    key={ratio}
+                    type="button"
+                    className={`ratio-tile${imageAspectRatio === ratio ? " is-active" : ""}`}
+                    aria-pressed={imageAspectRatio === ratio}
+                    disabled={running}
+                    onClick={() => updateParams({ aspectRatio: ratio })}
+                  >
+                    <RatioShape ratio={ratio} />
+                    <span>{ratio}</span>
+                  </button>
+                ))}
               </div>
-            ) : null}
+            </div>
             <Field label="数量">
               <Input
                 type="number"
                 min={1}
-                max={imageOutput.maxCount}
+                max={IMAGE_MAX_COUNT}
                 value={generation.params?.count ?? 1}
                 disabled={running}
                 onChange={(event) => updateParams({ count: Number(event.target.value) || 1 })}
@@ -161,7 +159,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           </>
         ) : null}
 
-        {qualityTiers.length > 0 ? (
+        {!isImage && qualityTiers.length > 0 ? (
           <SelectField
             label="质量档位"
             value={generation.params?.qualityTier ?? qualityTiers[0].key}
@@ -171,7 +169,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           />
         ) : null}
 
-        {backgrounds.length > 0 ? (
+        {!isImage && backgrounds.length > 0 ? (
           <SelectField
             label="背景"
             value={generation.params?.background ?? backgrounds[0]}
@@ -215,7 +213,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           </>
         ) : null}
 
-        {imageOutput || videoOutput ? (
+        {isImage || videoOutput ? (
           <Field label="负向提示词">
             <Textarea
               rows={2}
@@ -238,18 +236,22 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
           </label>
         ) : null}
 
-        {extraParams.map((param) => (
-          <SelectField
-            key={param.key}
-            label={param.label}
-            value={String(generation.params?.extra?.[param.key] ?? param.defaultValue)}
-            options={param.options}
-            disabled={running}
-            onChange={(value) =>
-              updateParams({ extra: { ...(generation.params?.extra ?? {}), [param.key]: value } })
-            }
-          />
-        ))}
+        {!isImage
+          ? extraParams.map((param) => (
+              <SelectField
+                key={param.key}
+                label={param.label}
+                value={String(generation.params?.extra?.[param.key] ?? param.defaultValue)}
+                options={param.options}
+                disabled={running}
+                onChange={(value) =>
+                  updateParams({
+                    extra: { ...(generation.params?.extra ?? {}), [param.key]: value },
+                  })
+                }
+              />
+            ))
+          : null}
 
         {generation.results.length > 0 ? (
           <div className="node-settings-results">

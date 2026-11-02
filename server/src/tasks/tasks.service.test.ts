@@ -106,6 +106,21 @@ describe("TasksService", () => {
     expect((await tasks.getInternal(task.taskId))?.request.params.count).toBe(4);
   });
 
+  it("appends image options to the upstream prompt", async () => {
+    const tasks = createService();
+    const { task } = await tasks.create("user-1", "image", {
+      modelId: "test-image",
+      mode: "textToImage",
+      prompt: "雨夜霓虹",
+      params: { aspectRatio: "16:9", resolution: "2k", count: 1 },
+      clientRequestId: "node-1:req-image-options",
+    } as CreateGenerationDto);
+
+    const stored = await tasks.getInternal(task.taskId);
+    expect(stored?.request.prompt).toContain("aspect ratio 16:9");
+    expect(stored?.request.prompt).toContain("resolution 2K");
+  });
+
   it("rejects an invalid video reference combination", async () => {
     const tasks = createService();
     let error: unknown;

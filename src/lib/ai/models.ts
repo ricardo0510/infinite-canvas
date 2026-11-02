@@ -1,4 +1,8 @@
 import { aiRequest } from "./http";
+import {
+  DEFAULT_IMAGE_ASPECT_RATIO,
+  DEFAULT_IMAGE_RESOLUTION,
+} from "./imageOptions";
 import type { AiModel, ModelKind } from "./types";
 
 let cached: AiModel[] | null = null;
@@ -66,22 +70,20 @@ export function defaultParams(model: AiModel | undefined): {
   extra?: Record<string, string | number | boolean>;
 } {
   if (!model) return { watermark: true };
-  const image = model.output.image;
+  if (model.kind === "image") {
+    return {
+      aspectRatio: DEFAULT_IMAGE_ASPECT_RATIO,
+      resolution: DEFAULT_IMAGE_RESOLUTION,
+      count: 1,
+      watermark: true,
+    };
+  }
   const video = model.output.video;
   const extra: Record<string, string | number | boolean> = {};
   for (const item of model.params?.extra ?? []) {
     extra[item.key] = item.defaultValue;
   }
   return {
-    ...(image
-      ? {
-          aspectRatio: image.aspectRatios[0],
-          resolution: image.resolutions[0],
-          count: 1,
-          background: model.params?.backgrounds?.[0],
-          qualityTier: model.params?.qualityTiers?.[0]?.key,
-        }
-      : {}),
     ...(video
       ? {
           aspectRatio: video.aspectRatios[0],
