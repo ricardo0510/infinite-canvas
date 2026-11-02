@@ -22,6 +22,24 @@
   transform: scale(1.25);
 }
 
+.node-handle-zone {
+  position: absolute;
+  top: 50%;
+  z-index: calc(var(--z-handle) - 1);
+  width: 64px;
+  height: 120px;
+  transform: translateY(-50%);
+  cursor: crosshair;
+}
+
+.node-handle-zone.is-left {
+  left: -64px;
+}
+
+.node-handle-zone.is-right {
+  right: -64px;
+}
+
 /* ---------- Shared node frame ---------- */
 
 .ai-node {

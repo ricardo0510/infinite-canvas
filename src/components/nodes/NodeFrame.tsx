@@ -21,8 +21,8 @@ type NodeFrameProps = {
 
 type Magnet = { side: "left" | "right"; x: number; y: number };
 
-const MAGNET_RADIUS = 84;
-const RELEASE_RADIUS = 180;
+const MAGNET_RADIUS = 44;
+const MAX_OFFSET = 26;
 
 export function NodeFrame({
   id,
@@ -66,31 +66,40 @@ export function NodeFrame({
       const rect = root.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) return;
       const scale = root.offsetWidth > 0 ? rect.width / root.offsetWidth : 1;
-      const screenX = clientX - rect.left;
-      const screenY = clientY - rect.top;
-      const x = screenX / scale;
-      const y = screenY / scale;
-      const current = magnetRef.current;
+      const centerY = rect.top + rect.height / 2;
 
+      const pointFor = (side: "left" | "right") => {
+        const baseX = side === "left" ? rect.left : rect.right;
+        const dx = clientX - baseX;
+        const dy = clientY - centerY;
+        const distance = Math.hypot(dx, dy);
+        if (distance > MAGNET_RADIUS) return null;
+        const ratio = distance === 0 ? 0 : Math.min(distance, MAX_OFFSET) / distance;
+        return {
+          x: (baseX + dx * ratio - rect.left) / scale,
+          y: (centerY + dy * ratio - rect.top) / scale,
+        };
+      };
+
+      const current = magnetRef.current;
       if (keepSide && current) {
-        const outsideX = Math.max(0, rect.left - clientX, clientX - rect.right);
-        const outsideY = Math.max(0, rect.top - clientY, clientY - rect.bottom);
-        if (Math.hypot(outsideX, outsideY) > RELEASE_RADIUS) {
+        const point = pointFor(current.side);
+        if (!point) {
           apply(null);
           return;
         }
-        apply({ side: current.side, x, y });
+        apply({ side: current.side, ...point });
         return;
       }
 
-      const centerY = rect.height / 2;
       const candidates: { side: "left" | "right"; distance: number }[] = [
-        { side: "left", distance: Math.hypot(screenX, screenY - centerY) },
-        { side: "right", distance: Math.hypot(screenX - rect.width, screenY - centerY) },
+        { side: "left", distance: Math.hypot(clientX - rect.left, clientY - centerY) },
+        { side: "right", distance: Math.hypot(clientX - rect.right, clientY - centerY) },
       ];
       const nearest = candidates.sort((left, right) => left.distance - right.distance)[0];
       if (!nearest || nearest.distance > MAGNET_RADIUS) return;
-      apply({ side: nearest.side, x, y });
+      const point = pointFor(nearest.side);
+      if (point) apply({ side: nearest.side, ...point });
     },
     [],
   );
@@ -136,6 +145,8 @@ export function NodeFrame({
       onPointerMove={handlePointerMove}
     >
       <NodeTitleBar id={id} title={title} defaultTitle={defaultTitle} actions={actions} />
+      <div className="node-handle-zone is-left nodrag nopan" onPointerMove={handlePointerMove} />
+      <div className="node-handle-zone is-right nodrag nopan" onPointerMove={handlePointerMove} />
       <Handle type="target" position={Position.Left} className="node-handle" style={handleStyle("left")} />
       {running ? <NodeLoadingOverlay label={loadingLabel} progress={progress} /> : null}
       <div className="node-body nowheel">
