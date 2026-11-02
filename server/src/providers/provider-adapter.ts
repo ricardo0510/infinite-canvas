@@ -47,6 +47,34 @@ export type ImageOutput = {
   height?: number;
 };
 
+export type VideoInput = {
+  model: string;
+  prompt: string;
+  aspectRatio?: string;
+  resolution?: string;
+  duration?: number;
+  negativePrompt?: string;
+  generateAudio?: boolean;
+  seed?: number;
+  firstFrameUrl?: string;
+  lastFrameUrl?: string;
+  referenceUrls?: string[];
+};
+
+export type VideoOutput = {
+  url: string;
+  thumbnailUrl?: string;
+  width?: number;
+  height?: number;
+  duration?: number;
+};
+
+export type VideoPollResult = {
+  status: "queued" | "running" | "succeeded" | "failed";
+  video?: VideoOutput;
+  message?: string;
+};
+
 export type ProviderTestResult = {
   ok: boolean;
   message?: string;
@@ -64,4 +92,9 @@ export interface ProviderAdapter {
   testKey(ctx: ProviderContext): Promise<ProviderTestResult>;
   generateText?(ctx: ProviderContext, input: TextInput): Promise<TextOutput>;
   generateImage?(ctx: ProviderContext, input: ImageInput): Promise<ImageOutput[]>;
+  submitVideo?(
+    ctx: ProviderContext,
+    input: VideoInput,
+  ): Promise<{ providerTaskId: string; width?: number; height?: number }>;
+  pollVideo?(ctx: ProviderContext, providerTaskId: string): Promise<VideoPollResult>;
 }

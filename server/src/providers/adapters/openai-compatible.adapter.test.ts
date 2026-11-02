@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveImageSize } from "./openai-compatible.adapter";
+import { resolveImageSize, resolveVideoSize } from "./openai-compatible.adapter";
 
 describe("resolveImageSize", () => {
   it("uses a square size for 1:1", () => {
@@ -13,5 +13,13 @@ describe("resolveImageSize", () => {
 
   it("falls back to a square for auto", () => {
     expect(resolveImageSize("auto", "auto")).toEqual({ width: 1024, height: 1024 });
+  });
+});
+
+describe("resolveVideoSize", () => {
+  it("maps SiliconFlow video aspect ratios", () => {
+    expect(resolveVideoSize("16:9")).toEqual({ width: 1280, height: 720 });
+    expect(resolveVideoSize("9:16")).toEqual({ width: 720, height: 1280 });
+    expect(resolveVideoSize("1:1")).toEqual({ width: 960, height: 960 });
   });
 });

@@ -3,10 +3,14 @@ import { randomUUID } from "node:crypto";
 import { ApiException } from "../common/api-exception";
 import { CredentialsService } from "../byok/credentials.service";
 import { DeepSeekTextProvider } from "../providers/deepseek-text.provider";
-import { UpstreamAuthError, type ImageOutput } from "../providers/provider-adapter";
+import {
+  UpstreamAuthError,
+  type ImageOutput,
+  type VideoPollResult,
+} from "../providers/provider-adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
 import { TasksService } from "./tasks.service";
-import type { ImageResultItem, InternalTask } from "./task.types";
+import type { ImageResultItem, InternalTask, VideoResultItem } from "./task.types";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -250,10 +254,129 @@ export class TaskProcessorService {
   }
 
   private async runVideo(task: InternalTask): Promise<void> {
-    throw new ApiException(
-      30001,
-      task.credentialId ? "视频 BYOK 暂未接入" : "视频生成暂未接入供应商",
-      400,
-    );
+    if (!task.credentialId) {
+      throw new ApiException(30001, "视频生成暂未接入供应商", 400);
+    }
+
+    await sleep(120);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 20);
+
+    let resolved;
+    try {
+      resolved = await this.credentials.resolve(task.credentialId);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        await this.tasks.fail(task.taskId, error.code, error.message);
+        return;
+      }
+      throw error;
+    }
+
+    const adapter = this.registry.get(resolved.provider.adapter);
+    if (!adapter.submitVideo || !adapter.pollVideo) {
+      throw new ApiException(30001, "当前供应商暂不支持视频生成", 400);
+    }
+
+    const params = task.request.params;
+    const references = task.request.references;
+    const firstFrame =
+      references.find((reference) => reference.type === "firstFrame") ??
+      references.find((reference) => reference.type === "referenceImage");
+    const lastFrame = references.find((reference) => reference.type === "lastFrame");
+    const context = {
+      baseUrl: resolved.provider.baseUrl,
+      apiKey: resolved.apiKey,
+      authType: resolved.provider.authType,
+      timeoutMs: resolved.provider.timeoutMs,
+      ...(resolved.provider.extra &&
+      typeof resolved.provider.extra === "object" &&
+      !Array.isArray(resolved.provider.extra)
+        ? { extra: resolved.provider.extra as Record<string, unknown> }
+        : {}),
+    };
+
+    let providerTaskId = "";
+    let videoWidth: number | undefined;
+    let videoHeight: number | undefined;
+    try {
+      const submitted = await adapter.submitVideo(context, {
+        model: task.providerModel ?? task.modelId,
+        prompt: task.request.prompt,
+        aspectRatio: params.aspectRatio,
+        resolution: params.resolution,
+        duration: params.duration,
+        ...(params.negativePrompt ? { negativePrompt: params.negativePrompt } : {}),
+        ...(params.generateAudio !== undefined
+          ? { generateAudio: params.generateAudio }
+          : {}),
+        ...(params.seed !== undefined ? { seed: params.seed } : {}),
+        ...(firstFrame ? { firstFrameUrl: firstFrame.url } : {}),
+        ...(lastFrame ? { lastFrameUrl: lastFrame.url } : {}),
+        referenceUrls: references
+          .filter(
+            (reference) =>
+              reference.type === "referenceImage" || reference.type === "reference",
+          )
+          .map((reference) => reference.url),
+      });
+      providerTaskId = submitted.providerTaskId;
+      videoWidth = submitted.width;
+      videoHeight = submitted.height;
+    } catch (error) {
+      if (error instanceof UpstreamAuthError) {
+        await this.credentials.markInvalid(task.credentialId);
+        await this.tasks.fail(task.taskId, 30001, "API Key 已失效，请重新绑定");
+        return;
+      }
+      throw error;
+    }
+
+    const startedAt = Date.now();
+    const deadline = startedAt + 15 * 60 * 1000;
+    let result: VideoPollResult | undefined;
+    while (Date.now() < deadline) {
+      await sleep(4000);
+      if (!(await this.tasks.isActive(task.taskId))) return;
+      try {
+        result = await adapter.pollVideo(context, providerTaskId);
+      } catch (error) {
+        if (error instanceof UpstreamAuthError) {
+          await this.credentials.markInvalid(task.credentialId);
+          await this.tasks.fail(task.taskId, 30001, "API Key 已失效，请重新绑定");
+          return;
+        }
+        throw error;
+      }
+      if (result.status === "succeeded") break;
+      if (result.status === "failed") {
+        throw new ApiException(30001, result.message ?? "视频生成失败", 400);
+      }
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      await this.tasks.setProgress(task.taskId, Math.min(90, 25 + elapsed));
+    }
+
+    if (!result || result.status !== "succeeded" || !result.video) {
+      throw new ApiException(30001, "视频生成超时", 400);
+    }
+
+    await this.credentials.touch(task.credentialId);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+
+    const video = result.video;
+    const width = video.width ?? videoWidth;
+    const height = video.height ?? videoHeight;
+    const item: VideoResultItem = {
+      id: `item_${randomUUID()}`,
+      kind: "video",
+      url: video.url,
+      ...(video.thumbnailUrl ? { thumbnailUrl: video.thumbnailUrl } : {}),
+      duration: params.duration ?? video.duration ?? 5,
+      ...(width ? { width } : {}),
+      ...(height ? { height } : {}),
+      modelId: task.modelId,
+      createdAt: new Date().toISOString(),
+    };
+    await this.tasks.complete(task.taskId, [item]);
   }
 }

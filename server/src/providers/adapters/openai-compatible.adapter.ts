@@ -9,6 +9,8 @@ import {
   type ProviderTestResult,
   type TextInput,
   type TextOutput,
+  type VideoInput,
+  type VideoPollResult,
 } from "../provider-adapter";
 import { inferModelKind, isSupportedUpstreamModel } from "../model-kind";
 
@@ -20,6 +22,22 @@ type ImageResponse = {
   images?: { url?: string }[];
   data?: { url?: string; b64_json?: string }[];
 };
+
+type VideoSubmitResponse = {
+  requestId?: string;
+};
+
+type VideoStatusResponse = {
+  status?: string;
+  reason?: string;
+  results?: { videos?: { url?: string }[] };
+};
+
+export function resolveVideoSize(aspectRatio = "16:9"): { width: number; height: number } {
+  if (aspectRatio === "9:16") return { width: 720, height: 1280 };
+  if (aspectRatio === "1:1") return { width: 960, height: 960 };
+  return { width: 1280, height: 720 };
+}
 
 export function resolveImageSize(
   aspectRatio = "1:1",
@@ -150,6 +168,55 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
 
     if (images.length === 0) throw new Error("供应商未返回图片");
     return images;
+  }
+
+  async submitVideo(
+    ctx: ProviderContext,
+    input: VideoInput,
+  ): Promise<{ providerTaskId: string; width?: number; height?: number }> {
+    const size = resolveVideoSize(input.aspectRatio);
+    const body: Record<string, unknown> = {
+      model: input.model,
+      prompt: input.prompt,
+      image_size: `${size.width}x${size.height}`,
+    };
+    if (input.negativePrompt) body.negative_prompt = input.negativePrompt;
+    if (input.seed !== undefined) body.seed = input.seed;
+    const image = input.firstFrameUrl ?? input.referenceUrls?.[0];
+    if (image) body.image = image;
+
+    const response = await this.request(ctx, "/video/submit", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await assertOk(response);
+
+    const data = (await response.json()) as VideoSubmitResponse;
+    if (!data.requestId) throw new Error("供应商未返回视频任务 ID");
+    return { providerTaskId: data.requestId, width: size.width, height: size.height };
+  }
+
+  async pollVideo(ctx: ProviderContext, providerTaskId: string): Promise<VideoPollResult> {
+    const response = await this.request(ctx, "/video/status", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ requestId: providerTaskId }),
+    });
+    await assertOk(response);
+
+    const data = (await response.json()) as VideoStatusResponse;
+    const status = (data.status ?? "").toLowerCase();
+    if (status === "succeed" || status === "succeeded") {
+      const url = data.results?.videos?.[0]?.url;
+      if (!url) throw new Error("视频生成成功但未返回地址");
+      return { status: "succeeded", video: { url } };
+    }
+    if (status === "failed") {
+      return { status: "failed", message: data.reason || "视频生成失败" };
+    }
+    if (status === "inqueue" || status === "queued") return { status: "queued" };
+    return { status: "running" };
   }
 
   async generateText(ctx: ProviderContext, input: TextInput): Promise<TextOutput> {
