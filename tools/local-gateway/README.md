@@ -29,9 +29,12 @@ node tools/local-gateway/server.mjs
 | `COMFY_URL` | `http://127.0.0.1:8188` | ComfyUI 地址 |
 | `COMFY_OUTPUT_DIR` | `~/ComfyUI/output` | ComfyUI 输出目录 |
 | `PUBLIC_BASE_URL` | `http://127.0.0.1:8081` | 返回给项目的媒体地址前缀 |
-| `IMAGE_MODEL` | `sd15` | 图片模型 ID |
-| `IMAGE_CHECKPOINT` | `v1-5-pruned-emaonly-fp16.safetensors` | 图片 checkpoint |
-| `MAX_IMAGE_SIDE` | `768` | 图片长边上限 |
+| `IMAGE_MODEL` | `flux2-klein-4b` | 默认图片模型 ID |
+| `IMAGE_CHECKPOINT` | `v1-5-pruned-emaonly-fp16.safetensors` | SD 1.5 checkpoint（备用） |
+| `FLUX2_UNET` | `flux-2-klein-4b-fp8.safetensors` | FLUX.2 Klein 4B 扩散模型 |
+| `FLUX2_TEXT_ENCODER` | `qwen_3_4b_fp4_flux2.safetensors` | FLUX.2 文本编码器 |
+| `FLUX2_VAE` | `flux2-vae.safetensors` | FLUX.2 VAE |
+| `MAX_IMAGE_SIDE` | `768` | SD 1.5 长边上限；FLUX.2 固定用 1024 |
 | `VIDEO_MODEL` | `wan21-t2v-1.3b` | 视频模型 ID |
 | `VIDEO_UNET` | `wan2.1_t2v_1.3B_fp16.safetensors` | Wan UNet |
 | `VIDEO_TEXT_ENCODER` | `umt5_xxl_fp8_e4m3fn_scaled.safetensors` | Wan T5 |
@@ -54,6 +57,12 @@ GET  /files/<path>
 图片：
 
 ```bash
+# FLUX.2 Klein 4B（推荐）
+curl http://127.0.0.1:8081/v1/images/generations \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"flux2-klein-4b","prompt":"a cat astronaut","size":"1024x1024"}'
+
+# SD 1.5（备用，支持参考图 img2img）
 curl http://127.0.0.1:8081/v1/images/generations \
   -H 'Content-Type: application/json' \
   -d '{"model":"sd15","prompt":"a cat astronaut","size":"512x512"}'
@@ -84,6 +93,7 @@ ProviderModel：
 
 | providerId | modelId | kind | capabilities |
 | --- | --- | --- | --- |
+| local-image | `flux2-klein-4b` | image | `{"aspectRatios":["1:1","16:9","9:16"],"resolutions":["1k"],"maxCount":1,"modes":["textToImage"]}` |
 | local-image | `sd15` | image | `{"aspectRatios":["1:1","16:9","9:16"],"resolutions":["1k"],"maxCount":1,"modes":["textToImage","imageToImage"]}` |
 | local-video | `wan21-t2v-1.3b` | video | `{"modes":["textToVideo"],"aspectRatios":["16:9","9:16"],"resolutions":["480p"],"minDuration":1,"maxDuration":2,"supportsAudio":false}` |
 

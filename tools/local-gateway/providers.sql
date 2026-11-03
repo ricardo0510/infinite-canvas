@@ -20,6 +20,18 @@ values
   (
     gen_random_uuid(),
     'local-image',
+    'flux2-klein-4b',
+    'FLUX.2 Klein 4B',
+    'image',
+    '{"aspectRatios":["1:1","16:9","9:16","4:3","3:4"],"resolutions":["1k"],"maxCount":1,"modes":["textToImage"],"maxImages":1,"maxPromptLength":4000}'::jsonb,
+    'manual',
+    true,
+    now(),
+    now()
+  ),
+  (
+    gen_random_uuid(),
+    'local-image',
     'sd15',
     'SD 1.5',
     'image',

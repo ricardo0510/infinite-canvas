@@ -38,9 +38,14 @@ const VIDEO_FRAMES = Number(process.env.VIDEO_FRAMES ?? 25);
 const VIDEO_FPS = Number(process.env.VIDEO_FPS ?? 16);
 const VIDEO_STEPS = Number(process.env.VIDEO_STEPS ?? 16);
 
-const IMAGE_MODEL = process.env.IMAGE_MODEL ?? "sd15";
+const IMAGE_MODEL = process.env.IMAGE_MODEL ?? "flux2-klein-4b";
 const IMAGE_CHECKPOINT =
   process.env.IMAGE_CHECKPOINT ?? "v1-5-pruned-emaonly-fp16.safetensors";
+const FLUX2_UNET =
+  process.env.FLUX2_UNET ?? "flux-2-klein-4b-fp8.safetensors";
+const FLUX2_TEXT_ENCODER =
+  process.env.FLUX2_TEXT_ENCODER ?? "qwen_3_4b_fp4_flux2.safetensors";
+const FLUX2_VAE = process.env.FLUX2_VAE ?? "flux2-vae.safetensors";
 const VIDEO_MODEL = process.env.VIDEO_MODEL ?? "wan21-t2v-1.3b";
 const VIDEO_UNET = process.env.VIDEO_UNET ?? "wan2.1_t2v_1.3B_fp16.safetensors";
 const VIDEO_TEXT_ENCODER =
@@ -79,8 +84,8 @@ function parseSize(value, fallback) {
   return [Number(match[1]), Number(match[2])];
 }
 
-function clampImageSize(width, height) {
-  const scale = Math.min(1, MAX_IMAGE_SIDE / Math.max(width, height));
+function clampImageSize(width, height, maxSide = MAX_IMAGE_SIDE) {
+  const scale = Math.min(1, maxSide / Math.max(width, height));
   const round = (value) => Math.max(256, Math.round((value * scale) / 64) * 64);
   return [round(width), round(height)];
 }
@@ -204,6 +209,74 @@ function imageGraph({ prompt, negativePrompt, width, height, seed, referenceName
   return graph;
 }
 
+function flux2ImageGraph({ prompt, width, height, seed }) {
+  return {
+    "70": {
+      class_type: "UNETLoader",
+      inputs: { unet_name: FLUX2_UNET, weight_dtype: "default" },
+    },
+    "71": {
+      class_type: "CLIPLoader",
+      inputs: { clip_name: FLUX2_TEXT_ENCODER, type: "flux2", device: "default" },
+    },
+    "72": {
+      class_type: "VAELoader",
+      inputs: { vae_name: FLUX2_VAE },
+    },
+    "66": {
+      class_type: "EmptyFlux2LatentImage",
+      inputs: { width, height, batch_size: 1 },
+    },
+    "62": {
+      class_type: "Flux2Scheduler",
+      inputs: { steps: 4, width, height },
+    },
+    "73": {
+      class_type: "RandomNoise",
+      inputs: { noise_seed: seed },
+    },
+    "61": {
+      class_type: "KSamplerSelect",
+      inputs: { sampler_name: "euler" },
+    },
+    "74": {
+      class_type: "CLIPTextEncode",
+      inputs: { text: prompt, clip: ["71", 0] },
+    },
+    "76": {
+      class_type: "ConditioningZeroOut",
+      inputs: { conditioning: ["74", 0] },
+    },
+    "63": {
+      class_type: "CFGGuider",
+      inputs: {
+        model: ["70", 0],
+        positive: ["74", 0],
+        negative: ["76", 0],
+        cfg: 1,
+      },
+    },
+    "64": {
+      class_type: "SamplerCustomAdvanced",
+      inputs: {
+        noise: ["73", 0],
+        guider: ["63", 0],
+        sampler: ["61", 0],
+        sigmas: ["62", 0],
+        latent_image: ["66", 0],
+      },
+    },
+    "65": {
+      class_type: "VAEDecode",
+      inputs: { samples: ["64", 0], vae: ["72", 0] },
+    },
+    "9": {
+      class_type: "SaveImage",
+      inputs: { filename_prefix: "gateway/flux2", images: ["65", 0] },
+    },
+  };
+}
+
 function videoGraph({ prompt, negativePrompt, width, height, seed }) {
   return {
     "37": {
@@ -272,19 +345,26 @@ function videoGraph({ prompt, negativePrompt, width, height, seed }) {
 async function generateImage(body) {
   const prompt = String(body.prompt ?? "").trim();
   if (!prompt) throw new Error("prompt 不能为空");
-  const [requestedWidth, requestedHeight] = parseSize(body.size, [512, 512]);
-  const [width, height] = clampImageSize(requestedWidth, requestedHeight);
+  const model = String(body.model ?? IMAGE_MODEL);
+  const isFlux2 = model.toLowerCase().includes("flux2");
+  const maxSide = isFlux2 ? 1024 : MAX_IMAGE_SIDE;
+  const [requestedWidth, requestedHeight] = parseSize(body.size, [1024, 1024]);
+  const [width, height] = clampImageSize(requestedWidth, requestedHeight, maxSide);
   const seed = Number.isFinite(body.seed) ? Number(body.seed) : randomSeed();
-  const referenceName = body.image ? await uploadReference(String(body.image)) : null;
+  // FLUX.2 暂时走文生图；参考图编辑留给 SD 1.5 的 img2img 路径。
+  const referenceName =
+    !isFlux2 && body.image ? await uploadReference(String(body.image)) : null;
 
-  const graph = imageGraph({
-    prompt,
-    negativePrompt: body.negative_prompt,
-    width,
-    height,
-    seed,
-    referenceName,
-  });
+  const graph = isFlux2
+    ? flux2ImageGraph({ prompt, width, height, seed })
+    : imageGraph({
+        prompt,
+        negativePrompt: body.negative_prompt,
+        width,
+        height,
+        seed,
+        referenceName,
+      });
   const promptId = await queuePrompt(graph);
 
   const deadline = Date.now() + 10 * 60 * 1000;
@@ -431,10 +511,11 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url ?? "/", `http://127.0.0.1:${PORT}`);
   try {
     if (req.method === "GET" && url.pathname === "/v1/models") {
+      const imageModels = [...new Set([IMAGE_MODEL, "sd15"])];
       json(res, 200, {
         object: "list",
         data: [
-          { id: IMAGE_MODEL, object: "model", owned_by: "local" },
+          ...imageModels.map((id) => ({ id, object: "model", owned_by: "local" })),
           { id: VIDEO_MODEL, object: "model", owned_by: "local" },
         ],
       });
