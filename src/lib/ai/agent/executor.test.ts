@@ -12,6 +12,7 @@ function reset(nodes: CanvasNode[] = []) {
     clipboard: null,
     viewport: null,
     batching: false,
+    historyRevision: 0,
   });
 }
 
@@ -105,5 +106,28 @@ describe("executePlan", () => {
     });
     expect(useCanvasStore.getState().nodes.map((node) => node.id)).toEqual(["b"]);
     expect(useCanvasStore.getState().past).toHaveLength(1);
+  });
+
+  it("reports the history revision so undo can stay bound to this batch", async () => {
+    const result = await executePlan({
+      summary: "新建",
+      commands: [{ op: "addNode", kind: "text", title: "A" }],
+    });
+
+    expect(result.historyRevision).toBe(useCanvasStore.getState().historyRevision);
+
+    useCanvasStore.getState().addNode("text", { x: 0, y: 0 });
+    expect(useCanvasStore.getState().historyRevision).not.toBe(result.historyRevision);
+  });
+
+  it("does not offer undo for a plan that changed nothing", async () => {
+    useCanvasStore.setState({ nodes: [textNode("a")] });
+    const result = await executePlan({
+      summary: "只看一眼",
+      commands: [{ op: "focus", nodeIds: ["a"] }],
+    });
+
+    expect(result.affectedNodeIds).toEqual([]);
+    expect(result.historyRevision).toBeUndefined();
   });
 });

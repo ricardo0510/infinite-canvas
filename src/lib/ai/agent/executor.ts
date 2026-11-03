@@ -11,6 +11,8 @@ export type ExecutePlanOptions = {
 
 export type ExecutePlanResult = {
   affectedNodeIds: string[];
+  /** Present only when the batch actually recorded an undoable history step. */
+  historyRevision?: number;
 };
 
 export class PlanExecutionError extends Error {
@@ -50,7 +52,7 @@ export async function executePlan(
   const affected = new Set<string>();
   const deleted = new Set<string>();
 
-  await useCanvasStore.getState().runBatch(async () => {
+  const recorded = await useCanvasStore.getState().runBatch(async () => {
     const store = () => useCanvasStore.getState();
     const aliases = new Map<string, string>();
     const start = selectionAnchor(store().nodes, options.anchor ?? { x: 0, y: 0 });
@@ -162,6 +164,10 @@ export async function executePlan(
 
     result.affectedNodeIds = finalIds;
   });
+
+  if (recorded) {
+    result.historyRevision = useCanvasStore.getState().historyRevision;
+  }
 
   return result;
 }

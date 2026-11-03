@@ -4,7 +4,15 @@ import { useCanvasStore } from "./canvasStore";
 import type { CanvasNode, CanvasEdge } from "../types";
 
 function reset(nodes: CanvasNode[] = [], edges: CanvasEdge[] = []) {
-  useCanvasStore.setState({ nodes, edges, past: [], future: [], clipboard: null, viewport: null });
+  useCanvasStore.setState({
+    nodes,
+    edges,
+    past: [],
+    future: [],
+    clipboard: null,
+    viewport: null,
+    historyRevision: 0,
+  });
 }
 
 function add(kind: "text" | "image" | "video", x: number, y: number) {
@@ -474,6 +482,23 @@ describe("reparenting", () => {
     expect(node(c).parentId).toBe(firstGroup);
     expect(node(c).position).toEqual({ x: 932, y: 32 });
     expect(node(d).parentId).toBe(secondGroup);
+  });
+});
+
+describe("history revision", () => {
+  it("changes whenever the undo history changes", () => {
+    expect(useCanvasStore.getState().historyRevision).toBe(0);
+
+    add("text", 0, 0);
+    const afterAdd = useCanvasStore.getState().historyRevision;
+    expect(afterAdd).toBe(1);
+
+    useCanvasStore.getState().undo();
+    const afterUndo = useCanvasStore.getState().historyRevision;
+    expect(afterUndo).toBe(2);
+
+    useCanvasStore.getState().redo();
+    expect(useCanvasStore.getState().historyRevision).toBe(3);
   });
 });
 

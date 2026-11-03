@@ -59,6 +59,8 @@ export type AgentMessage = {
   planStatus?: AgentPlanStatus;
   affectedNodeIds?: string[];
   undone?: boolean;
+  /** Canvas history revision created by this execution, used to keep undo safe. */
+  historyRevision?: number;
 };
 
 export type AgentContextNode = {

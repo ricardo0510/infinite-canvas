@@ -1,9 +1,34 @@
 import { create } from "zustand";
 import { MOCK_MODEL_ID } from "../lib/ai/agent/client";
-import type { AgentMessage, AgentStatus } from "../lib/ai/agent/types";
+import type {
+  AgentMessage,
+  AgentPlanStatus,
+  AgentStatus,
+  AiCommandPlan,
+} from "../lib/ai/agent/types";
 
 const STORAGE_KEY = "infinite-canvas:ai-agent:v1";
 const MESSAGE_LIMIT = 50;
+const PLAN_STATUSES = new Set<AgentPlanStatus>([
+  "pending",
+  "executing",
+  "done",
+  "failed",
+]);
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isPlan(value: unknown): value is AiCommandPlan {
+  if (!isRecord(value)) return false;
+  if (typeof value.summary !== "string") return false;
+  if (!Array.isArray(value.commands)) return false;
+  if (!value.commands.every((command) => isRecord(command) && typeof command.op === "string")) {
+    return false;
+  }
+  return value.clarification === undefined || typeof value.clarification === "string";
+}
 
 type PersistedSession = {
   messages: AgentMessage[];
@@ -22,15 +47,39 @@ type AgentState = {
 };
 
 function isMessage(value: unknown): value is AgentMessage {
-  if (typeof value !== "object" || value === null) return false;
-  const record = value as Record<string, unknown>;
-  return (
-    typeof record.id === "string" &&
-    typeof record.role === "string" &&
-    typeof record.kind === "string" &&
-    typeof record.content === "string" &&
-    typeof record.createdAt === "number"
-  );
+  if (!isRecord(value)) return false;
+  if (
+    typeof value.id !== "string" ||
+    typeof value.role !== "string" ||
+    typeof value.kind !== "string" ||
+    typeof value.content !== "string" ||
+    typeof value.createdAt !== "number"
+  ) {
+    return false;
+  }
+  if (value.plan !== undefined && !isPlan(value.plan)) return false;
+  if (
+    value.planStatus !== undefined &&
+    (typeof value.planStatus !== "string" ||
+      !PLAN_STATUSES.has(value.planStatus as AgentPlanStatus))
+  ) {
+    return false;
+  }
+  if (
+    value.affectedNodeIds !== undefined &&
+    (!Array.isArray(value.affectedNodeIds) ||
+      !value.affectedNodeIds.every((id) => typeof id === "string"))
+  ) {
+    return false;
+  }
+  if (value.undone !== undefined && typeof value.undone !== "boolean") return false;
+  if (
+    value.historyRevision !== undefined &&
+    (typeof value.historyRevision !== "number" || !Number.isFinite(value.historyRevision))
+  ) {
+    return false;
+  }
+  return true;
 }
 
 function loadSession(): PersistedSession {
@@ -41,7 +90,15 @@ function loadSession(): PersistedSession {
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Record<string, unknown>;
     const messages = Array.isArray(parsed.messages)
-      ? parsed.messages.filter(isMessage).slice(-MESSAGE_LIMIT)
+      ? parsed.messages
+          .filter(isMessage)
+          .slice(-MESSAGE_LIMIT)
+          // A reload interrupts execution, so never restore a stuck "executing" card.
+          .map((message) =>
+            message.planStatus === "executing"
+              ? { ...message, planStatus: "failed" as const }
+              : message,
+          )
       : [];
     return {
       messages,

@@ -7,6 +7,7 @@ type AgentHeaderProps = {
   options: SelectOption[];
   loading: boolean;
   error: string | null;
+  executing: boolean;
   onModelChange: (value: string) => void;
   onNewChat: () => void;
   onClose: () => void;
@@ -18,6 +19,7 @@ export function AgentHeader({
   options,
   loading,
   error,
+  executing,
   onModelChange,
   onNewChat,
   onClose,
@@ -51,8 +53,9 @@ export function AgentHeader({
           variant="ghost"
           size="sm"
           icon
-          title="新对话"
+          title={executing ? "执行中，无法开始新对话" : "新对话"}
           aria-label="新对话"
+          disabled={executing}
           onClick={onNewChat}
         >
           <Icon name="plus" size={15} />

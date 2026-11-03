@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useReactFlow } from "@xyflow/react";
 import { useAiModels } from "../../lib/ai/useModels";
 import { MOCK_MODEL_ID, requestAgentChat } from "../../lib/ai/agent/client";
@@ -6,6 +6,7 @@ import { buildAgentContext, buildChatMessages } from "../../lib/ai/agent/context
 import { executePlan } from "../../lib/ai/agent/executor";
 import { runMockAgent } from "../../lib/ai/agent/mockAgent";
 import { describeCommand } from "../../lib/ai/agent/tools";
+import { validatePlan } from "../../lib/ai/agent/validate";
 import type { AgentChatResponse, AgentMessage } from "../../lib/ai/agent/types";
 import { byId, nodeRect } from "../../lib/geometry";
 import {
@@ -44,7 +45,31 @@ export function AgentPanel() {
   const { screenToFlowPosition, setCenter, getZoom } = useReactFlow();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const requestRef = useRef(0);
+  const abortRef = useRef<AbortController | null>(null);
   const [draft, setDraft] = useState({ text: "", version: 0 });
+
+  const cancelInflight = useCallback(() => {
+    requestRef.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+  }, []);
+
+  const close = useCallback(() => {
+    cancelInflight();
+    if (useAgentStore.getState().status === "planning") setStatus("idle");
+    setAgentOpen(false);
+  }, [cancelInflight, setAgentOpen, setStatus]);
+
+  // A closed panel must not leave an aborted request stuck in "planning".
+  useEffect(
+    () => () => {
+      cancelInflight();
+      if (useAgentStore.getState().status === "planning") {
+        useAgentStore.getState().setStatus("idle");
+      }
+    },
+    [cancelInflight],
+  );
 
   const options = useMemo(
     () => [
@@ -65,7 +90,7 @@ export function AgentPanel() {
     textareaRef.current?.focus();
     const focus = () => textareaRef.current?.focus();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setAgentOpen(false);
+      if (event.key === "Escape") close();
     };
     window.addEventListener("ic:focus-agent", focus);
     window.addEventListener("keydown", onKeyDown);
@@ -73,7 +98,7 @@ export function AgentPanel() {
       window.removeEventListener("ic:focus-agent", focus);
       window.removeEventListener("keydown", onKeyDown);
     };
-  }, [setAgentOpen]);
+  }, [close]);
 
   const appendError = (message: string) => {
     addMessage(
@@ -87,16 +112,26 @@ export function AgentPanel() {
 
   const applyResponse = (response: AgentChatResponse) => {
     if (response.kind === "plan") {
+      const validation = validatePlan(
+        {
+          summary: response.summary,
+          commands: response.commands,
+          ...(response.clarification ? { clarification: response.clarification } : {}),
+        },
+        useCanvasStore.getState().nodes,
+      );
+      if (!validation.ok) {
+        appendError(
+          `模型返回的计划未通过校验，未执行：${validation.errors.slice(0, 3).join("；")}`,
+        );
+        return;
+      }
       addMessage(
         createAgentMessage({
           role: "assistant",
           kind: "plan",
           content: response.message,
-          plan: {
-            summary: response.summary,
-            commands: response.commands,
-            ...(response.clarification ? { clarification: response.clarification } : {}),
-          },
+          plan: validation.plan,
           planStatus: "pending",
         }),
       );
@@ -131,6 +166,8 @@ export function AgentPanel() {
     );
     setStatus("planning");
     const requestId = ++requestRef.current;
+    const controller = new AbortController();
+    abortRef.current = controller;
 
     try {
       const canvas = useCanvasStore.getState();
@@ -142,11 +179,14 @@ export function AgentPanel() {
       const response =
         modelId === MOCK_MODEL_ID
           ? await delay(280).then(() => runMockAgent(text, context))
-          : await requestAgentChat({
-              modelId,
-              messages: buildChatMessages(useAgentStore.getState().messages),
-              context,
-            });
+          : await requestAgentChat(
+              {
+                modelId,
+                messages: buildChatMessages(useAgentStore.getState().messages),
+                context,
+              },
+              controller.signal,
+            );
       if (requestId !== requestRef.current) return;
       applyResponse(response);
     } catch (reason) {
@@ -154,6 +194,7 @@ export function AgentPanel() {
       setDraft((current) => ({ text, version: current.version + 1 }));
       appendError(reason instanceof Error ? reason.message : "Agent 请求失败，请重试。");
     } finally {
+      if (abortRef.current === controller) abortRef.current = null;
       if (requestId === requestRef.current) setStatus("idle");
     }
   };
@@ -193,6 +234,9 @@ export function AgentPanel() {
       updateMessage(message.id, {
         planStatus: "done",
         affectedNodeIds: result.affectedNodeIds,
+        ...(result.historyRevision !== undefined
+          ? { historyRevision: result.historyRevision }
+          : {}),
       });
       addMessage(
         createAgentMessage({
@@ -202,6 +246,9 @@ export function AgentPanel() {
             .map((command) => `· ${describeCommand(command)}`)
             .join("\n")}`,
           affectedNodeIds: result.affectedNodeIds,
+          ...(result.historyRevision !== undefined
+            ? { historyRevision: result.historyRevision }
+            : {}),
         }),
       );
     } catch (reason) {
@@ -222,14 +269,21 @@ export function AgentPanel() {
   };
 
   const undo = (message: AgentMessage) => {
-    useCanvasStore.getState().undo();
+    if (message.undone === true) return;
+    const state = useCanvasStore.getState();
+    if (
+      message.historyRevision === undefined ||
+      message.historyRevision !== state.historyRevision
+    ) {
+      return;
+    }
+    state.undo();
     updateMessage(message.id, { undone: true });
   };
 
-  const close = () => setAgentOpen(false);
-
   const newChat = () => {
-    requestRef.current += 1;
+    if (useAgentStore.getState().status === "executing") return;
+    cancelInflight();
     clear();
   };
 
@@ -238,15 +292,16 @@ export function AgentPanel() {
       <div className="agent-backdrop" aria-hidden="true" onClick={close} />
       <aside className="agent-panel" aria-label="AI Agent">
         <AgentHeader
-        modelId={modelId}
-        options={options}
-        loading={loading}
-        error={error}
-        onModelChange={setModelId}
-        onNewChat={newChat}
-        onClose={close}
-        onOpenSettings={() => setAiSettingsOpen(true)}
-      />
+          modelId={modelId}
+          options={options}
+          loading={loading}
+          error={error}
+          executing={status === "executing"}
+          onModelChange={setModelId}
+          onNewChat={newChat}
+          onClose={close}
+          onOpenSettings={() => setAiSettingsOpen(true)}
+        />
 
       {messages.length === 0 ? (
         <div className="agent-empty">

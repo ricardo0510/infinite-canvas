@@ -223,7 +223,12 @@ async function main() {
     }
     killTree(chrome);
     killTree(preview);
-    fs.rmSync(profile, { recursive: true, force: true });
+    await wait(300);
+    try {
+      fs.rmSync(profile, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+    } catch {
+      // Chrome may still be releasing its profile; leaving a temp dir is harmless.
+    }
   }
 
   process.exit(0);

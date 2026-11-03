@@ -1,5 +1,6 @@
 import { Button } from "../ui/Button";
 import type { AgentMessage } from "../../lib/ai/agent/types";
+import { useCanvasStore } from "../../store/canvasStore";
 
 type AgentResultCardProps = {
   message: AgentMessage;
@@ -8,6 +9,17 @@ type AgentResultCardProps = {
 
 export function AgentResultCard({ message, onUndo }: AgentResultCardProps) {
   const affected = message.affectedNodeIds ?? [];
+  const historyRevision = useCanvasStore((state) => state.historyRevision);
+  const recorded = typeof message.historyRevision === "number";
+  const canUndo =
+    message.undone !== true && recorded && message.historyRevision === historyRevision;
+  const label = message.undone
+    ? "已撤销"
+    : !recorded
+      ? "不可撤销"
+      : !canUndo
+        ? "已失效"
+        : "撤销";
 
   return (
     <div className="agent-result">
@@ -23,9 +35,16 @@ export function AgentResultCard({ message, onUndo }: AgentResultCardProps) {
           variant="ghost"
           size="xs"
           onClick={onUndo}
-          disabled={message.undone === true}
+          disabled={!canUndo}
+          title={
+            !canUndo && !message.undone
+              ? recorded
+                ? "画布已有新的修改，无法只撤销这一步"
+                : "这次执行没有产生可撤销的修改"
+              : undefined
+          }
         >
-          {message.undone ? "已撤销" : "撤销"}
+          {label}
         </Button>
       </div>
     </div>

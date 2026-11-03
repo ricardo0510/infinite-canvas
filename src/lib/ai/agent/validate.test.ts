@@ -121,6 +121,18 @@ describe("validatePlan", () => {
     ).toBe(false);
   });
 
+  it("rejects malformed command fields before they reach the plan card", () => {
+    const result = validatePlan(
+      {
+        summary: "坏字段",
+        commands: [{ op: "delete", nodeIds: "oops" }],
+      },
+      nodes,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join(" ")).toContain("节点列表无效");
+  });
+
   it("rejects unknown templates and non-group ungroup", () => {
     expect(
       validatePlan(

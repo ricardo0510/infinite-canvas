@@ -282,7 +282,10 @@ type CanvasState = {
   clipboard: CanvasSnapshot | null;
   viewport: Viewport | null;
   batching: boolean;
-  runBatch: (fn: () => void | Promise<void>) => Promise<void>;
+  /** Increments whenever the undo/redo history changes. */
+  historyRevision: number;
+  /** Runs a group of changes as one history step. Resolves whether a step was recorded. */
+  runBatch: (fn: () => void | Promise<void>) => Promise<boolean>;
   onNodesChange: (changes: NodeChange<CanvasNode>[]) => void;
   onEdgesChange: (changes: EdgeChange<CanvasEdge>[]) => void;
   onConnect: (connection: Connection) => void;
@@ -347,6 +350,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
   clipboard: null,
   viewport: initial.viewport ?? null,
   batching: false,
+  historyRevision: 0,
 
   onNodesChange: (changes) => {
     if (changes.some((change) => change.type === "remove")) get().commit();
@@ -426,13 +430,14 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     set({
       past: [...past.slice(-(HISTORY_LIMIT - 1)), { version: SCHEMA_VERSION, nodes, edges }],
       future: [],
+      historyRevision: get().historyRevision + 1,
     });
   },
 
   runBatch: async (fn) => {
     if (get().batching) {
       await fn();
-      return;
+      return false;
     }
     const { nodes, edges } = get();
     const before: CanvasSnapshot = { version: SCHEMA_VERSION, nodes, edges };
@@ -445,11 +450,13 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
     }
     set({ batching: false });
     const after = get();
-    if (after.nodes === before.nodes && after.edges === before.edges) return;
+    if (after.nodes === before.nodes && after.edges === before.edges) return false;
     set({
       past: [...after.past.slice(-(HISTORY_LIMIT - 1)), before],
       future: [],
+      historyRevision: after.historyRevision + 1,
     });
+    return true;
   },
 
   addNode: (kind, position) => {
@@ -713,6 +720,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       edges: previous.edges,
       past: past.slice(0, -1),
       future: [{ version: SCHEMA_VERSION, nodes, edges }, ...future].slice(0, HISTORY_LIMIT),
+      historyRevision: get().historyRevision + 1,
     });
   },
 
@@ -725,6 +733,7 @@ export const useCanvasStore = create<CanvasState>((set, get) => ({
       edges: next.edges,
       past: [...past, { version: SCHEMA_VERSION, nodes, edges }].slice(-HISTORY_LIMIT),
       future: future.slice(1),
+      historyRevision: get().historyRevision + 1,
     });
   },
 

@@ -68,34 +68,123 @@ export const AGENT_SYSTEM_PROMPT = `你是「无限画布」里的画布助手�
 - 用户只是提问时返回 reply，不要创建计划。
 - 用户要求整理成流程图时，通常使用 align(left) + autoLayout + select。`;
 
-export function buildAgentUserPrompt(dto: AgentChatDto): string {
-  const context = dto.context;
-  let contextJson = JSON.stringify(context);
-  if (contextJson.length > MAX_CONTEXT_CHARS) {
-    contextJson = JSON.stringify({
+type PromptContext = AgentChatDto["context"];
+type PromptMessages = AgentChatDto["messages"];
+
+const CONTEXT_HEADER = "【当前画布上下文】\n";
+const CONVERSATION_HEADER = "\n\n【对话记录】\n";
+const TRUNCATED_NOTE = "\n（上下文已截断，只包含部分节点）";
+const PROMPT_INSTRUCTION = "请根据最后一条用户消息，输出约定格式的 JSON。";
+const MIN_CONVERSATION_CHARS = 4_000;
+
+function serializeContext(
+  context: PromptContext,
+  textLimit: number | undefined,
+  maxNodes: number,
+): { json: string; truncated: boolean } {
+  const nodes = context.nodes.slice(0, maxNodes).map((node) => ({
+    ...node,
+    ...(textLimit === undefined ? {} : { text: (node.text ?? "").slice(0, textLimit) }),
+  }));
+  const included = new Set(nodes.map((node) => node.id));
+  const truncated = context.truncated === true || nodes.length < context.nodes.length;
+  return {
+    json: JSON.stringify({
       ...context,
-      nodes: context.nodes.map((node) => ({
-        ...node,
-        text: node.text?.slice(0, 200) ?? "",
-      })),
-    });
+      nodes,
+      edges: context.edges.filter(
+        (edge) => included.has(edge.source) && included.has(edge.target),
+      ),
+      truncated,
+    }),
+    truncated,
+  };
+}
+
+/** Shrinks the context first so the latest conversation is never the part we drop. */
+function fitContext(context: PromptContext): { json: string; truncated: boolean } {
+  const attempts = [
+    { textLimit: undefined, maxNodes: context.nodes.length },
+    { textLimit: 200, maxNodes: context.nodes.length },
+    { textLimit: 120, maxNodes: 100 },
+    { textLimit: 60, maxNodes: 60 },
+    { textLimit: 0, maxNodes: 30 },
+  ];
+  for (const attempt of attempts) {
+    const result = serializeContext(context, attempt.textLimit, attempt.maxNodes);
+    if (result.json.length <= MAX_CONTEXT_CHARS) return result;
   }
 
-  const conversation = dto.messages
-    .map((message) => `${message.role === "user" ? "用户" : "助手"}：${message.content}`)
-    .join("\n");
+  const nodes = context.nodes.slice(0, 30).map((node) => ({
+    id: node.id,
+    type: node.type,
+    title: node.title,
+    parentId: node.parentId,
+  }));
+  const ids = new Set(nodes.map((node) => node.id));
+  return {
+    json: JSON.stringify({
+      selectedNodeIds: context.selectedNodeIds.filter((id) => ids.has(id)),
+      nodes,
+      edges: context.edges.filter((edge) => ids.has(edge.source) && ids.has(edge.target)),
+      groups: context.groups.slice(0, 30),
+      viewport: context.viewport,
+      totalNodes: context.totalNodes,
+      truncated: true,
+    }),
+    truncated: true,
+  };
+}
 
-  const prompt = `【当前画布上下文】
-${contextJson}
+/** Keeps the newest messages and always retains the final user message. */
+function trimConversation(messages: PromptMessages, maxChars: number): string {
+  const lines = messages.map(
+    (message) => `${message.role === "user" ? "用户" : "助手"}：${message.content}`,
+  );
+  const kept: string[] = [];
+  let used = 0;
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const line = lines[index];
+    if (kept.length === 0) {
+      const clipped = line.slice(0, Math.max(1, maxChars));
+      kept.unshift(clipped);
+      used = clipped.length;
+      continue;
+    }
+    if (used + line.length + 1 > maxChars) break;
+    kept.unshift(line);
+    used += line.length + 1;
+  }
+  return kept.join("\n");
+}
 
-【对话记录】
-${conversation}
+export function buildAgentUserPrompt(dto: AgentChatDto): string {
+  const { json, truncated } = fitContext(dto.context);
+  const overhead =
+    CONTEXT_HEADER.length +
+    CONVERSATION_HEADER.length +
+    PROMPT_INSTRUCTION.length +
+    2 +
+    (truncated ? TRUNCATED_NOTE.length : 0);
+  const conversationBudget = Math.max(
+    MIN_CONVERSATION_CHARS,
+    MAX_PROMPT_CHARS - json.length - overhead,
+  );
+  const conversation = trimConversation(dto.messages, conversationBudget);
+  const prompt = `${CONTEXT_HEADER}${json}${truncated ? TRUNCATED_NOTE : ""}${CONVERSATION_HEADER}${conversation}\n\n${PROMPT_INSTRUCTION}`;
 
-请根据最后一条用户消息，输出约定格式的 JSON。`;
+  if (prompt.length <= MAX_PROMPT_CHARS) return prompt;
 
-  return prompt.length > MAX_PROMPT_CHARS
-    ? `${prompt.slice(0, MAX_PROMPT_CHARS)}\n（上下文已截断）`
-    : prompt;
+  // Defensive fallback: trim the context head, never the conversation tail.
+  const suffix = `${CONVERSATION_HEADER}${conversation}\n\n${PROMPT_INSTRUCTION}`;
+  const contextBudget = Math.max(
+    0,
+    MAX_PROMPT_CHARS -
+      suffix.length -
+      CONTEXT_HEADER.length -
+      TRUNCATED_NOTE.length,
+  );
+  return `${CONTEXT_HEADER}${json.slice(0, contextBudget)}${TRUNCATED_NOTE}${suffix}`;
 }
 
 function stripFences(value: string): string {
