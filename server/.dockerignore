@@ -1,0 +1,13 @@
+node_modules
+dist
+uploads
+data
+.adminjs
+.env
+.env.*
+!.env.example
+*.log
+.git
+.gitignore
+Dockerfile
+docker-compose.yml

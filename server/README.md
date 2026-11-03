@@ -11,18 +11,49 @@
 
 后续替换点：S3/OSS、生产级限流。
 
-## 运行
+## Docker Compose 运行（推荐）
 
 ```bash
-# 在仓库根目录
-docker-compose -f server/docker-compose.yml up -d postgres redis
+cd server
+cp .env.example .env
 
+# 首次启动会构建镜像、执行 Prisma 迁移
+docker compose up -d --build
+
+# 首次需要初始化供应商目录和默认用户
+docker compose run --rm seed
+```
+
+服务地址：
+
+- API：`http://localhost:8790/v1`
+- 管理端：`http://localhost:8791/admin`
+- PostgreSQL：`localhost:5432`（canvas / canvas）
+- Redis：`localhost:6379`
+
+Compose 启动的是 API + 独立 Worker + Admin + PostgreSQL + Redis。前端仍在仓库根目录用 `npm run dev` 启动，Vite 会把 `/v1` 代理到 `http://localhost:8790`。
+
+常用命令：
+
+```bash
+docker compose logs -f api worker
+docker compose restart api worker
+docker compose down          # 停止，保留数据
+docker compose down -v       # 停止并清空数据库/上传卷
+```
+
+## 本机直接运行（不用 Docker）
+
+```bash
 cd server
 cp .env.example .env
 npm install
 npm run prisma:migrate
-npm run dev
+npm run build
+npm start
 ```
+
+> `npm run dev` 使用 tsx，而 tsx/esbuild 不支持 NestJS 需要的 `emitDecoratorMetadata`，会报依赖注入错误；本地开发请使用 `npm run build && npm start`，或改用 `ts-node`。
 
 生产拆分：
 
