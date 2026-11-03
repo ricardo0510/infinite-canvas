@@ -64,9 +64,16 @@ export function AgentPanel() {
   useEffect(() => {
     textareaRef.current?.focus();
     const focus = () => textareaRef.current?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAgentOpen(false);
+    };
     window.addEventListener("ic:focus-agent", focus);
-    return () => window.removeEventListener("ic:focus-agent", focus);
-  }, []);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("ic:focus-agent", focus);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [setAgentOpen]);
 
   const appendError = (message: string) => {
     addMessage(
@@ -227,8 +234,10 @@ export function AgentPanel() {
   };
 
   return (
-    <aside className="agent-panel" aria-label="AI Agent">
-      <AgentHeader
+    <>
+      <div className="agent-backdrop" aria-hidden="true" onClick={close} />
+      <aside className="agent-panel" aria-label="AI Agent">
+        <AgentHeader
         modelId={modelId}
         options={options}
         loading={loading}
@@ -297,6 +306,7 @@ export function AgentPanel() {
         initialValue={draft.text}
         onSend={(text) => void send(text)}
       />
-    </aside>
+      </aside>
+    </>
   );
 }

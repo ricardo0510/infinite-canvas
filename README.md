@@ -26,6 +26,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
 - AI generation: text, image and video nodes with model selection, prompts, references from upstream nodes and task recovery
+- AI Agent side panel: multi-turn canvas chat, whitelisted tools, confirmable plans, one-step undo, and an offline mock model
 - Right-click context menu: add nodes, duplicate, layer order, group, delete
 - One-click auto layout (Dagre, loaded on demand)
 - Undo/redo, copy/paste, duplicate
@@ -45,6 +46,17 @@ VITE_AI_TOKEN=
 ```
 
 工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。多用户部署用 `cd server && npm run token:create -- --user <id>` 为每个用户生成独立令牌，配置 `DEV_ALLOW_ANONYMOUS=false` 关闭匿名访问。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
+
+## AI Agent
+
+右侧 Agent 面板（工具栏 sparkles 按钮或 `Ctrl/Cmd + K`）把自然语言变成画布操作。模型只负责输出计划和 JSON，前端负责白名单校验、批量执行和撤销；任何修改都要先点“执行”。
+
+- 选择“本地演示（离线规则）”可不开模型直接体验：整理流程图、新建看板、查找空文本节点、对齐/分布/分组/删除等。
+- 接入真实文本模型时，先在 AI 设置里绑定供应商 Key 并启用模型，再在面板顶部选择它。
+- 服务端接口：`POST /v1/agent/chat`，使用当前用户的 BYOK 文本模型；服务端不执行画布动作。
+- 对话内容与压缩后的画布上下文会发送到所选模型供应商；会话只保存在当前浏览器 `sessionStorage`。
+
+方案与边界见 [docs/ai-agent-development-plan.md](./docs/ai-agent-development-plan.md)。
 
 ## Run
 
@@ -72,9 +84,10 @@ npm run dev:admin  # http://localhost:8791/admin
 ## Quality
 
 ```bash
-npm run typecheck  # tsc -b
-npm run lint       # oxlint
-npm test           # vitest run
+npm run typecheck         # tsc -b
+npm run lint              # oxlint
+npm test                  # vitest run
+npm run test:e2e:agent    # headless Chrome smoke test for the agent panel
 ```
 
 CI runs typecheck, lint, unit tests, and a production build on every push and pull request.
@@ -112,6 +125,7 @@ Headless Chrome, 1440×900, production build.
 | `Ctrl/Cmd + S` | Save to `localStorage` |
 | `Delete` / `Backspace` | Delete selected nodes |
 | `/` | Command palette |
+| `Ctrl/Cmd + K` | Open and focus the AI Agent |
 | `?` | Keyboard shortcuts |
 
 Double-click the canvas to add a text node, right-click for the context menu, and drag the left/right handles to connect nodes.
@@ -134,6 +148,7 @@ src/
     KeyboardHelp.tsx      # shortcut cheatsheet
     EmptyState.tsx        # onboarding for an empty canvas
     ai/                   # AI panel, model select, settings
+    agent/                # right-side Agent panel, plan/result cards
     nodes/                # Text, Image, Video, Group
     edges/                # Smoothstep edge with hover delete
   hooks/
@@ -142,6 +157,7 @@ src/
     useResolvedImageSrc.ts # IndexedDB ref → object URL
   lib/
     ai/                   # API client, providers, task manager
+    ai/agent/             # agent types, context, mock, validation, executor
     storage.ts            # schema v5, validation, migration, import/export
     geometry.ts           # sizes, absolute rects, descendants
     guides.ts             # smart snapping + alignment guide math
@@ -152,8 +168,9 @@ src/
     stress.ts             # deterministic canvas used by the benchmark
     layout.ts             # Dagre (dynamic import)
   store/
-    canvasStore.ts        # nodes/edges/history/clipboard
-    uiStore.ts            # snap toggle, help panel, AI panel
+    canvasStore.ts        # nodes/edges/history/clipboard/batch
+    uiStore.ts            # snap toggle, help panel, AI panel, Agent drawer
+    agentStore.ts         # Agent messages/status/model, session persistence
 ```
 
 Data model: `{ version: 5, nodes, edges, viewport? }`. Older `v1` through `v4` snapshots are migrated on load; unknown fields and unsafe image URLs are dropped. Image sources are `idb:<id>` refs (blob stored in IndexedDB), `https:`, or legacy `data:image/` URLs. Video nodes store `https:` sources and optional posters.

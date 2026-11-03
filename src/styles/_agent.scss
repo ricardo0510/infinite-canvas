@@ -398,7 +398,19 @@
 
 /* ---------- Narrow screens: right drawer ---------- */
 
+.agent-backdrop {
+  display: none;
+}
+
 @media (max-width: 1199px) {
+  .agent-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: calc(var(--z-inspector) - 1);
+    display: block;
+    background: rgb(20 20 18 / 18%);
+  }
+
   .agent-panel {
     position: fixed;
     top: 0;
