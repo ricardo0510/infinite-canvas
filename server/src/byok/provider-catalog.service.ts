@@ -121,7 +121,20 @@ const DEFAULT_MODES: Record<ModelKind, string[]> = {
   text: [],
   image: ["textToImage", "imageToImage"],
   video: ["textToVideo", "imageToVideo", "firstLastFrame", "referenceVideo"],
+  audio: ["textToSpeech"],
 };
+
+function voiceList(value: unknown): { key: string; label: string }[] | null {
+  if (!Array.isArray(value)) return null;
+  const items = value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const record = item as Record<string, unknown>;
+    const key = typeof record.key === "string" ? record.key.trim() : "";
+    const label = typeof record.label === "string" ? record.label.trim() : "";
+    return key ? [{ key, label: label || key }] : [];
+  });
+  return items.length > 0 ? items : null;
+}
 
 function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
   const kind = normalizeKind(row.kind);
@@ -129,7 +142,7 @@ function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
   const aspectRatios = stringList(capabilities.aspectRatios);
   const resolutions = stringList(capabilities.resolutions);
   const modes = stringList(capabilities.modes) ?? DEFAULT_MODES[kind];
-  const output: AiModel["output"] = { image: null, video: null };
+  const output: AiModel["output"] = { image: null, video: null, audio: null };
 
   if (kind === "image" && aspectRatios && resolutions) {
     output.image = {
@@ -145,6 +158,14 @@ function toAiModel(row: ProviderModel & { provider: ProviderConfig }): AiModel {
       minDuration: integer(capabilities.minDuration, 5),
       maxDuration: integer(capabilities.maxDuration, 10),
       supportsAudio: booleanValue(capabilities.supportsAudio, false),
+    };
+  }
+  if (kind === "audio") {
+    output.audio = {
+      formats: stringList(capabilities.formats) ?? ["wav"],
+      voices: voiceList(capabilities.voices) ?? [],
+      supportsInstructions: booleanValue(capabilities.supportsInstructions, true),
+      maxInputLength: integer(capabilities.maxInputLength, 2000),
     };
   }
 

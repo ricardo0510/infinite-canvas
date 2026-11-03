@@ -67,9 +67,19 @@ export function defaultParams(model: AiModel | undefined): {
   generateAudio?: boolean;
   watermark?: boolean;
   negativePrompt?: string;
+  instructions?: string;
+  voice?: string;
+  format?: string;
   extra?: Record<string, string | number | boolean>;
 } {
   if (!model) return { watermark: true };
+  if (model.kind === "audio") {
+    const audio = model.output.audio;
+    return {
+      ...(audio?.voices[0]?.key ? { voice: audio.voices[0].key } : {}),
+      ...(audio?.formats[0] ? { format: audio.formats[0] } : {}),
+    };
+  }
   if (model.kind === "image") {
     const image = model.output.image;
     return {

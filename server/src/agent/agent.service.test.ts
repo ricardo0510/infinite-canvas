@@ -42,7 +42,7 @@ function createService(text: string) {
         kind: "text",
         modes: [],
         limits: { maxPromptLength: 8000, maxImages: 0, maxVideos: 0 },
-        output: { image: null, video: null },
+        output: { image: null, video: null, audio: null },
       },
       providerId: "test",
       providerModel: "text-model",

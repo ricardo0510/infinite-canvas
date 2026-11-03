@@ -36,6 +36,13 @@ export type VideoOutput = {
   supportsAudio: boolean;
 };
 
+export type AudioOutput = {
+  formats: string[];
+  maxInputLength: number;
+  supportsInstructions: boolean;
+  voices: { key: string; label: string }[];
+};
+
 export type AiModel = {
   id: string;
   name: string;
@@ -51,6 +58,7 @@ export type AiModel = {
   output: {
     image: ImageOutput | null;
     video: VideoOutput | null;
+    audio: AudioOutput | null;
   };
   params?: {
     qualityTiers?: { key: string; label: string }[];

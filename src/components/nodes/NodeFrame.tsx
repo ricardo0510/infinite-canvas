@@ -9,7 +9,7 @@ type NodeFrameProps = {
   title: string;
   defaultTitle: string;
   accent: string;
-  kind: "text" | "image" | "video";
+  kind: "text" | "image" | "video" | "audio";
   selected: boolean;
   running: boolean;
   loadingLabel?: string;

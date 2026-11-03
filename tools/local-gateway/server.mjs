@@ -6,6 +6,7 @@
  *   POST /v1/images/generations
  *   POST /v1/video/submit
  *   POST /v1/video/status
+ *   POST /v1/audio/speech          （Breeze TTS 2，返回 WAV）
  *   GET  /files/<path>            （带 Range，供图片/视频播放）
  *
  * 只依赖 Node 22 内置模块，不需要 npm install。
@@ -15,9 +16,13 @@
  *   COMFY_URL=http://127.0.0.1:8188
  *   COMFY_OUTPUT_DIR=~/ComfyUI/output
  *   PUBLIC_BASE_URL=http://127.0.0.1:8081
+ *   TTS_MODEL=breeze-tts-2
+ *   TTS_SCRIPT=~/BreezeTTS2_Mac_Streaming/breezetts2_mac_fast.py
+ *   TTS_UPSTREAM_URL=            （可选：把 /v1/audio/speech 转发给别的 OpenAI 兼容 TTS 服务）
  */
+import { spawn } from "node:child_process";
 import { createReadStream } from "node:fs";
-import { stat } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import http from "node:http";
 import os from "node:os";
 import path from "node:path";
@@ -51,6 +56,16 @@ const VIDEO_UNET = process.env.VIDEO_UNET ?? "wan2.1_t2v_1.3B_fp16.safetensors";
 const VIDEO_TEXT_ENCODER =
   process.env.VIDEO_TEXT_ENCODER ?? "umt5_xxl_fp8_e4m3fn_scaled.safetensors";
 const VIDEO_VAE = process.env.VIDEO_VAE ?? "wan_2.1_vae.safetensors";
+
+const TTS_MODEL = process.env.TTS_MODEL ?? "breeze-tts-2";
+const TTS_SCRIPT = path.resolve(
+  process.env.TTS_SCRIPT ??
+    path.join(os.homedir(), "BreezeTTS2_Mac_Streaming", "breezetts2_mac_fast.py"),
+);
+const TTS_UV = process.env.TTS_UV ?? "uv";
+const TTS_PYTHON = process.env.TTS_PYTHON ?? "3.12";
+const TTS_TIMEOUT_MS = Number(process.env.TTS_TIMEOUT_MS ?? 300000);
+const TTS_UPSTREAM_URL = (process.env.TTS_UPSTREAM_URL ?? "").replace(/\/+$/, "");
 
 const jobs = new Map();
 
@@ -444,6 +459,88 @@ async function videoStatus(requestId) {
   };
 }
 
+function runCommand(command, args, { cwd, timeoutMs = TTS_TIMEOUT_MS } = {}) {
+  return new Promise((resolve, reject) => {
+    const child = spawn(command, args, {
+      cwd,
+      env: process.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    const timer = setTimeout(() => {
+      child.kill("SIGKILL");
+      reject(new Error(`TTS 生成超时（${Math.round(timeoutMs / 1000)}s）`));
+    }, timeoutMs);
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk;
+    });
+    child.on("error", (error) => {
+      clearTimeout(timer);
+      reject(error);
+    });
+    child.on("close", (code) => {
+      clearTimeout(timer);
+      if (code === 0) {
+        resolve({ stdout, stderr });
+        return;
+      }
+      const detail = (stderr || stdout).trim().slice(-800);
+      reject(new Error(`TTS 进程退出码 ${code}${detail ? `：${detail}` : ""}`));
+    });
+  });
+}
+
+async function synthesizeSpeech(body) {
+  const input = typeof body.input === "string" ? body.input.trim() : "";
+  if (!input) throw new Error("input 不能为空");
+  const instruct = typeof body.instruct === "string" ? body.instruct.trim() : "";
+
+  if (TTS_UPSTREAM_URL) {
+    const response = await fetch(`${TTS_UPSTREAM_URL}/audio/speech`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, model: body.model || TTS_MODEL }),
+      signal: AbortSignal.timeout(TTS_TIMEOUT_MS),
+    });
+    if (!response.ok) {
+      const detail = (await response.text().catch(() => "")).slice(0, 300);
+      throw new Error(`上游 TTS 失败（HTTP ${response.status}）${detail ? `：${detail}` : ""}`);
+    }
+    return {
+      buffer: Buffer.from(await response.arrayBuffer()),
+      mimeType: response.headers.get("content-type") ?? "audio/wav",
+    };
+  }
+
+  const dir = await mkdtemp(path.join(os.tmpdir(), "breeze-tts-"));
+  try {
+    const output = path.join(dir, "speech");
+    const args = [
+      "run",
+      "--python",
+      TTS_PYTHON,
+      TTS_SCRIPT,
+      "--no-play",
+      "--runs",
+      "1",
+      "--text",
+      input,
+      "--output",
+      output,
+    ];
+    if (instruct) args.push("--instruct", instruct);
+    await runCommand(TTS_UV, args, { cwd: path.dirname(TTS_SCRIPT) });
+    const buffer = await readFile(`${output}_1.wav`);
+    return { buffer, mimeType: "audio/wav" };
+  } finally {
+    await rm(dir, { recursive: true, force: true }).catch(() => undefined);
+  }
+}
+
 const MIME = {
   ".png": "image/png",
   ".jpg": "image/jpeg",
@@ -517,6 +614,7 @@ const server = http.createServer(async (req, res) => {
         data: [
           ...imageModels.map((id) => ({ id, object: "model", owned_by: "local" })),
           { id: VIDEO_MODEL, object: "model", owned_by: "local" },
+          { id: TTS_MODEL, object: "model", owned_by: "local" },
         ],
       });
       return;
@@ -542,6 +640,18 @@ const server = http.createServer(async (req, res) => {
     if (req.method === "POST" && url.pathname === "/v1/video/status") {
       const body = await readJson(req);
       json(res, 200, await videoStatus(String(body.requestId ?? "")));
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/v1/audio/speech") {
+      const body = await readJson(req);
+      const { buffer, mimeType } = await synthesizeSpeech(body);
+      res.writeHead(200, {
+        "Content-Type": mimeType,
+        "Content-Length": buffer.byteLength,
+        "Access-Control-Allow-Origin": "*",
+      });
+      res.end(buffer);
       return;
     }
 

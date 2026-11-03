@@ -34,6 +34,7 @@ import { EmptyState } from "./EmptyState";
 import { MediaPreviewModal } from "./MediaPreviewModal";
 import { CanvasEdge } from "./edges/CanvasEdge";
 import { SelectionToolbar } from "./SelectionToolbar";
+import { AudioNode } from "./nodes/AudioNode";
 import { GroupNode } from "./nodes/GroupNode";
 import { ImageNode } from "./nodes/ImageNode";
 import { TextNode } from "./nodes/TextNode";
@@ -50,6 +51,7 @@ const nodeTypes = {
   text: TextNode,
   image: ImageNode,
   video: VideoNode,
+  audio: AudioNode,
   group: GroupNode,
 } satisfies NodeTypes;
 
@@ -142,7 +144,7 @@ export function FlowCanvas() {
   const handleNodeClick = useCallback(
     (_event: MouseEvent, node: CanvasNode) => {
       raiseNode(node.id);
-      if (node.type !== "text" && node.type !== "image" && node.type !== "video") {
+      if (node.type === "group") {
         setAiPanelNode(null);
         return;
       }
@@ -288,6 +290,7 @@ export function FlowCanvas() {
             nodeColor={(node) => {
               if (node.type === "group") return "#d4d4cc";
               if (node.type === "video") return NOTE_COLORS.amber;
+              if (node.type === "audio") return NOTE_COLORS.violet;
               const color = (node.data as { color?: NoteColor } | undefined)?.color;
               return color ? NOTE_COLORS[color] : DEFAULT_EDGE_STROKE;
             }}

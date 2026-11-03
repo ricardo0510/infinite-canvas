@@ -82,6 +82,21 @@ export function buildImageBody(input: GenerateInput): Record<string, unknown> {
   };
 }
 
+export function buildAudioBody(input: GenerateInput): Record<string, unknown> {
+  const { params } = input;
+  return {
+    modelId: input.modelId,
+    mode: "textToSpeech",
+    prompt: input.prompt,
+    params: {
+      ...(params.instructions ? { instructions: params.instructions } : {}),
+      ...(params.voice ? { voice: params.voice } : {}),
+      ...(params.format ? { format: params.format } : {}),
+    },
+    clientRequestId: input.clientRequestId,
+  };
+}
+
 export function buildVideoBody(input: GenerateInput): Record<string, unknown> {
   return {
     modelId: input.modelId,

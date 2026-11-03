@@ -120,6 +120,14 @@ function createNode(kind: NodeKind, position: XYPosition): CanvasNode {
       };
       return node;
     }
+    case "audio": {
+      const node: CanvasNode = {
+        ...base,
+        type: "audio",
+        data: { title: "音频", src: "", mimeType: "", duration: 0, alt: "" },
+      };
+      return node;
+    }
     default: {
       const node: CanvasNode = {
         ...base,

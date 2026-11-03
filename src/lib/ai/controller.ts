@@ -32,6 +32,7 @@ export function kindOfNode(node: CanvasNode | undefined): GenerationKind | null 
   if (node?.type === "text") return "text";
   if (node?.type === "image") return "image";
   if (node?.type === "video") return "video";
+  if (node?.type === "audio") return "audio";
   return null;
 }
 
@@ -110,6 +111,14 @@ function finishGeneration(nodeId: string, results: GenerationResultItem[]): void
     const image = results.find((item): item is Extract<GenerationResultItem, { kind: "image" }> => item.kind === "image");
     if (image) {
       display.src = image.url;
+      display.alt = current.prompt.slice(0, 80);
+    }
+  } else if (kind === "audio") {
+    const audio = results.find((item): item is Extract<GenerationResultItem, { kind: "audio" }> => item.kind === "audio");
+    if (audio) {
+      display.src = audio.url;
+      display.mimeType = audio.mimeType ?? "";
+      display.duration = audio.duration ?? 0;
       display.alt = current.prompt.slice(0, 80);
     }
   } else {
@@ -240,7 +249,9 @@ export async function generateNode(nodeId: string): Promise<void> {
 
   const upstream = collectUpstream(nodeId, state.nodes, state.edges);
   let mode = current.mode;
-  if (kind === "image") {
+  if (kind === "audio") {
+    mode = "textToSpeech";
+  } else if (kind === "image") {
     const hasImage = upstream.references.some((item) => item.kind === "image");
     mode = hasImage ? "imageToImage" : "textToImage";
   } else if (kind === "video") {
@@ -342,6 +353,12 @@ export function activateResult(nodeId: string, resultId: string): void {
   if (result.kind === "video") {
     display.src = result.url;
     display.thumbnailUrl = result.thumbnailUrl ?? "";
+    display.alt = current.prompt.slice(0, 80);
+  }
+  if (result.kind === "audio") {
+    display.src = result.url;
+    display.mimeType = result.mimeType ?? "";
+    display.duration = result.duration ?? 0;
     display.alt = current.prompt.slice(0, 80);
   }
   useCanvasStore.getState().updateNodeData(nodeId, display);

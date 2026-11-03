@@ -2,6 +2,7 @@ import type { MarkerType } from "@xyflow/react";
 import { DEFAULT_SIZE } from "./geometry";
 import { blobToDataUrl, getImageBlob, isIdbImageRef } from "./imageStore";
 import type {
+  AudioData,
   CanvasEdge,
   CanvasNode,
   CanvasSnapshot,
@@ -29,9 +30,9 @@ const MAX_GENERATION_PROMPT = 20_000;
 const MAX_ERROR_MESSAGE = 500;
 const MAX_INLINE_EXPORT_BYTES = 8 * 1024 * 1024;
 
-const NODE_KINDS: NodeKind[] = ["text", "image", "video", "group"];
+const NODE_KINDS: NodeKind[] = ["text", "image", "video", "audio", "group"];
 const COLORS: NoteColor[] = ["violet", "cyan", "amber", "emerald"];
-const GENERATION_KINDS: GenerationKind[] = ["text", "image", "video"];
+const GENERATION_KINDS: GenerationKind[] = ["text", "image", "video", "audio"];
 const GENERATION_STATUSES: GenerationStatus[] = [
   "idle",
   "queued",
@@ -116,13 +117,24 @@ export function sanitizeVideoSrc(value: unknown): string {
   return "";
 }
 
-function sanitizeMediaUrl(value: unknown, mediaKind: "image" | "video"): string {
+export function sanitizeAudioSrc(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const src = value.trim();
+  if (/^https:\/\//i.test(src) || isLocalHttpUrl(src)) return src;
+  if (/^blob:/i.test(src)) return src;
+  if (/^data:audio\//i.test(src)) return src;
+  if (IDB_REF.test(src)) return src;
+  return "";
+}
+
+function sanitizeMediaUrl(value: unknown, mediaKind: "image" | "video" | "audio"): string {
   const src = typeof value === "string" ? value.trim() : "";
   if (!src) return "";
   if (/^https:\/\//i.test(src) || isLocalHttpUrl(src)) return src;
   if (IDB_REF.test(src)) return src;
   if (mediaKind === "image" && /^data:image\//i.test(src)) return src;
   if (mediaKind === "video" && /^data:video\//i.test(src)) return src;
+  if (mediaKind === "audio" && /^data:audio\//i.test(src)) return src;
   return "";
 }
 
@@ -161,6 +173,12 @@ function sanitizeParams(value: unknown): GenerationParams | undefined {
   if (maxOutputTokens !== undefined) params.maxOutputTokens = Math.min(32_768, Math.max(1, Math.round(maxOutputTokens)));
   const systemPrompt = text(value.systemPrompt);
   if (systemPrompt) params.systemPrompt = systemPrompt.slice(0, 8000);
+  const instructions = text(value.instructions);
+  if (instructions) params.instructions = instructions.slice(0, 2000);
+  const voice = text(value.voice).trim();
+  if (voice) params.voice = voice.slice(0, 100);
+  const format = text(value.format).trim();
+  if (format) params.format = format.slice(0, 20);
   if (isRecord(value.extra)) {
     const extra: Record<string, string | number | boolean> = {};
     for (const [key, item] of Object.entries(value.extra)) {
@@ -177,7 +195,14 @@ function sanitizeParams(value: unknown): GenerationParams | undefined {
 function sanitizeResult(value: unknown): GenerationResultItem | null {
   if (!isRecord(value)) return null;
   const itemKind = value.kind;
-  if (itemKind !== "text" && itemKind !== "image" && itemKind !== "video") return null;
+  if (
+    itemKind !== "text" &&
+    itemKind !== "image" &&
+    itemKind !== "video" &&
+    itemKind !== "audio"
+  ) {
+    return null;
+  }
   const id = safeId(value.id);
   if (!id) return null;
   const modelId = text(value.modelId).slice(0, 200);
@@ -220,6 +245,21 @@ function sanitizeResult(value: unknown): GenerationResultItem | null {
     };
   }
   const duration = optionalNumber(value.duration);
+  if (itemKind === "audio") {
+    const mimeType = text(value.mimeType).slice(0, 100);
+    const voice = text(value.voice).slice(0, 100);
+    return {
+      id,
+      kind: "audio",
+      url,
+      modelId,
+      createdAt,
+      ...(mimeType ? { mimeType } : {}),
+      ...(duration !== undefined ? { duration } : {}),
+      ...(voice ? { voice } : {}),
+      ...(assetId ? { assetId } : {}),
+    };
+  }
   return {
     id,
     kind: "video",
@@ -301,7 +341,7 @@ function edgeStyle(value: unknown): CanvasEdge["style"] {
 function nodeData(
   type: NodeKind,
   value: unknown,
-): TextData | ImageData | VideoData | GroupData {
+): TextData | ImageData | VideoData | AudioData | GroupData {
   const data = isRecord(value) ? value : {};
   const generation = sanitizeGeneration(data.generation);
   switch (type) {
@@ -330,6 +370,18 @@ function nodeData(
         alt: text(data.alt),
         ...(generation ? { generation } : {}),
       };
+    case "audio": {
+      const duration = optionalNumber(data.duration);
+      return {
+        title: text(data.title, "音频"),
+        ...(data.static === true ? { static: true } : {}),
+        src: sanitizeAudioSrc(data.src),
+        mimeType: text(data.mimeType).slice(0, 100),
+        duration: duration !== undefined ? Math.max(0, duration) : 0,
+        alt: text(data.alt),
+        ...(generation ? { generation } : {}),
+      };
+    }
     default:
       return {
         label: text(data.label, "分组"),

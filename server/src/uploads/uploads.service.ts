@@ -14,6 +14,19 @@ const EXTENSIONS: Record<string, string> = {
   "image/gif": "gif",
 };
 
+const AUDIO_EXTENSIONS: Record<string, string> = {
+  "audio/wav": "wav",
+  "audio/x-wav": "wav",
+  "audio/wave": "wav",
+  "audio/mpeg": "mp3",
+  "audio/mp3": "mp3",
+  "audio/ogg": "ogg",
+  "audio/opus": "opus",
+  "audio/aac": "aac",
+  "audio/flac": "flac",
+  "audio/webm": "webm",
+};
+
 @Injectable()
 export class UploadsService {
   private readonly uploadDir: string;
@@ -76,6 +89,36 @@ export class UploadsService {
       size: buffer.byteLength,
       width,
       height,
+      assetId: `asset_${digest.slice(0, 16)}`,
+    };
+  }
+
+  /** 保存上游返回的二进制媒体（目前用于 TTS 音频）。 */
+  async saveBuffer(buffer: Buffer, mimeType: string) {
+    const normalized = mimeType.toLowerCase().split(";")[0].trim();
+    const extension = AUDIO_EXTENSIONS[normalized];
+    if (!extension) {
+      throw new ApiException(20001, `不支持的音频格式：${mimeType}`, 422);
+    }
+    if (buffer.byteLength === 0) {
+      throw new ApiException(20001, "音频内容为空", 422);
+    }
+    if (buffer.byteLength > this.maxBytes) {
+      throw new ApiException(20001, "音频文件超过大小限制", 422);
+    }
+
+    const id = randomUUID();
+    const filename = `${id}.${extension}`;
+    await mkdir(this.uploadDir, { recursive: true });
+    await writeFile(path.join(this.uploadDir, filename), buffer);
+
+    const digest = createHash("sha256").update(buffer).digest("hex");
+
+    return {
+      uploadId: `upl_${id}`,
+      url: `${this.publicBaseUrl}/uploads/${filename}`,
+      mimeType: normalized,
+      size: buffer.byteLength,
       assetId: `asset_${digest.slice(0, 16)}`,
     };
   }

@@ -206,6 +206,20 @@
   text-shadow: 0 1px 6px #000;
 }
 
+.ai-result-audio {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: var(--text-2);
+}
+
+.ai-upstream-icon {
+  display: grid;
+  place-items: center;
+  color: var(--text-2);
+}
+
 /* ---------- Buttons ---------- */
 
 /* ---------- AI settings ---------- */

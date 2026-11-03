@@ -13,7 +13,7 @@ export type PendingTask = {
   progress?: number;
 };
 
-const KINDS: GenerationKind[] = ["text", "image", "video"];
+const KINDS: GenerationKind[] = ["text", "image", "video", "audio"];
 
 function read(): PendingTask[] {
   try {

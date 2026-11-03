@@ -45,6 +45,15 @@ export class TasksController {
     return this.create(user, "video", dto, reply);
   }
 
+  @Post("audio/generations")
+  async createAudio(
+    @CurrentUser() user: AuthUser,
+    @Body() dto: CreateGenerationDto,
+    @Res({ passthrough: true }) reply: FastifyReply,
+  ) {
+    return this.create(user, "audio", dto, reply);
+  }
+
   @Get("tasks/:taskId")
   async getTask(@CurrentUser() user: AuthUser, @Param("taskId") taskId: string) {
     return this.tasks.get(user.id, taskId);

@@ -67,6 +67,7 @@ function CommandPaletteSession() {
       { id: "text", label: "新建文本", group: "添加", keywords: "文字", run: add("text") },
       { id: "image", label: "新建图片", group: "添加", keywords: "图片 上传", run: add("image") },
       { id: "video", label: "新建视频", group: "添加", keywords: "视频 生成", run: add("video") },
+      { id: "audio", label: "新建音频", group: "添加", keywords: "音频 语音 tts 配音", run: add("audio") },
       ...TEMPLATES.map((item) => ({
         id: `template-${item.id}`,
         label: `模板：${item.label}`,

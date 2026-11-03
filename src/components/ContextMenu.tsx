@@ -29,6 +29,7 @@ const ADD_ITEMS: { kind: NodeKind; label: string }[] = [
   { kind: "text", label: "文本" },
   { kind: "image", label: "图片" },
   { kind: "video", label: "视频" },
+  { kind: "audio", label: "音频" },
 ];
 
 export function ContextMenu({ menu, onClose }: ContextMenuProps) {

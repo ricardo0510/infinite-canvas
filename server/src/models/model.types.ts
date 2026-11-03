@@ -1,4 +1,4 @@
-export const MODEL_KINDS = ["text", "image", "video"] as const;
+export const MODEL_KINDS = ["text", "image", "video", "audio"] as const;
 
 export type ModelKind = (typeof MODEL_KINDS)[number];
 
@@ -6,6 +6,7 @@ export const MODEL_KIND_LABELS: Record<ModelKind, string> = {
   text: "文本",
   image: "图片",
   video: "视频",
+  audio: "音频",
 };
 
 export function isModelKind(value: unknown): value is ModelKind {
@@ -24,6 +25,13 @@ export type VideoOutput = {
   minDuration: number;
   maxDuration: number;
   supportsAudio: boolean;
+};
+
+export type AudioOutput = {
+  formats: string[];
+  voices: { key: string; label: string }[];
+  supportsInstructions: boolean;
+  maxInputLength: number;
 };
 
 export type ModelExtraParam = {
@@ -49,6 +57,7 @@ export type AiModel = {
   output: {
     image: ImageOutput | null;
     video: VideoOutput | null;
+    audio: AudioOutput | null;
   };
   params?: {
     qualityTiers?: { key: string; label: string }[];

@@ -25,6 +25,7 @@ function nodeTitle(node: CanvasNode): string {
   if (node.type === "group") return node.data.label || "分组";
   if (node.data.title) return node.data.title;
   if (node.type === "text") return "文本";
+  if (node.type === "audio") return "音频";
   return node.type === "image" ? "图片" : "视频";
 }
 
@@ -47,9 +48,11 @@ function NodeThumb({ node }: { node: CanvasNode }) {
       ? "file-text"
       : node.type === "video"
         ? "play"
-        : node.type === "group"
-          ? "folder"
-          : "image";
+        : node.type === "audio"
+          ? "audio"
+          : node.type === "group"
+            ? "folder"
+            : "image";
 
   return (
     <span className={`sidebar-thumb sidebar-thumb-${node.type}`}>

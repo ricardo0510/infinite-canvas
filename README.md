@@ -9,7 +9,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 ## Features
 
 - Infinite pan/zoom, minimap, controls, fit view
-- Node types: **Text**, **Image**, **Video**, **Group** (sub-flows)
+- Node types: **Text**, **Image**, **Video**, **Audio**, **Group** (sub-flows)
 - Drag a node into a group to join it, drag it out to leave; groups expand to fit
 - Inline editing, accent colors, free resize with persisted sizes
 - Drag, connect, multi-select, box select, snap to grid (8 px)
@@ -26,6 +26,7 @@ See [ROADMAP.md](./ROADMAP.md) for the development plan.
 - Align / distribute / group from the selection toolbar
 - Viewport persistence, zoom presets and minimap toggle in the bottom-left controls
 - AI generation: text, image and video nodes with model selection, prompts, references from upstream nodes and task recovery
+- Audio nodes: Breeze TTS 2 speech generation with emotion/style instructions, inline player and task recovery
 - AI Agent side panel: multi-turn canvas chat, whitelisted tools, confirmable plans, one-step undo, and an offline mock model
 - Right-click context menu: add nodes, duplicate, layer order, group, delete
 - One-click auto layout (Dagre, loaded on demand)
@@ -46,6 +47,37 @@ VITE_AI_TOKEN=
 ```
 
 工具栏的 `AI` 按钮里可以管理供应商 Key 和模型。服务端未配置 `API_TOKEN` 时访问令牌留空；配置了就把同一个值填进 `VITE_AI_TOKEN` 或弹窗里的访问令牌。多用户部署用 `cd server && npm run token:create -- --user <id>` 为每个用户生成独立令牌，配置 `DEV_ALLOW_ANONYMOUS=false` 关闭匿名访问。文本、图片、视频生成都走异步任务和 WebSocket，没有 HTTP 轮询兜底。API contract: [docs/backend-api-plan.md](./docs/backend-api-plan.md); frontend design: [docs/ai-generation-development-plan.md](./docs/ai-generation-development-plan.md).
+
+## Audio generation (Breeze TTS 2)
+
+音频节点通过本地网关接入 [Breeze TTS 2](https://github.com/breezeblue-ai/breeze-tts)，链路和本地图片/视频一致：
+
+```text
+音频节点 → POST /v1/audio/generations → 任务队列 → 网关 /v1/audio/speech → Breeze 脚本生成 WAV → 上传并回填节点
+```
+
+1. 准备 Breeze 运行环境（Apple Silicon，首次需下载约 3 GB 模型）：
+
+   ```bash
+   cd ~/BreezeTTS2_Mac_Streaming && ./tts.sh "你好，这是语音测试。"
+   ```
+
+2. 启动网关（默认读取 `~/BreezeTTS2_Mac_Streaming/breezetts2_mac_fast.py`）：
+
+   ```bash
+   node tools/local-gateway/server.mjs
+   ```
+
+3. 注册本地语音 Provider（`local-audio` / `breeze-tts-2`）并绑定假 Key：
+
+   ```bash
+   bash tools/local-gateway/install.sh
+   ```
+
+4. 在画布中添加「音频节点」，输入台词，可在生成设置里填写「情绪 / 风格」，点击生成；节点内可直接播放、拖动进度条定位。
+
+> 换脚本路径：`TTS_SCRIPT=/path/to/breezetts2_mac_fast.py node tools/local-gateway/server.mjs`。
+> 当后端不在 Docker 中运行（例如 `node dist/main.js`）时，把 `local-audio` 的 `baseUrl` 改成 `http://127.0.0.1:8081/v1`；Docker 部署则保持 `http://host.docker.internal:8081/v1`。
 
 ## AI Agent
 

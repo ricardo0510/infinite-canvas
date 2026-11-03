@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildImageBody, buildTextBody, buildVideoBody, resolveImageMode, resolveVideoMode } from "./payload";
+import { buildAudioBody, buildImageBody, buildTextBody, buildVideoBody, resolveImageMode, resolveVideoMode } from "./payload";
 import type { GenerateInput } from "./types";
 
 function input(overrides: Partial<GenerateInput> = {}): GenerateInput {
@@ -101,6 +101,24 @@ describe("generation payloads", () => {
       modelId: "m1",
       prompt: "a cat",
       params: { temperature: 0.2, maxOutputTokens: 128 },
+      clientRequestId: "n1:req1",
+    });
+  });
+
+  it("builds an audio body with speech instructions", () => {
+    const body = buildAudioBody(
+      input({
+        kind: "audio",
+        mode: undefined,
+        prompt: "你好，世界",
+        params: { instructions: "语速平稳，情绪温暖", voice: "default", format: "wav" },
+      }),
+    );
+    expect(body).toEqual({
+      modelId: "m1",
+      mode: "textToSpeech",
+      prompt: "你好，世界",
+      params: { instructions: "语速平稳，情绪温暖", voice: "default", format: "wav" },
       clientRequestId: "n1:req1",
     });
   });

@@ -41,6 +41,14 @@ function videoOf(node: CanvasNode): string {
   return result?.kind === "video" && result.url ? result.url : "";
 }
 
+function audioOf(node: CanvasNode): string {
+  if (node.type !== "audio") return "";
+  const src = typeof node.data.src === "string" ? node.data.src : "";
+  if (src) return src;
+  const result = activeResult(node);
+  return result?.kind === "audio" && result.url ? result.url : "";
+}
+
 export function collectUpstream(
   nodeId: string,
   nodes: CanvasNode[],
@@ -77,11 +85,12 @@ export function collectUpstream(
 }
 
 export type NodePreview = {
-  kind: "text" | "image" | "video";
+  kind: "text" | "image" | "video" | "audio";
   title: string;
   url?: string;
   poster?: string;
   text?: string;
+  duration?: number;
 };
 
 function previewTitle(node: CanvasNode): string {
@@ -89,6 +98,7 @@ function previewTitle(node: CanvasNode): string {
   if (title) return title;
   if (node.type === "image") return "图片";
   if (node.type === "video") return "视频";
+  if (node.type === "audio") return "音频";
   return "文本";
 }
 
@@ -130,6 +140,10 @@ export function previewOf(node: CanvasNode): NodePreview | null {
       poster: dataThumb || resultThumb,
     };
   }
+  if (node.type === "audio") {
+    const duration = typeof node.data.duration === "number" ? node.data.duration : 0;
+    return { kind: "audio", title, url: audioOf(node), duration };
+  }
   return null;
 }
 
@@ -146,6 +160,7 @@ export function mapUpstreamReferences(
   upstream: UpstreamReference[],
 ): ReferenceInput[] {
   if (kind === "text") return [];
+  if (kind === "audio") return [];
   const images = upstream.filter((item) => item.kind === "image").slice(0, 8);
   const videos = upstream.filter((item) => item.kind === "video").slice(0, 3);
 

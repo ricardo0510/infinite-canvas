@@ -3,7 +3,8 @@ insert into "ProviderConfig"
   (id, name, type, adapter, "baseUrl", "authType", "supportsModels", "timeoutMs", enabled, "createdAt", "updatedAt")
 values
   ('local-image', '本地图片', 'local', 'openai-compatible', 'http://host.docker.internal:8081/v1', 'bearer', false, 180000, true, now(), now()),
-  ('local-video', '本地视频', 'local', 'openai-compatible', 'http://host.docker.internal:8081/v1', 'bearer', false, 180000, true, now(), now())
+  ('local-video', '本地视频', 'local', 'openai-compatible', 'http://host.docker.internal:8081/v1', 'bearer', false, 180000, true, now(), now()),
+  ('local-audio', '本地语音', 'local', 'openai-compatible', 'http://host.docker.internal:8081/v1', 'bearer', false, 600000, true, now(), now())
 on conflict (id) do update set
   name = excluded.name,
   adapter = excluded.adapter,
@@ -48,6 +49,18 @@ values
     'Wan2.1 T2V 1.3B',
     'video',
     '{"modes":["textToVideo"],"aspectRatios":["16:9","9:16"],"resolutions":["480p"],"minDuration":1,"maxDuration":2,"supportsAudio":false,"maxImages":1,"maxPromptLength":2000}'::jsonb,
+    'manual',
+    true,
+    now(),
+    now()
+  ),
+  (
+    gen_random_uuid(),
+    'local-audio',
+    'breeze-tts-2',
+    'Breeze TTS 2',
+    'audio',
+    '{"modes":["textToSpeech"],"formats":["wav"],"voices":[],"supportsInstructions":true,"maxInputLength":2000,"maxPromptLength":2000}'::jsonb,
     'manual',
     true,
     now(),

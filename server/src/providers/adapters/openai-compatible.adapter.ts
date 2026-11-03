@@ -7,6 +7,8 @@ import {
   type ProviderContext,
   type ProviderModelInfo,
   type ProviderTestResult,
+  type SpeechInput,
+  type SpeechOutput,
   type TextInput,
   type TextOutput,
   type VideoInput,
@@ -262,6 +264,39 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       };
     }
     return output;
+  }
+
+  async generateSpeech(ctx: ProviderContext, input: SpeechInput): Promise<SpeechOutput> {
+    const body: Record<string, unknown> = {
+      model: input.model,
+      input: input.input,
+      ...(input.voice ? { voice: input.voice } : {}),
+      ...(input.format ? { response_format: input.format } : {}),
+      ...(input.instructions ? { instructions: input.instructions } : {}),
+    };
+
+    const response = await this.request(ctx, "/audio/speech", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    await assertOk(response);
+
+    const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      const data = (await response.json()) as { url?: string; data?: { url?: string }[] };
+      const url = data.url ?? data.data?.[0]?.url;
+      if (!url) throw new Error("供应商未返回音频");
+      return { url, mimeType: "audio/mpeg" };
+    }
+
+    const bytes = Buffer.from(await response.arrayBuffer());
+    if (bytes.byteLength === 0) throw new Error("供应商未返回音频");
+    return {
+      bytes,
+      mimeType: contentType.split(";")[0] || "audio/wav",
+      size: bytes.byteLength,
+    };
   }
 
   private async request(

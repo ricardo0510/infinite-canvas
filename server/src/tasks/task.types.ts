@@ -1,4 +1,4 @@
-export type TaskKind = "text" | "image" | "video";
+export type TaskKind = "text" | "image" | "video" | "audio";
 export type TaskStatus = "queued" | "running" | "succeeded" | "failed" | "canceled";
 
 export type ReferenceType =
@@ -28,6 +28,9 @@ export type GenerationParams = {
   temperature?: number;
   maxOutputTokens?: number;
   systemPrompt?: string;
+  instructions?: string;
+  voice?: string;
+  format?: string;
   extra?: Record<string, string | number | boolean>;
 };
 
@@ -63,7 +66,21 @@ export type VideoResultItem = BaseResultItem & {
   assetId?: string;
 };
 
-export type ResultItem = TextResultItem | ImageResultItem | VideoResultItem;
+export type AudioResultItem = BaseResultItem & {
+  kind: "audio";
+  url: string;
+  mimeType?: string;
+  duration?: number;
+  voice?: string;
+  size?: number;
+  assetId?: string;
+};
+
+export type ResultItem =
+  | TextResultItem
+  | ImageResultItem
+  | VideoResultItem
+  | AudioResultItem;
 
 export type TaskResult = {
   kind: TaskKind;

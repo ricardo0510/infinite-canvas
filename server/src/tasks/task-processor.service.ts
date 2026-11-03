@@ -6,11 +6,18 @@ import {
   UpstreamAuthError,
   type ImageOutput,
   type ProviderContext,
+  type SpeechOutput,
   type VideoPollResult,
 } from "../providers/provider-adapter";
 import { ProviderRegistry } from "../providers/provider-registry.service";
+import { UploadsService } from "../uploads/uploads.service";
 import { TasksService } from "./tasks.service";
-import type { ImageResultItem, InternalTask, VideoResultItem } from "./task.types";
+import type {
+  AudioResultItem,
+  ImageResultItem,
+  InternalTask,
+  VideoResultItem,
+} from "./task.types";
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -24,6 +31,7 @@ export class TaskProcessorService {
     private readonly tasks: TasksService,
     private readonly credentials: CredentialsService,
     private readonly registry: ProviderRegistry,
+    private readonly uploads: UploadsService,
   ) {}
 
   async execute(taskId: string): Promise<void> {
@@ -46,6 +54,10 @@ export class TaskProcessorService {
       }
       if (task.kind === "image") {
         await this.runImage(task);
+        return;
+      }
+      if (task.kind === "audio") {
+        await this.runAudio(task);
         return;
       }
       await this.runVideo(task);
@@ -202,6 +214,81 @@ export class TaskProcessorService {
       createdAt: new Date().toISOString(),
     }));
     await this.tasks.complete(task.taskId, items);
+  }
+
+  private async runAudio(task: InternalTask): Promise<void> {
+    if (!task.credentialId) {
+      throw new ApiException(20003, "请先在 AI 设置中绑定供应商 API Key", 400);
+    }
+
+    await sleep(120);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+    await this.tasks.setProgress(task.taskId, 30);
+
+    let resolved;
+    try {
+      resolved = await this.credentials.resolve(task.credentialId);
+    } catch (error) {
+      if (error instanceof ApiException) {
+        await this.tasks.fail(task.taskId, error.code, error.message);
+        return;
+      }
+      throw error;
+    }
+
+    const adapter = this.registry.get(resolved.provider.adapter);
+    if (!adapter.generateSpeech) {
+      throw new ApiException(30001, "当前供应商暂不支持音频生成", 400);
+    }
+
+    const params = task.request.params;
+    let speech: SpeechOutput;
+    try {
+      speech = await adapter.generateSpeech(this.context(resolved), {
+        model: task.providerModel ?? task.modelId,
+        input: task.request.prompt,
+        ...(params.voice ? { voice: params.voice } : {}),
+        ...(params.format ? { format: params.format } : {}),
+        ...(params.instructions ? { instructions: params.instructions } : {}),
+      });
+    } catch (error) {
+      if (error instanceof UpstreamAuthError) {
+        await this.credentials.markInvalid(task.credentialId);
+        await this.tasks.fail(task.taskId, 30001, "API Key 已失效，请重新绑定");
+        return;
+      }
+      throw error;
+    }
+
+    await this.credentials.touch(task.credentialId);
+    if (!(await this.tasks.isActive(task.taskId))) return;
+
+    let url = speech.url;
+    let assetId: string | undefined;
+    let mimeType = speech.mimeType;
+    if (!url) {
+      if (!speech.bytes) {
+        throw new ApiException(30001, "供应商未返回音频", 400);
+      }
+      const saved = await this.uploads.saveBuffer(speech.bytes, speech.mimeType);
+      url = saved.url;
+      assetId = saved.assetId;
+      mimeType = saved.mimeType;
+    }
+
+    const item: AudioResultItem = {
+      id: `item_${randomUUID()}`,
+      kind: "audio",
+      url,
+      mimeType,
+      ...(speech.duration !== undefined ? { duration: speech.duration } : {}),
+      ...(params.voice ? { voice: params.voice } : {}),
+      ...(speech.size !== undefined ? { size: speech.size } : {}),
+      ...(assetId ? { assetId } : {}),
+      modelId: task.modelId,
+      createdAt: new Date().toISOString(),
+    };
+    await this.tasks.complete(task.taskId, [item]);
   }
 
   private async runVideo(task: InternalTask): Promise<void> {

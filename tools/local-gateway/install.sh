@@ -14,7 +14,7 @@ docker compose -f "$COMPOSE" exec -T postgres psql -U canvas -d canvas \
   < "$ROOT/tools/local-gateway/providers.sql"
 
 echo "==> 绑定本地假 Key（已存在会忽略）"
-for provider in local-image local-video; do
+for provider in local-image local-video local-audio; do
   curl -sS -X POST "http://127.0.0.1:8790/v1/providers/${provider}/credentials" \
     -H 'Content-Type: application/json' \
     -d '{"label":"默认","apiKey":"local"}'

@@ -15,7 +15,7 @@ const TEST_MODELS: AiModel[] = [
     kind: "text",
     modes: [],
     limits: { maxPromptLength: 8000, maxImages: 0, maxVideos: 0 },
-    output: { image: null, video: null },
+    output: { image: null, video: null, audio: null },
   },
   {
     id: "test-image",
@@ -26,6 +26,7 @@ const TEST_MODELS: AiModel[] = [
     output: {
       image: { aspectRatios: ["1:1", "16:9"], resolutions: ["1k", "2k"], maxCount: 4 },
       video: null,
+      audio: null,
     },
   },
   {
@@ -37,6 +38,7 @@ const TEST_MODELS: AiModel[] = [
     output: {
       image: { aspectRatios: ["3:2"], resolutions: ["2k"], maxCount: 2 },
       video: null,
+      audio: null,
     },
   },
   {
@@ -53,6 +55,24 @@ const TEST_MODELS: AiModel[] = [
         minDuration: 4,
         maxDuration: 12,
         supportsAudio: true,
+      },
+      audio: null,
+    },
+  },
+  {
+    id: "test-audio",
+    name: "测试音频",
+    kind: "audio",
+    modes: ["textToSpeech"],
+    limits: { maxPromptLength: 2000, maxImages: 0, maxVideos: 0 },
+    output: {
+      image: null,
+      video: null,
+      audio: {
+        formats: ["wav"],
+        voices: [{ key: "default", label: "默认" }],
+        supportsInstructions: true,
+        maxInputLength: 2000,
       },
     },
   },
@@ -164,6 +184,41 @@ describe("TasksService", () => {
     const stored = await tasks.getInternal(task.taskId);
     expect(stored?.request.prompt).toContain("aspect ratio 16:9");
     expect(stored?.request.prompt).toContain("resolution 2K");
+  });
+
+  it("creates an audio task with speech params", async () => {
+    const tasks = createService();
+    const { task } = await tasks.create("user-1", "audio", {
+      modelId: "test-audio",
+      prompt: "你好，世界",
+      params: { instructions: "语速平稳，情绪温暖" },
+      clientRequestId: "node-1:req-audio-1",
+    } as CreateGenerationDto);
+
+    expect(task.status).toBe("queued");
+    expect(task.mode).toBe("textToSpeech");
+    const stored = await tasks.getInternal(task.taskId);
+    expect(stored?.request.params.instructions).toBe("语速平稳，情绪温暖");
+    expect(stored?.request.params.format).toBe("wav");
+    expect(stored?.request.params.voice).toBe("default");
+  });
+
+  it("rejects an audio voice outside the model capabilities", async () => {
+    const tasks = createService();
+    let error: unknown;
+    try {
+      await tasks.create("user-1", "audio", {
+        modelId: "test-audio",
+        prompt: "你好",
+        params: { voice: "unknown" },
+        clientRequestId: "node-1:req-audio-2",
+      } as CreateGenerationDto);
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ApiException);
+    expect((error as ApiException).code).toBe(20001);
   });
 
   it("rejects an invalid video reference combination", async () => {

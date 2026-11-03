@@ -43,6 +43,11 @@ node tools/local-gateway/server.mjs
 | `VIDEO_FRAMES` | `25` | 帧数 |
 | `VIDEO_FPS` | `16` | 帧率 |
 | `VIDEO_STEPS` | `16` | 采样步数 |
+| `TTS_MODEL` | `breeze-tts-2` | 语音模型 ID |
+| `TTS_SCRIPT` | `~/BreezeTTS2_Mac_Streaming/breezetts2_mac_fast.py` | Breeze TTS 脚本路径 |
+| `TTS_UV` / `TTS_PYTHON` | `uv` / `3.12` | 运行脚本的解释器 |
+| `TTS_TIMEOUT_MS` | `300000` | 单次语音合成超时 |
+| `TTS_UPSTREAM_URL` | 空 | 可选：转发到别的 OpenAI 兼容 TTS 服务 |
 
 ## 接口
 
@@ -51,6 +56,7 @@ GET  /v1/models
 POST /v1/images/generations
 POST /v1/video/submit
 POST /v1/video/status
+POST /v1/audio/speech
 GET  /files/<path>
 ```
 
@@ -80,14 +86,24 @@ curl http://127.0.0.1:8081/v1/video/status \
   -d '{"requestId":"..."}'
 ```
 
+语音（Breeze TTS 2，返回 `audio/wav`）：
+
+```bash
+curl http://127.0.0.1:8081/v1/audio/speech \
+  -H 'Content-Type: application/json' \
+  -d '{"model":"breeze-tts-2","input":"你好，这是语音测试。","instruct":"语速平稳，语气自然。"}' \
+  -o speech.wav
+```
+
 ## 接入项目
 
-在管理端新增两个 Provider（Key 随便填 `local`）：
+在管理端新增三个 Provider（Key 随便填 `local`）：
 
 | id | name | adapter | baseUrl | supportsModels |
 | --- | --- | --- | --- | --- |
 | `local-image` | 本地图片 | `openai-compatible` | `http://host.docker.internal:8081/v1` | false |
 | `local-video` | 本地视频 | `openai-compatible` | `http://host.docker.internal:8081/v1` | false |
+| `local-audio` | 本地语音 | `openai-compatible` | `http://host.docker.internal:8081/v1` | false |
 
 ProviderModel：
 
@@ -96,5 +112,6 @@ ProviderModel：
 | local-image | `flux2-klein-4b` | image | `{"aspectRatios":["1:1","16:9","9:16"],"resolutions":["1k"],"maxCount":1,"modes":["textToImage"]}` |
 | local-image | `sd15` | image | `{"aspectRatios":["1:1","16:9","9:16"],"resolutions":["1k"],"maxCount":1,"modes":["textToImage","imageToImage"]}` |
 | local-video | `wan21-t2v-1.3b` | video | `{"modes":["textToVideo"],"aspectRatios":["16:9","9:16"],"resolutions":["480p"],"minDuration":1,"maxDuration":2,"supportsAudio":false}` |
+| local-audio | `breeze-tts-2` | audio | `{"modes":["textToSpeech"],"formats":["wav"],"supportsInstructions":true,"maxInputLength":2000}` |
 
-> 项目只接受 `https://` 媒体地址。本地网关返回的是 `http://127.0.0.1:8081/files/...`，需要改前端 `src/lib/storage.ts` / `src/lib/ai/media.ts` 放行 localhost HTTP，或者给网关套一层 HTTPS。
+跑 `bash tools/local-gateway/install.sh` 会自动写入 `providers.sql` 里的 Provider / Model 并绑定假 Key。

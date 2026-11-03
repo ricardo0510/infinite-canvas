@@ -203,6 +203,9 @@ export class TasksService {
     if (kind === "text" && references.length > 0) {
       throw new ApiException(20001, "文本生成不支持 references", 422);
     }
+    if (kind === "audio" && references.length > 0) {
+      throw new ApiException(20001, "音频生成暂不支持 references", 422);
+    }
     if (kind === "image") {
       if (references.length > model.limits.maxImages) {
         throw new ApiException(20001, "参考图数量超出模型限制", 422);
@@ -234,6 +237,14 @@ export class TasksService {
     references: ReferenceInput[],
   ): string {
     if (kind === "text") return "";
+
+    if (kind === "audio") {
+      const mode = requested ?? "textToSpeech";
+      if (!model.modes.includes(mode)) {
+        throw new ApiException(20001, `模型不支持 mode=${mode}`, 422);
+      }
+      return mode;
+    }
 
     let mode = requested;
     if (!mode) {
@@ -334,6 +345,21 @@ export class TasksService {
       params.resolution = input.resolution ?? output?.resolutions[0] ?? DEFAULT_IMAGE_RESOLUTION;
       params.count = Math.min(maxCount, Math.max(1, input.count ?? 1));
       if (params.watermark === undefined) params.watermark = true;
+      return params;
+    }
+
+    if (kind === "audio") {
+      const output = model.output.audio;
+      if (!output) throw new ApiException(20001, "模型不支持音频输出", 422);
+      if (input.voice && !output.voices.some((voice) => voice.key === input.voice)) {
+        throw new ApiException(20001, "voice 不在模型能力范围内", 422);
+      }
+      if (input.format && output.formats.length > 0 && !output.formats.includes(input.format)) {
+        throw new ApiException(20001, "format 不在模型能力范围内", 422);
+      }
+      params.voice = input.voice ?? output.voices[0]?.key;
+      params.format = input.format ?? output.formats[0] ?? "wav";
+      if (input.instructions) params.instructions = input.instructions;
       return params;
     }
 

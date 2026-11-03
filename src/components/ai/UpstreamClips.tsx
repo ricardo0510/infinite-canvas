@@ -4,6 +4,13 @@ import { sanitizeImageSrc, sanitizeVideoSrc } from "../../lib/storage";
 import type { CanvasNode } from "../../types";
 import { Icon } from "../ui/Icon";
 
+function previewLabel(preview: NodePreview): string {
+  if (preview.kind === "video") return "视频";
+  if (preview.kind === "image") return "图片";
+  if (preview.kind === "audio") return "音频";
+  return "文本";
+}
+
 function Clip({ preview }: { preview: NodePreview }) {
   const imageSrc = useResolvedImageSrc(
     preview.kind === "image"
@@ -27,14 +34,18 @@ function Clip({ preview }: { preview: NodePreview }) {
         <img src={imageSrc} alt={preview.title} draggable={false} />
       ) : preview.kind === "video" && videoSrc ? (
         <video src={videoSrc} preload="metadata" muted playsInline />
+      ) : preview.kind === "audio" ? (
+        <span className="ai-upstream-icon" aria-hidden="true">
+          <Icon name="audio" size={14} />
+        </span>
       ) : null}
       {preview.kind === "video" && (imageSrc || videoSrc) ? (
         <span className="ai-upstream-play" aria-hidden="true">
           <Icon name="play" size={8} />
         </span>
       ) : null}
-      {!hasText && !imageSrc && !videoSrc ? (
-        <span className="ai-upstream-empty">{preview.kind === "video" ? "视频" : preview.kind === "image" ? "图片" : "文本"}</span>
+      {!hasText && !imageSrc && !videoSrc && preview.kind !== "audio" ? (
+        <span className="ai-upstream-empty">{previewLabel(preview)}</span>
       ) : null}
     </div>
   );

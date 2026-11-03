@@ -38,9 +38,10 @@ const KIND_LABELS: Record<ModelKind, string> = {
   text: "文本",
   image: "图片",
   video: "视频",
+  audio: "音频",
 };
 
-const KIND_ORDER: Record<ModelKind, number> = { text: 0, image: 1, video: 2 };
+const KIND_ORDER: Record<ModelKind, number> = { text: 0, image: 1, video: 2, audio: 3 };
 
 function errorText(error: unknown): string {
   return error instanceof Error ? error.message : "操作失败，请稍后重试";

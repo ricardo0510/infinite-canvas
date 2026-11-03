@@ -42,6 +42,12 @@ function configSummary(
       `${generation.params?.count ?? 1}`,
     ];
   }
+  if (kind === "audio") {
+    const output = model?.output.audio;
+    const items = [(generation.params?.format ?? output?.formats[0] ?? "wav").toUpperCase()];
+    if (generation.params?.instructions?.trim()) items.push("情绪");
+    return items;
+  }
   if (kind !== "video") return [];
 
   const output = model?.output.video;
@@ -299,7 +305,13 @@ export function AiPanel() {
           <Textarea
             className="ai-prompt"
             value={generation.prompt}
-            placeholder={kind === "text" ? "写下你想生成的内容…" : "描述你想生成的画面，可连接上游素材…"}
+            placeholder={
+              kind === "text"
+                ? "写下你想生成的内容…"
+                : kind === "audio"
+                  ? "输入要朗读的台词或旁白，可连接上游文本节点…"
+                  : "描述你想生成的画面，可连接上游素材…"
+            }
             aria-label="Prompt"
             rows={5}
             onChange={(event) => patchGeneration(nodeId, { prompt: event.target.value })}

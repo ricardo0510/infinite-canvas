@@ -9,6 +9,7 @@ export const MIN_SIZE: Record<NodeKind, { width: number; height: number }> = {
   text: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   image: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   video: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  audio: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   group: { width: 220, height: 140 },
 };
 
@@ -16,6 +17,7 @@ export const DEFAULT_SIZE: Record<NodeKind, { width: number; height: number }> =
   text: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   image: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   video: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
+  audio: { width: AI_NODE_WIDTH, height: EMPTY_NODE_HEIGHT },
   group: { width: 320, height: 200 },
 };
 

@@ -154,6 +154,86 @@
   pointer-events: none;
 }
 
+/* ---------- Audio node ---------- */
+
+.node-audio {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 14px;
+}
+
+.node-audio audio {
+  display: none;
+}
+
+.node-audio-toggle {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text-1);
+  cursor: pointer;
+  transition: border-color var(--dur-1) var(--ease-out), color var(--dur-1) var(--ease-out),
+    background var(--dur-1) var(--ease-out);
+}
+
+.node-audio-toggle:hover:not(:disabled) {
+  border-color: var(--node-accent);
+  background: color-mix(in srgb, var(--node-accent) 14%, var(--surface-2));
+  color: var(--node-accent);
+}
+
+.node-audio-toggle:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.node-audio-info {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.node-audio-title {
+  overflow: hidden;
+  color: var(--text-1);
+  font-size: var(--font-sm);
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.node-audio-track {
+  position: relative;
+  height: 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--text-1) 12%, transparent);
+  cursor: pointer;
+}
+
+.node-audio-progress {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 999px;
+  background: var(--node-accent);
+  transition: width 80ms linear;
+}
+
+.node-audio-time {
+  color: var(--text-2);
+  font-size: var(--font-xs);
+  font-variant-numeric: tabular-nums;
+}
+
 .node-empty {
   display: flex;
   flex: 1 1 auto;

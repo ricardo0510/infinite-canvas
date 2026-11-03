@@ -119,6 +119,13 @@ const PATHS = {
   fullscreen: <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />,
   check: <path d="m4 12 5 5L20 6" />,
   play: <path d="M8 5v14l11-7z" fill="currentColor" stroke="none" />,
+  pause: <path d="M9 5v14M15 5v14" strokeWidth="2.4" />,
+  audio: (
+    <>
+      <path d="M4 9v6h4l5 4V5L8 9z" />
+      <path d="M16.5 8.6a5 5 0 0 1 0 6.8M19.2 6a8.5 8.5 0 0 1 0 12" />
+    </>
+  ),
   "arrow-right": <path d="M4 12h15m-6-6 6 6-6 6" />,
   sparkles: (
     <>

@@ -2,9 +2,9 @@ import type { Edge, Node } from "@xyflow/react";
 
 export type NoteColor = "violet" | "cyan" | "amber" | "emerald";
 
-export type NodeKind = "text" | "image" | "video" | "group";
+export type NodeKind = "text" | "image" | "video" | "audio" | "group";
 
-export type GenerationKind = "text" | "image" | "video";
+export type GenerationKind = "text" | "image" | "video" | "audio";
 
 export type GenerationStatus =
   | "idle"
@@ -55,6 +55,17 @@ export type GenerationResultItem =
       assetId?: string;
       modelId: string;
       createdAt: string;
+    }
+  | {
+      id: string;
+      kind: "audio";
+      url: string;
+      mimeType?: string;
+      duration?: number;
+      voice?: string;
+      assetId?: string;
+      modelId: string;
+      createdAt: string;
     };
 
 export type GenerationParams = {
@@ -71,6 +82,9 @@ export type GenerationParams = {
   temperature?: number;
   maxOutputTokens?: number;
   systemPrompt?: string;
+  instructions?: string;
+  voice?: string;
+  format?: string;
   extra?: Record<string, string | number | boolean>;
 };
 
@@ -125,12 +139,29 @@ export type GroupData = {
   [key: string]: unknown;
 };
 
+export type AudioData = {
+  title: string;
+  static?: boolean;
+  src: string;
+  mimeType: string;
+  duration: number;
+  alt: string;
+  generation?: GenerationMeta;
+  [key: string]: unknown;
+};
+
 export type TextNodeModel = Node<TextData, "text">;
 export type ImageNodeModel = Node<ImageData, "image">;
 export type VideoNodeModel = Node<VideoData, "video">;
+export type AudioNodeModel = Node<AudioData, "audio">;
 export type GroupNodeModel = Node<GroupData, "group">;
 
-export type CanvasNode = TextNodeModel | ImageNodeModel | VideoNodeModel | GroupNodeModel;
+export type CanvasNode =
+  | TextNodeModel
+  | ImageNodeModel
+  | VideoNodeModel
+  | AudioNodeModel
+  | GroupNodeModel;
 
 export type CanvasEdge = Edge;
 

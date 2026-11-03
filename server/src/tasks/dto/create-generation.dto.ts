@@ -81,6 +81,21 @@ export class GenerationParamsDto {
   maxOutputTokens?: number;
 
   @IsOptional()
+  @IsString()
+  @Length(0, 2000)
+  instructions?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 100)
+  voice?: string;
+
+  @IsOptional()
+  @IsString()
+  @Length(1, 20)
+  format?: string;
+
+  @IsOptional()
   @IsObject()
   extra?: Record<string, string | number | boolean>;
 }

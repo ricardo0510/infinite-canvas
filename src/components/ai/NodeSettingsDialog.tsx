@@ -25,6 +25,7 @@ type NodeSettingsDialogProps = {
 
 function resultLabel(item: GenerationResultItem): string {
   if (item.kind === "text") return item.text.slice(0, 60) || "文本";
+  if (item.kind === "audio") return "音频";
   return item.kind === "image" ? "图片" : "视频";
 }
 
@@ -34,6 +35,13 @@ function ResultThumb({ item }: { item: GenerationResultItem }) {
   }
   if (item.kind === "image") {
     return <img src={item.url} alt={resultLabel(item)} />;
+  }
+  if (item.kind === "audio") {
+    return (
+      <span className="ai-result-audio">
+        <Icon name="audio" size={16} />
+      </span>
+    );
   }
   return (
     <span className="ai-result-video">
@@ -72,6 +80,7 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
     : IMAGE_RESOLUTIONS;
   const imageMaxCount = imageOutput?.maxCount ?? IMAGE_MAX_COUNT;
   const videoOutput = model?.output.video ?? null;
+  const audioOutput = model?.output.audio ?? null;
   const qualityTiers = model?.params?.qualityTiers ?? [];
   const backgrounds = model?.params?.backgrounds ?? [];
   const extraParams = model?.params?.extra ?? [];
@@ -136,6 +145,43 @@ export function NodeSettingsDialog({ nodeId, model, generation, onClose }: NodeS
                 onChange={(event) => updateParams({ count: Number(event.target.value) || 1 })}
               />
             </Field>
+          </>
+        ) : null}
+
+        {generation.kind === "audio" ? (
+          <>
+            {audioOutput?.voices?.length ? (
+              <SelectField
+                label="音色"
+                value={generation.params?.voice ?? audioOutput.voices[0]?.key ?? ""}
+                options={audioOutput.voices.map((voice) => ({
+                  value: voice.key,
+                  label: voice.label,
+                }))}
+                disabled={running}
+                onChange={(value) => updateParams({ voice: value })}
+              />
+            ) : null}
+            {audioOutput?.supportsInstructions ? (
+              <Field label="情绪 / 风格">
+                <Textarea
+                  rows={3}
+                  placeholder="例如：同一个人连续自然地说话，语速平稳，情绪温暖柔软。"
+                  value={generation.params?.instructions ?? ""}
+                  disabled={running}
+                  onChange={(event) => updateParams({ instructions: event.target.value })}
+                />
+              </Field>
+            ) : null}
+            {audioOutput?.formats?.length ? (
+              <SelectField
+                label="输出格式"
+                value={generation.params?.format ?? audioOutput.formats[0] ?? "wav"}
+                options={audioOutput.formats}
+                disabled={running}
+                onChange={(value) => updateParams({ format: value })}
+              />
+            ) : null}
           </>
         ) : null}
 
