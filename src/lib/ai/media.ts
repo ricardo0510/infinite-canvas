@@ -1,4 +1,5 @@
 import { getImageBlob, isIdbImageRef } from "../imageStore";
+import { isLocalHttpUrl } from "../storage";
 import { aiUpload } from "./http";
 import type { ReferenceInput } from "./types";
 
@@ -31,7 +32,10 @@ async function uploadLocal(url: string): Promise<string> {
   } else if (/^data:/i.test(url) || /^blob:/i.test(url)) {
     const response = await fetch(url);
     blob = await response.blob();
-  } else if (/^https:\/\//i.test(url)) {
+  } else if (/^https?:\/\//i.test(url)) {
+    if (/^http:\/\//i.test(url) && !isLocalHttpUrl(url)) {
+      throw new Error("不支持的媒体地址");
+    }
     return url;
   } else {
     throw new Error("不支持的媒体地址");

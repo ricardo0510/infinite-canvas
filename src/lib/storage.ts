@@ -80,11 +80,26 @@ function clampProgress(value: unknown): number | undefined {
   return Math.min(100, Math.max(0, Math.round(value)));
 }
 
+const LOCAL_MEDIA_HOSTS = new Set(["localhost", "127.0.0.1", "::1", "[::1]"]);
+
+/** 本地模型网关返回的是 http://127.0.0.1，仅放行回环地址和 .local。 */
+export function isLocalHttpUrl(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return (
+      url.protocol === "http:" &&
+      (LOCAL_MEDIA_HOSTS.has(url.hostname) || url.hostname.endsWith(".local"))
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Only local, uploaded, or https images are allowed. */
 export function sanitizeImageSrc(value: unknown): string {
   if (typeof value !== "string") return "";
   const src = value.trim();
-  if (/^https:\/\//i.test(src)) return src;
+  if (/^https:\/\//i.test(src) || isLocalHttpUrl(src)) return src;
   if (/^blob:/i.test(src)) return src;
   if (/^data:image\//i.test(src)) return src;
   if (IDB_REF.test(src)) return src;
@@ -94,7 +109,7 @@ export function sanitizeImageSrc(value: unknown): string {
 export function sanitizeVideoSrc(value: unknown): string {
   if (typeof value !== "string") return "";
   const src = value.trim();
-  if (/^https:\/\//i.test(src)) return src;
+  if (/^https:\/\//i.test(src) || isLocalHttpUrl(src)) return src;
   if (/^blob:/i.test(src)) return src;
   if (/^data:video\//i.test(src)) return src;
   if (IDB_REF.test(src)) return src;
@@ -104,7 +119,7 @@ export function sanitizeVideoSrc(value: unknown): string {
 function sanitizeMediaUrl(value: unknown, mediaKind: "image" | "video"): string {
   const src = typeof value === "string" ? value.trim() : "";
   if (!src) return "";
-  if (/^https:\/\//i.test(src)) return src;
+  if (/^https:\/\//i.test(src) || isLocalHttpUrl(src)) return src;
   if (IDB_REF.test(src)) return src;
   if (mediaKind === "image" && /^data:image\//i.test(src)) return src;
   if (mediaKind === "video" && /^data:video\//i.test(src)) return src;

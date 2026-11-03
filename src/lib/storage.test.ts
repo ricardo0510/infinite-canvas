@@ -275,6 +275,15 @@ describe("sanitizeImageSrc", () => {
     );
   });
 
+  it("allows local model gateway http urls", () => {
+    expect(sanitizeImageSrc("http://127.0.0.1:8081/files/a.png")).toBe(
+      "http://127.0.0.1:8081/files/a.png",
+    );
+    expect(sanitizeImageSrc("http://localhost:8081/files/a.png")).toBe(
+      "http://localhost:8081/files/a.png",
+    );
+  });
+
   it("rejects other protocols and empty values", () => {
     expect(sanitizeImageSrc("http://example.com/a.png")).toBe("");
     expect(sanitizeImageSrc("javascript:alert(1)")).toBe("");
@@ -287,5 +296,23 @@ describe("sanitizeImageSrc", () => {
 describe("parseSnapshot", () => {
   it("is an alias of migrateSnapshot", () => {
     expect(parseSnapshot(v1)).toEqual(migrateSnapshot(v1));
+  });
+});
+
+describe("local model media", () => {
+  it("keeps local gateway urls when migrating a snapshot", () => {
+    const snapshot = migrateSnapshot({
+      version: 2,
+      nodes: [
+        {
+          id: "img",
+          type: "image",
+          position: { x: 0, y: 0 },
+          data: { src: "http://127.0.0.1:8081/files/a.png" },
+        },
+      ],
+      edges: [],
+    });
+    expect(snapshot?.nodes[0].data.src).toBe("http://127.0.0.1:8081/files/a.png");
   });
 });
